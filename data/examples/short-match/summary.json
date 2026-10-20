@@ -1,0 +1,52 @@
+{
+  "match_id": "synthetic-v1.3-match-2-5",
+  "event_count": 189,
+  "final_score": {
+    "home": 1,
+    "away": 1
+  },
+  "validated": true,
+  "counts": {
+    "goal": 2,
+    "pass": 83,
+    "period_end": 2,
+    "period_start": 2,
+    "pressure": 38,
+    "recovery": 27,
+    "restart": 4,
+    "shot": 3,
+    "turnover": 28
+  },
+  "synthetic_metrics": {
+    "pass_difficulty_score": {
+      "count": 83,
+      "min": 15,
+      "mean": 42.61,
+      "max": 76
+    },
+    "pass_average_ball_speed_kmh": {
+      "count": 83,
+      "min": 43.3831,
+      "mean": 66.61,
+      "max": 86.3923
+    },
+    "shot_initial_segment_speed_kmh": {
+      "count": 3,
+      "min": 104.4918,
+      "mean": 117.33,
+      "max": 127.181
+    }
+  },
+  "pass_accuracy": {
+    "home": {
+      "attempted": 42,
+      "completed": 29,
+      "percentage": 69.05
+    },
+    "away": {
+      "attempted": 41,
+      "completed": 27,
+      "percentage": 65.85
+    }
+  }
+}

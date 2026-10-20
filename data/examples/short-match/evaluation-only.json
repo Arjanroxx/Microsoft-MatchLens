@@ -1,0 +1,138 @@
+[
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 0,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 0,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 64302,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 99654,
+    "behaviour": "higher-press",
+    "reason": "after_conceding",
+    "trigger_event_id": "evt-000029"
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 156493,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 182504,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 226307,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 260967,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 22314,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 49449,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 82208,
+    "behaviour": "higher-press",
+    "reason": "after_conceding",
+    "trigger_event_id": "evt-000123"
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 113949,
+    "behaviour": "quick-play",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 161505,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 173197,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 182537,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 247742,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 263544,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  }
+]
