@@ -62,3 +62,12 @@ export function boardAt(match,time){
   for(const e of match.events){if(e.t>time)break;if(e.t>=action.t&&e.start&&['restart','recovery'].includes(e.type))ball=e.start;}
   return {positions,ball,action,active:time<action.t};
 }
+
+// Event labels must also handle boundaries/restarts, which have no outcome field.
+export function eventTitle(event) {
+  if (event.type === 'pass') return event.outcome === 'complete' ? 'Pass completed' : 'Pass intercepted';
+  if (event.type === 'shot') return 'Shot · ' + String(event.outcome_reason || event.outcome || 'resolved').replaceAll('_', ' ');
+  return {goal:'Goal!', recovery:'Possession recovered', turnover:'Possession lost',
+    pressure:'Pressure applied', restart:'Play restarts', period_start:'Half begins',
+    period_end:'Half ends'}[event.type] || event.type;
+}

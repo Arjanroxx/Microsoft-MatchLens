@@ -1,9 +1,9 @@
-import {prepare,statistics,boardAt,mean} from './model.mjs';
+import {prepare,statistics,boardAt,mean,eventTitle} from './model.mjs';
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,n=0)=>v==null?'—':Number(v).toFixed(n), clock=t=>`${String(Math.floor(t/60000)).padStart(2,'0')}:${String(Math.floor(t/1000)%60).padStart(2,'0')}`;
 let match,time=0,playing=false,speed=8,tab='events',filter='all',selectedEvent=null,selectedPlayer=null,trails=true,names=false,lastFrame=0,lastUI=0,lastPrefix=-1;
 const teamName=id=>match?.metadata.teams.find(t=>t.team_id===id)?.name||'', playerName=id=>match?.players[id]?.name||'Team event';
-const title=e=>({pass:e.outcome==='complete'?'Pass completed':'Pass intercepted',shot:'Shot · '+(e.outcome_reason||e.outcome).replaceAll('_',' '),goal:'Goal!',recovery:'Possession recovered',turnover:'Possession lost',pressure:'Pressure applied',restart:'Play restarts',period_start:'Half begins',period_end:'Half ends'}[e.type]||e.type);
+const title=eventTitle;
 const symbol=e=>({pass:'↗',shot:'◎',goal:'⚽',recovery:'↶',turnover:'⇄',pressure:'⌁',restart:'▶',period_start:'◷',period_end:'◷'}[e.type]||'·');
 function notify(msg){$('status').textContent=msg;$('status').classList.add('show');clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('status').classList.remove('show'),5500);}
 function showModal(titleText,html,label='MATCHLENS STUDIO'){$('modal-label').textContent=label;$('modal-body').innerHTML=`<h2>${esc(titleText)}</h2>${html}`;$('modal').showModal();}

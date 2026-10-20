@@ -39,7 +39,7 @@ Click **Load a match**, and select **metadata.json and events.jsonl together** f
 - `app.mjs`: clock, SVG renderer, UI interactions, local fixture/import adapter, evidence and recap templates.
 - `styles.css`: responsive broadcast-style layout; lime home and lilac away identity.
 - `index.html`: semantic controls, pitch and panels.
-- `tests/replay.test.mjs`: timing, deduplication, score and input invariants.
+- `tests/`: timing, deduplication, score, event labels and application startup/interaction smoke tests.
 
 For a backend, replace `load()` with a fetch to your match endpoints while retaining `prepare(metadata, events)`. Do not expose API keys to the browser. Current `prepare` expects a complete preloaded replay; true live streaming requires a delayed clock or kick/trajectory/completion observation messages, as documented in `docs/UI-INTEGRATION.md`.
 
@@ -54,7 +54,7 @@ The pitch keeps kick-time player snapshots rather than inventing full movement t
 Node 18+ is required only for tests:
 
 ```bash
-node --test frontend/tests/replay.test.mjs
+node --test frontend/tests
 node --check frontend/app.mjs
 ```
 
