@@ -48,5 +48,202 @@
       "completed": 27,
       "percentage": 65.85
     }
+  },
+  "teams": {
+    "home": {
+      "team_id": "home",
+      "name": "Northbridge FC",
+      "goals": 1,
+      "passes": {
+        "attempted": 42,
+        "completed": 29,
+        "incomplete": 13,
+        "accuracy_percentage": 69.05
+      },
+      "shots": {
+        "total": 2,
+        "on_target": 1,
+        "off_target": 1
+      },
+      "saves": 0,
+      "interceptions": 14,
+      "recoveries": 14,
+      "turnovers": 14,
+      "pressure_events": 22,
+      "possessions": 16,
+      "event_counts": {
+        "restart": 2,
+        "pass": 42,
+        "turnover": 14,
+        "recovery": 14,
+        "pressure": 22,
+        "shot": 2,
+        "goal": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 42,
+          "min": 4.05,
+          "mean": 26.27,
+          "max": 49.83
+        },
+        "intended_pass_distance_m": {
+          "count": 42,
+          "min": 8.79,
+          "mean": 29.92,
+          "max": 50.09
+        },
+        "pass_difficulty_score": {
+          "count": 42,
+          "min": 15,
+          "mean": 41.02,
+          "max": 73
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 42,
+          "min": 44.1742,
+          "mean": 65.68,
+          "max": 86.3101
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 42,
+          "min": 44.1742,
+          "mean": 65.68,
+          "max": 86.31
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 88.0255,
+          "mean": 97.54,
+          "max": 107.0643
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 2,
+          "min": 104.4918,
+          "mean": 115.84,
+          "max": 127.181
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 2,
+          "min": 104.4918,
+          "mean": 115.84,
+          "max": 127.1812
+        },
+        "ball_average_speed_kmh": {
+          "count": 44,
+          "min": 44.1742,
+          "mean": 67.13,
+          "max": 107.0643
+        }
+      },
+      "possession": {
+        "time_ms": 283509,
+        "time_seconds": 283.509,
+        "percentage": 51.32,
+        "elapsed_time_percentage": 47.25
+      }
+    },
+    "away": {
+      "team_id": "away",
+      "name": "Southbank FC",
+      "goals": 1,
+      "passes": {
+        "attempted": 41,
+        "completed": 27,
+        "incomplete": 14,
+        "accuracy_percentage": 65.85
+      },
+      "shots": {
+        "total": 1,
+        "on_target": 1,
+        "off_target": 0
+      },
+      "saves": 0,
+      "interceptions": 13,
+      "recoveries": 13,
+      "turnovers": 14,
+      "pressure_events": 16,
+      "possessions": 15,
+      "event_counts": {
+        "recovery": 13,
+        "pass": 41,
+        "turnover": 14,
+        "pressure": 16,
+        "shot": 1,
+        "goal": 1,
+        "restart": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 41,
+          "min": 4.18,
+          "mean": 27.39,
+          "max": 51.12
+        },
+        "intended_pass_distance_m": {
+          "count": 41,
+          "min": 9.53,
+          "mean": 32.05,
+          "max": 50.23
+        },
+        "pass_difficulty_score": {
+          "count": 41,
+          "min": 20,
+          "mean": 44.24,
+          "max": 76
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 41,
+          "min": 43.3831,
+          "mean": 67.56,
+          "max": 86.3923
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 41,
+          "min": 43.3832,
+          "mean": 67.56,
+          "max": 86.3924
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 1,
+          "min": 102.0777,
+          "mean": 102.08,
+          "max": 102.0777
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 1,
+          "min": 120.3214,
+          "mean": 120.32,
+          "max": 120.3214
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 1,
+          "min": 120.3214,
+          "mean": 120.32,
+          "max": 120.3214
+        },
+        "ball_average_speed_kmh": {
+          "count": 42,
+          "min": 43.3831,
+          "mean": 68.39,
+          "max": 102.0777
+        }
+      },
+      "possession": {
+        "time_ms": 268937,
+        "time_seconds": 268.937,
+        "percentage": 48.68,
+        "elapsed_time_percentage": 44.82
+      }
+    }
+  },
+  "possession": {
+    "method": "team_phase_time_v1",
+    "definition": "Restart/recovery to loss; pass flights belong to passing team; shot flights and loose-ball/restart gaps unassigned",
+    "percentage_denominator": "home_time_ms + away_time_ms (excludes unassigned time)",
+    "elapsed_time_ms": 600000,
+    "controlled_time_ms": 552446,
+    "unassigned_time_ms": 47554,
+    "unassigned_time_percentage": 7.93
   }
 }

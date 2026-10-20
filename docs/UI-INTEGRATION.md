@@ -61,3 +61,68 @@ Use a solid line for actual travel and an optional dashed continuation for the i
 5. Selected-player details and difficulty/speed cards.
 
 Keep the data-reader boundary separate from the renderer. A future backend or video adapter should be able to supply normalised observations/events without replacing the board.
+
+## Side-by-side team statistics
+
+`summary.json` now includes `teams.home` and `teams.away` with the same structure. Use these for the two columns; the older top-level pooled `synthetic_metrics` remains for backwards compatibility and is not the team comparison source.
+
+| Display row | Field below each `teams.<team>` |
+|---|---|
+| Team name / goals | `name`, `goals` |
+| Possession | `possession.percentage` |
+| Possession time | `possession.time_seconds` |
+| Pass attempts / completions / failures | `passes.attempted`, `passes.completed`, `passes.incomplete` |
+| Pass accuracy | `passes.accuracy_percentage` |
+| Actual / intended pass distance | `metrics.pass_distance_m.mean`, `metrics.intended_pass_distance_m.mean` |
+| Pass difficulty | `metrics.pass_difficulty_score.mean` |
+| Pass ball speed | `metrics.pass_average_ball_speed_kmh.mean` |
+| Fastest pass segment | `metrics.pass_peak_segment_ball_speed_kmh.max` |
+| Shots / on target / off target | `shots.total`, `shots.on_target`, `shots.off_target` |
+| Shot initial speed / fastest initial shot | `metrics.shot_initial_segment_speed_kmh.mean` / `.max` |
+| Whole-flight shot speed | `metrics.shot_average_ball_speed_kmh.mean` |
+| Peak shot segment speed | `metrics.shot_peak_segment_speed_kmh.max` |
+| Whole-flight ball speed across actions | `metrics.ball_average_speed_kmh.mean` |
+| Defensive actions | `saves`, `interceptions`, `recoveries`, `turnovers`, `pressure_events` |
+| Possession sequences | `possessions` |
+
+Each metric distribution includes `count`, `min`, `mean`, and `max`. No observations means count zero and null values: display a dash, not zero speed or 0% accuracy. Means of speed metrics are event-weighted means of per-action speeds, not time-weighted motion averages. `pressure_events` counts recorded pressure observations, not distinct pressing episodes. Interceptions are credited to the defending team; saves to the opponent of the shooter. Count a goal event once, not once again for its scoring shot.
+
+### Possession definition
+
+This project uses `team_phase_time_v1`, a defined event-based convention rather than a claim of official broadcast methodology:
+
+- A restart or recovery starts a team's possession phase.
+- Pass flights, including unsuccessful attempts until the turnover timestamp, belong to that passing team's phase.
+- Turnovers end that phase; any wait until the next recovery is unassigned.
+- Shot flight is unassigned from the kick timestamp; the preceding preparation interval belongs to the attacking team.
+- Goal-to-kickoff gaps and time outside known possession phases remain unassigned.
+- Period boundaries stop possession. Half-time adds no playing time.
+- Team percentage = team phase milliseconds / (home + away phase milliseconds). The denominator excludes unassigned time; available team shares sum to 100.
+
+The top-level `possession` object reports `controlled_time_ms`, `elapsed_time_ms`, and `unassigned_time_ms` / `unassigned_time_percentage`. `controlled_time_ms` is the sum of the two attributed team phases, including pass flights; it is not continuous ball-contact time. Each team's `elapsed_time_percentage` uses the entire elapsed clock instead, so those two values may sum to less than 100. Do not mix these two denominator conventions in a comparison.
+
+### Live snapshots without future results
+
+Do not use the final summary as live match statistics. The backend can share the deterministic reducer:
+
+```python
+from simulator.statistics import MatchStatistics, calculate_statistics
+
+reducer = MatchStatistics(metadata)
+for event in incoming_events:
+    reducer.update(event)
+live = reducer.snapshot(as_of=(current_period, current_period_time_ms))
+
+# For preloaded replay, rebuild a prefix after a seek:
+live = calculate_statistics(metadata, events, as_of=(current_period, current_period_time_ms))
+```
+
+Only process events through the current playback time. The reducer ignores duplicate IDs and does not use metadata's final score. Snapshots can extend the last known possession to the current clock without mutating stored totals. To rewind or apply a correction, rebuild from the appropriate event prefix; do not feed backwards events into an existing reducer.
+
+Since action records arrive at completion, the exact shot release becomes known when its shot record arrives. Possession for that flight is then reclassified as unassigned. Until resolution, a streaming snapshot extends the last known owner provisionally. The UI can label the value live/estimated rather than implying continuous contact measurement.
+
+Existing matches can have these additive summary fields recalculated without changing their event files:
+
+```powershell
+py -3.13 -m simulator.statistics --input data/generated/evolving-match
+```

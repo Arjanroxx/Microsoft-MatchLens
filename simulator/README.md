@@ -65,7 +65,7 @@ For a shorter fixture, add `--minutes-per-half 5`. Default duration is two 45-mi
 |---|---|
 | `metadata.json` | Synthetic teams, 22 players, pitch dimensions, directions, seed, final score, limitations |
 | `events.jsonl` | One event per line; the future ingestion input |
-| `summary.json` | Validation result, event counts, final score, difficulty and speed distributions |
+| `summary.json` | Validation result, event counts, final score, separate home/away metrics, time-based possession, pooled distributions for compatibility |
 | `evaluation-only.json` | Intended scenario window and scripted shot references; never provide this to insight detectors |
 
 Events include period boundaries, restarts, passes, pressure, turnovers, recoveries, shots, and goals. Not every profile or seed must produce every type. Tackles, fouls, substitutions, tracking, and corrections are not implemented yet.
@@ -150,6 +150,26 @@ Sample fragments (field values are illustrative):
 `pass_difficulty` belongs on passes and `shot_speed` on shots; the fragment lists fields together only for illustration. See actual JSONL for complete records.
 
 ## What has been checked
+
+### Team statistics and possession
+
+All applicable metrics are now also aggregated separately in `summary.teams.home` and `summary.teams.away`: goals, passes/accuracy, shot counts, saves, interceptions, recoveries, turnovers, pressure observations, possession sequences, and distance/difficulty/speed distributions. An empty distribution has null values rather than invented zero measurements.
+
+Possession comes from elapsed event time, not event counts. Restart/recovery begins a team's phase; passes stay within that phase until a recorded loss. Shot flights are excluded from the kick onward; loose-ball intervals, restart gaps, and intervals without a known owner remain unassigned. Team possession percentages use only the two attributed team phases. Raw times and the unassigned portion are exposed alongside the percentages. This is a documented simulation convention, not a claim to match a provider's possession methodology.
+
+Use the shared reducer for live snapshots or the current event prefix; do not show a final summary early. See `docs/UI-INTEGRATION.md` for field paths, exact timing rules, and code examples. To upgrade an existing summary without regenerating events:
+
+```powershell
+py -3.13 -m simulator.statistics --input data/generated/evolving-match
+```
+
+The command validates the existing events and updates only `summary.json`. It preserves older pooled fields for compatibility. Newly generated matches include the team fields automatically. Run all tests with:
+
+```powershell
+py -3.13 -m unittest discover -s simulator -p "test_*.py" -v
+```
+
+### Validation coverage
 
 The tests cover reproducible seeds, all four profiles across multiple seeds, event ordering, valid players/teams, bounds, pass continuity, score consistency, and rejection of selected corruptions. Metric tests check a known 30 m / 3 s trajectory (10 m/s; 36 km/h), direction-normalised difficulty, pressure/distance/congestion effects, zero-distance trajectories, invalid timestamps, initial versus average shot speed, and rejection of altered metric values. Pitch tests move defenders while holding the attempt fixed: context/difficulty must change, and a blocked pass becomes an interception while the open version succeeds. Movement is bounded, and doubled traversal speed produces doubled measured speed. This checks causality and engineering invariants, not realism against professional match distributions.
 

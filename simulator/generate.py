@@ -9,6 +9,7 @@ from simulator.metrics import ball_speed, make_trajectory, pass_difficulty
 
 from simulator.engine import SCENARIOS, generate
 from simulator.pitch import distance, pass_context, resolve_pass
+from simulator.statistics import calculate_statistics
 
 
 def validate(metadata, events):
@@ -150,6 +151,7 @@ def main():
         completed = sum(e["outcome"] == "complete" for e in passes)
         summary["pass_accuracy"][team] = {"attempted": len(passes), "completed": completed,
                                            "percentage": round(completed / len(passes) * 100, 2) if passes else None}
+    summary.update(calculate_statistics(metadata, events))
     (args.output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))
 
