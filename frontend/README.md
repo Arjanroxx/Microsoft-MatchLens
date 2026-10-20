@@ -54,7 +54,7 @@ The pitch keeps kick-time player snapshots rather than inventing full movement t
 Node 18+ is required only for tests:
 
 ```bash
-node --test frontend/tests
+node --test frontend/tests/replay.test.mjs frontend/tests/startup.test.mjs
 node --check frontend/app.mjs
 ```
 
