@@ -13,3 +13,45 @@ test('every fixture event has a label, including initial restart and period boun
   assert.equal(eventTitle({type:'restart'}),'Play restarts');
   assert.equal(eventTitle({type:'period_start'}),'Half begins');
 });
+
+test('smooth movement meets exact snapshot anchors without changing ball trajectory',()=>{
+  const i=match.visualFrames.findIndex((f,i)=>i>0&&f.blend&&f.period===match.visualFrames[i-1].period&&f.t-match.visualFrames[i-1].t>2000);
+  assert.ok(i>0);
+  const previous=match.visualFrames[i-1],next=match.visualFrames[i],time=(previous.t+next.t)/2;
+  const smooth=boardAt(match,time),held=boardAt(match,time,{smooth:false});
+  const id=Object.keys(previous.positions).find(id=>id!==smooth.carrierId&&next.positions[id]&&Math.abs(previous.positions[id].x_m-next.positions[id].x_m)>0.1);
+  assert.ok(id);
+  assert.ok(Math.abs(smooth.positions[id].x_m-(previous.positions[id].x_m+next.positions[id].x_m)/2)<0.00001);
+  assert.equal(held.positions[id].x_m,previous.positions[id].x_m);
+  assert.deepEqual(smooth.ball,held.ball);
+  assert.equal(boardAt(match,next.t).positions[id].x_m,next.positions[id].x_m);
+});
+test('carrier highlight transfers at completion, clears in flight and follows recovery events',()=>{
+  const pass=match.actions.find(e=>e.type==='pass'&&e.outcome==='complete');
+  assert.equal(boardAt(match,pass.kick).carrierId,null);
+  assert.equal(boardAt(match,pass.t-1).carrierId,null);
+  assert.equal(boardAt(match,pass.t).carrierId,pass.recipient_id);
+  for(const event of match.events.filter(e=>e.type==='recovery')){
+    const board=boardAt(match,event.t);
+    assert.equal(board.carrierId,event.player_id);
+    assert.equal(board.positions[event.player_id].x_m,event.start.x_m);
+    assert.equal(board.positions[event.player_id].y_m,event.start.y_m);
+  }
+});
+test('every ball observation and source sequence remain unchanged',()=>{
+  assert.deepEqual(match.events.map(e=>e.event_id),events.map(e=>e.event_id));
+  for(const action of match.actions){
+    for(const point of action.ball_trajectory){
+      const time=(action.period-1)*meta.period_duration_ms+point.period_time_ms;
+      if(time>=action.t)continue;
+      const board=boardAt(match,time);
+      assert.ok(Math.abs(board.ball.x_m-point.x_m)<0.00001);
+      assert.ok(Math.abs(board.ball.y_m-point.y_m)<0.00001);
+      assert.equal(board.carrierId,null);
+    }
+  }
+});
+test('timestamp ties use simulator sequence even when input is reversed',()=>{
+  const prepared=prepare(meta,[events[1],events[0]]);
+  assert.deepEqual(prepared.events.map(e=>e.sequence),[events[0].sequence,events[1].sequence]);
+});

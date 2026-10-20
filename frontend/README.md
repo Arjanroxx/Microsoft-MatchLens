@@ -16,7 +16,8 @@ Open **http://localhost:8080/frontend/**. On Windows, `py -3.13 -m http.server 8
 
 - One shared clock for play/pause, seek, ±10 seconds, restart, next action and 1×–60× replay.
 - Fixed-coordinate pitch; home/away player markers, shirt numbers, optional names and clickable player details.
-- Ball interpolation between trajectory samples, kick-time player snapshots, recent completed action trails, dashed intended paths after interceptions.
+- Ball interpolation through exact trajectory samples; smooth illustrative player motion between kick, arrival and recovery anchors; recent completed action trails and dashed intended paths after interceptions.
+- Amber gradient possession halo that clears during flight and transfers on completed passes/recoveries. Smooth toggle, reduced-motion support, pitch gradients and phase-aware trail resets.
 - Score and team statistics from completed events, rebuilt on seek. Goal events count once. No final score or final-summary leakage.
 - Event feed with key-moment/pass filters, event-to-pitch navigation, geometry/speed evidence and raw source fields.
 - Template-based “Catch me up” for the last 60 match seconds, with source event IDs. No LLM calls.
@@ -47,7 +48,7 @@ The JS reducer follows `simulator/statistics.py`. Possession uses `team_phase_ti
 
 To add Foundry, send computed evidence from a backend to the model; attach verified event references and an `as_of` clock to returned insights. Refuse future insights when replaying an earlier time. The current recap is a factual template, not an AI integration.
 
-The pitch keeps kick-time player snapshots rather than inventing full movement tracks; it updates the receiver/interceptor on completion. Player movement between kicks is intentionally not interpolated. Ball movement is sampled-data interpolation. The simulator is a simplified uncalibrated 2D model, not professional tracking.
+The pitch interpolates player positions between exact state anchors for presentation only. Kickoff resets for schema 1.3 mirror `PitchState.FORMATION` and engine restart handling; unsupported schemas wait for an observed snapshot. Arrival anchors update the actual receiver/interceptor or saving keeper; recovery anchors place the named recoverer at the recorded ball location. The carrier stays at the ball between actions, as in the engine. Disable **Smooth** to hold player states. No interpolation changes event order, timestamps, trajectories, outcomes or statistics. Position interpolation uses future anchors from a preloaded replay and is not measured tracking or a true-live renderer. Outcomes and carrier highlights remain withheld until their event time. Ball motion always interpolates recorded samples linearly, without easing or resampling the football physics.
 
 ## Verify
 
@@ -65,3 +66,9 @@ During development the JS statistics were compared against Python’s reference 
 Editable Canva UI concept: https://canva.link/v7vphmg7sg30of0
 
 The functional application is implemented in HTML/CSS/JS. Canva is an editable visual concept accompanying that implementation. Fonts use Google Fonts with local system fallbacks. No external JavaScript/CDN dependencies.
+
+## Smoother replay update
+
+Default replay speed is now 4×. The amber player highlight means established ball control; while the ball travels, no intended receiver is marked as the carrier. At a simulator kickoff, old phase trails are cleared and positions reset at the recorded restart timestamp. Goal and halftime resets are not blended early. The pitch glow follows the team in control or taking the current action.
+
+Validation for this update: 6,881 sample assertions covering snapshot anchors, ball samples, carrier timing, recoveries, goal timing and unchanged event order; startup/interaction smoke checks executed in an isolated JavaScript runtime. Browser visual QA and hosted preview publication were unavailable because the build environment was offline. The existing hosted preview remains on the prior version until a build environment can publish this branch.

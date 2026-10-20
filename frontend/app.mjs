@@ -1,7 +1,7 @@
 import {prepare,statistics,boardAt,mean,eventTitle} from './model.mjs';
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,n=0)=>v==null?'—':Number(v).toFixed(n), clock=t=>`${String(Math.floor(t/60000)).padStart(2,'0')}:${String(Math.floor(t/1000)%60).padStart(2,'0')}`;
-let match,time=0,playing=false,speed=8,tab='events',filter='all',selectedEvent=null,selectedPlayer=null,trails=true,names=false,lastFrame=0,lastUI=0,lastPrefix=-1;
+let match,time=0,playing=false,speed=4,tab='events',filter='all',selectedEvent=null,selectedPlayer=null,trails=true,names=false,smooth=!(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false),lastFrame=0,lastUI=0,lastPrefix=-1;
 const teamName=id=>match?.metadata.teams.find(t=>t.team_id===id)?.name||'', playerName=id=>match?.players[id]?.name||'Team event';
 const title=eventTitle;
 const symbol=e=>({pass:'↗',shot:'◎',goal:'⚽',recovery:'↶',turnover:'⇄',pressure:'⌁',restart:'▶',period_start:'◷',period_end:'◷'}[e.type]||'·');
@@ -14,23 +14,49 @@ function install(metadata,events){const next=prepare(metadata,events);match=next
   $('home-short').textContent=teamName('home').replace(/ FC$/,'').toUpperCase();$('away-short').textContent=teamName('away').replace(/ FC$/,'').toUpperCase();
   document.querySelector('.crest.home').innerHTML=esc(teamName('home').slice(0,1))+'<span>FC</span>';document.querySelector('.crest.away').innerHTML=esc(teamName('away').slice(0,1))+'<span>FC</span>';
   $('seek').max=match.duration;$('half-duration').textContent=clock(metadata.period_duration_ms)+' · HT';$('full-duration').textContent=clock(match.duration)+' · FT';
-  // Start at the first measured player snapshot, before its outcome is known.
-  time=match.actions[0]?.kick||0;update(true);
+  // Begin at kickoff. Schema 1.3 reset positions mirror simulator/PitchState.
+  time=0;$('speed').value=String(speed);$('smooth').classList.toggle('active',smooth);$('smooth').setAttribute('aria-pressed',smooth);update(true);
 }
 function point(p){return `${p.x_m/match.metadata.pitch.length_m*105},${68-p.y_m/match.metadata.pitch.width_m*68}`;}
 function xy(p){return {x:p.x_m/match.metadata.pitch.length_m*105,y:68-p.y_m/match.metadata.pitch.width_m*68};}
-function renderPitch(){if(!match)return;const board=boardAt(match,time),a=board.action;
-  $('players-layer').innerHTML=Object.entries(board.positions).map(([id,p])=>{const roster=match.players[id];if(!roster)return '';const {x,y}=xy(p),color=roster.team_id==='home'?'#d4f77d':'#b7a0ed';return `<g class="player ${selectedPlayer===id?'selected':''}" tabindex="0" role="button" aria-label="Inspect ${esc(roster.name)}" data-player="${esc(id)}" transform="translate(${x} ${y})"><title>${esc(roster.name)} · ${esc(roster.role)}</title>${selectedPlayer===id?`<circle r="3" fill="none" stroke="${color}" opacity=".6"/>`:''}<circle r="2.05" fill="${color}"/><text y=".05">${esc(roster.shirt_number)}</text>${names?`<text class="name" y="4">${esc(roster.name.replace(' Player ',' #'))}</text>`:''}</g>`;}).join('');
+function renderPitch(){if(!match)return;const board=boardAt(match,time,{smooth}),a=board.action;
+  $('position-note').textContent=smooth?'Smoothed snapshots · illustrative movement':'Exact state anchors · no player smoothing';
+  const possessionTeam=board.carrierId?match.players[board.carrierId]?.team_id:board.active?a.team_id:null;
+  $('pitch').setAttribute('data-possession',possessionTeam||'neutral');
+  $('pitch').setAttribute('data-phase',board.phase);
+  const pulse=smooth?Math.sin(time/260)*.18:0;
+  $('players-layer').innerHTML=Object.entries(board.positions).map(([id,p])=>{
+    const roster=match.players[id];if(!roster)return '';
+    const {x,y}=xy(p),carrier=id===board.carrierId,color=roster.team_id==='home'?'#d4f77d':'#b7a0ed';
+    const halo=carrier?'<circle class="carrier-aura" r="4.8" fill="url(#carrier-halo)"/><circle class="carrier-ring" r="'+(2.9+pulse)+'" fill="none" stroke="#ffbc73" stroke-width=".3"/><circle r="3.55" fill="none" stroke="#ffdcaa" stroke-width=".15" stroke-dasharray="1 2.5" transform="rotate('+(smooth?time/18%360:0)+')"/>':'';
+    return '<g class="player '+(carrier?'carrier ':'')+(selectedPlayer===id?'selected':'')+'" tabindex="0" role="button" aria-label="Inspect '+esc(roster.name)+(carrier?' · In possession':'')+'" data-player="'+esc(id)+'" transform="translate('+x+' '+y+')"><title>'+esc(roster.name)+' · '+esc(roster.role)+(carrier?' · In possession':'')+'</title>'+halo+(selectedPlayer===id?'<circle r="3.9" fill="none" stroke="#6ee7ff" stroke-width=".25"/>':'')+'<circle class="player-body" r="'+(carrier?2.25:2.05)+'" fill="'+(carrier?'url(#carrier-fill)':color)+'"/><text y=".05">'+esc(roster.shirt_number)+'</text>'+(names?'<text class="name" y="4.6">'+esc(roster.name.replace(' Player ',' #'))+'</text>':'')+'</g>';
+  }).join('');
   let lines='';
-  if(trails){for(const e of match.actions){if(e.t>time)break;if(time-e.t>12000 || e.period!==(time<match.metadata.period_duration_ms?1:2))continue;const opacity=Math.max(.13,1-(time-e.t)/14000),color=e.type==='shot'?'#f6d38b':e.team_id==='home'?'#d4f77d':'#b7a0ed';lines+=`<line x1="${xy(e.start).x}" y1="${xy(e.start).y}" x2="${xy(e.end).x}" y2="${xy(e.end).y}" stroke="${color}" stroke-width=".4" opacity="${opacity}" marker-end="url(#arrow)"/>`;if(e.type==='pass'&&e.outcome!=='complete'&&e.intended_end){lines+=`<line x1="${xy(e.end).x}" y1="${xy(e.end).y}" x2="${xy(e.intended_end).x}" y2="${xy(e.intended_end).y}" stroke="${color}" opacity="${opacity*.45}" stroke-width=".25" stroke-dasharray="1 1"/>`;}}
-    if(board.active&&board.ball&&a){lines+=`<line x1="${xy(a.start).x}" y1="${xy(a.start).y}" x2="${xy(board.ball).x}" y2="${xy(board.ball).y}" stroke="#f5f2c6" stroke-width=".35" opacity=".75"/>`;}
+  if(trails){for(const e of match.actions){
+    if(e.t>time)break;
+    if(time-e.t>12000||e.period!==board.period)continue;
+    // Do not carry a previous phase's trails across a simulator kickoff reset.
+    const reset=match.events.findLast?.(ev=>ev.t<=time&&ev.type==='restart'&&ev.reason==='kickoff');
+    if(reset&&e.t<reset.t)continue;
+    const opacity=Math.max(.08,1-(time-e.t)/12000),color=e.type==='shot'?'#ffd195':e.team_id==='home'?'#d4f77d':'#b7a0ed';
+    lines+='<line x1="'+xy(e.start).x+'" y1="'+xy(e.start).y+'" x2="'+xy(e.end).x+'" y2="'+xy(e.end).y+'" stroke="'+color+'" stroke-width=".42" opacity="'+opacity+'" marker-end="url(#arrow)"/>';
+    if(e.type==='pass'&&e.outcome!=='complete'&&e.intended_end)lines+='<line x1="'+xy(e.end).x+'" y1="'+xy(e.end).y+'" x2="'+xy(e.intended_end).x+'" y2="'+xy(e.intended_end).y+'" stroke="'+color+'" opacity="'+opacity*.4+'" stroke-width=".25" stroke-dasharray="1 1"/>';
   }
+  if(board.active&&board.ball&&a){
+    // Partial trail ends at the current sampled ball location, never at a future outcome.
+    lines+='<line x1="'+xy(a.start).x+'" y1="'+xy(a.start).y+'" x2="'+xy(board.ball).x+'" y2="'+xy(board.ball).y+'" stroke="#ffbc73" stroke-width="1.1" opacity=".12"/><line x1="'+xy(a.start).x+'" y1="'+xy(a.start).y+'" x2="'+xy(board.ball).x+'" y2="'+xy(board.ball).y+'" stroke="#fff1c1" stroke-width=".32" opacity=".85"/>';
+  }}
   $('trail-layer').innerHTML=lines;
-  if(board.ball){const {x,y}=xy(board.ball);$('ball-layer').innerHTML=`<circle cx="${x}" cy="${y}" r="1.6" fill="#fff9cb" opacity=".45" filter="url(#ballglow)"/><circle cx="${x}" cy="${y}" r=".65" fill="#fffbe8" stroke="#293322" stroke-width=".15"/>`;}else $('ball-layer').innerHTML='';
-  const completed=match.events.filter(e=>e.t<=time),last=completed.at(-1);let message='Awaiting the first kick-time snapshot';
-  if(board.active)message=`${playerName(a.player_id).replace(' Player ',' #')} · Ball in flight`;
-  else if(last)message=`${title(last)}${last.player_id?' · #'+match.players[last.player_id]?.shirt_number:''}`;
-  $('action-toast').lastElementChild.textContent=message;
+  if(board.ball){const {x,y}=xy(board.ball);$('ball-layer').innerHTML='<circle cx="'+x+'" cy="'+y+'" r="2" fill="url(#carrier-halo)" opacity=".85"/><circle cx="'+x+'" cy="'+y+'" r=".7" fill="#fffbe8" stroke="#6b512f" stroke-width=".15"/>';}else $('ball-layer').innerHTML='';
+  let message='Waiting for the first player snapshot';
+  if(board.active)message=playerName(a.player_id).replace(' Player ',' #')+' · Ball in flight';
+  else if(board.carrierId)message=playerName(board.carrierId).replace(' Player ',' #')+' · In possession';
+  else if(board.lastEvent)message=title(board.lastEvent);
+  const toast=$('action-toast');
+  if(toast.lastElementChild.textContent!==message){
+    toast.lastElementChild.textContent=message;
+    if(smooth)toast.animate?.([{opacity:.55,translate:'0 3px'},{opacity:1,translate:'0 0'}],{duration:180,easing:'ease-out'});
+  }
 }
 function eventMarkup(e){return `<button class="event ${selectedEvent?.event_id===e.event_id?'selected':''}" data-event="${esc(e.event_id)}"><span class="event-icon ${e.team_id==='away'?'away':''}">${symbol(e)}</span><span class="event-info"><span class="event-title"><span>${esc(title(e))}</span><time>${clock(e.t)}</time></span><p>${esc(playerName(e.player_id).replace(' Player ',' #'))}</p>${e.type==='pass'?`<small>${fmt(e.distance_m,1)} m <span>·</span> ${esc(e.pass_difficulty?.rating||'')} difficulty</small>`:e.type==='shot'?`<small>${fmt(e.shot_speed?.kmh,1)} km/h initial speed</small>`:''}</span></button>`;}
 function renderFeed(past){const visible=past.filter(e=>filter==='all'||(filter==='pass'?e.type==='pass':['shot','goal','recovery','turnover'].includes(e.type))).slice(-80).reverse();$('feed').innerHTML=visible.length?visible.map(eventMarkup).join(''):'<div class="empty-state"><span>◷</span><h4>The story is about to start.</h4><p>Press play to follow the match.<br>Events appear only after they happen.</p></div>';$('event-count').textContent=past.length;}
@@ -53,16 +79,17 @@ function update(force=false){if(!match)return;const past=match.events.filter(e=>
   if(prefix!==lastPrefix||force){renderFeed(past);renderEvidence();$('timeline-markers').innerHTML=past.filter(e=>e.type==='goal').map(e=>`<i style="left:${e.t/match.duration*100}%" title="Goal ${clock(e.t)}"></i>`).join('');lastPrefix=prefix;}
   renderPitch();
 }
-function frame(now){const dt=lastFrame?Math.min(100,now-lastFrame):0;lastFrame=now;if(playing&&match){time=Math.min(match.duration,time+dt*speed);if(time===match.duration)playing=false;if(now-lastUI>180){update();lastUI=now;}else renderPitch();}requestAnimationFrame(frame);}
+function frame(now){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;if(playing&&match){time=Math.min(match.duration,time+dt*speed);if(time===match.duration)playing=false;const pastCount=match.events.filter(e=>e.t<=time).length;if(now-lastUI>120||pastCount!==lastPrefix||time===match.duration){update();lastUI=now;}else renderPitch();}requestAnimationFrame(frame);}
 function inspectEvent(id){const event=match.events.find(e=>e.event_id===id&&e.t<=time);if(!event)return;playing=false;selectedPlayer=null;selectedEvent=event;setTime(event.t);setTab('evidence');}
 document.addEventListener('click',e=>{const event=e.target.closest('[data-event]'),player=e.target.closest('[data-player]');if(event)inspectEvent(event.dataset.event);if(player){selectedPlayer=player.dataset.player;selectedEvent=null;playing=false;setTab('evidence');update(true);}if(e.target.id==='replay-action'&&selectedEvent){const start=selectedEvent.kick;selectedEvent=null;setTime(start);playing=true;update(true);}});
 $('players-layer').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();e.target.closest('[data-player]')?.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
 document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));lastPrefix=-1;update(true);}));
 $('play').onclick=()=>{if(!match)return;if(time>=match.duration)setTime(0);playing=!playing;update(true);};$('restart').onclick=()=>{playing=false;setTime(0);};$('back').onclick=()=>setTime(time-10000);$('forward').onclick=()=>setTime(time+10000);$('seek').oninput=e=>setTime(+e.target.value);$('speed').onchange=e=>{speed=+e.target.value;};$('next').onclick=()=>{const next=match?.events.find(e=>e.t>time&&['pass','shot','goal'].includes(e.type));if(next){playing=false;setTime(next.t);}else notify('No more actions in this replay.');};
+$('smooth').onclick=()=>{smooth=!smooth;$('smooth').classList.toggle('active',smooth);$('smooth').setAttribute('aria-pressed',smooth);renderPitch();};
 $('trails').onclick=()=>{trails=!trails;$('trails').classList.toggle('active',trails);$('trails').setAttribute('aria-pressed',trails);renderPitch();};$('labels').onclick=()=>{names=!names;$('labels').classList.toggle('active',names);$('labels').setAttribute('aria-pressed',names);renderPitch();};
 $('catchup').onclick=()=>{if(!match)return;const past=match.events.filter(e=>e.t<=time&&e.t>=Math.max(0,time-60000)),s=statistics(match,time),goals=past.filter(e=>e.type==='goal');const rows=['home','away'].map(team=>{const ev=past.filter(e=>e.team_id===team),passes=ev.filter(e=>e.type==='pass');return `<li><strong>${esc(teamName(team))}</strong>: ${passes.filter(e=>e.outcome==='complete').length} of ${passes.length} passes completed, ${ev.filter(e=>e.type==='shot').length} shots and ${ev.filter(e=>e.type==='recovery').length} recoveries.</li>`;}).join('');showModal('Back in the game.',`<p>From <strong>${clock(Math.max(0,time-60000))}</strong> to <strong>${clock(time)}</strong>. Current score: ${s.teams.home.goals}–${s.teams.away.goals}.</p><ul>${rows}</ul><p>${goals.length?goals.map(g=>`Goal for ${esc(teamName(g.team_id))} at ${clock(g.t)} (${esc(g.event_id)}).`).join('<br>'):'No goals in this window.'}</p><details><summary>Source event IDs (${past.length})</summary><pre>${esc(past.map(e=>e.event_id).join(', '))}</pre></details><p>Calculated directly from completed events. This recap uses templates; no AI model is connected.</p>`,'CATCH ME UP · LAST 60 MATCH SECONDS');};
-const notes='<p>This is an <strong>original synthetic 2D simulation</strong>. It is not a real match or professional tracking feed.</p><ul><li>Player locations are kick-time snapshots. Ball movement interpolates timestamped trajectory samples.</li><li>Difficulty is a geometry heuristic, not a probability. Ball speeds are simulated pitch-plane measurements.</li><li>There are no fouls, offside, substitutions, xG or measured player running distances.</li><li>Scores and statistics use only completed events through your playback position. Shot records are not counted as extra goals.</li></ul>';
+const notes='<p>This is an <strong>original synthetic 2D simulation</strong>. It is not a real match or professional tracking feed.</p><ul><li>Smooth mode illustrates movement between exact kick/arrival state anchors; it is not measured tracking. Disable Smooth to hold player snapshots. Ball movement always follows timestamped trajectory samples.</li><li>Difficulty is a geometry heuristic, not a probability. Ball speeds are simulated pitch-plane measurements.</li><li>There are no fouls, offside, substitutions, xG or measured player running distances.</li><li>Scores and statistics use only completed events through your playback position. Shot records are not counted as extra goals.</li></ul>';
 $('limitations').onclick=()=>showModal('A clear view of the model.',notes,'MODEL NOTES');$('about').onclick=()=>showModal('Explore a match, play by play.',`<p><strong>Play</strong> to follow the ball. Change speed or drag the timeline to inspect a moment. Click a player for their contributions, or a completed event for its evidence.</p><p><strong>Load a match</strong> accepts the simulator’s metadata.json and events.jsonl together. Files are processed locally in your browser.</p>${notes}`);$('close-modal').onclick=()=>$('modal').close();$('modal').addEventListener('click',e=>{if(e.target===$('modal')){const r=$('modal').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('modal').close();}});
 $('import').onclick=()=>$('files').click();$('files').onchange=async e=>{try{const files=[...e.target.files],metadata=files.find(f=>f.name==='metadata.json'),events=files.find(f=>f.name==='events.jsonl');if(!metadata||!events)throw Error('Select metadata.json and events.jsonl together.');if(metadata.size+events.size>60*1024*1024)throw Error('Please use match files smaller than 60 MB combined.');install(JSON.parse(await metadata.text()),(await events.text()).split(/\r?\n/).filter(l=>l.trim()).map(l=>JSON.parse(l)));notify('Match loaded. Your files stay in this browser.');}catch(err){notify('Could not load match: '+err.message);}finally{e.target.value='';}};
 document.addEventListener('keydown',e=>{if(['INPUT','BUTTON','SELECT','TEXTAREA'].includes(document.activeElement.tagName)||$('modal').open)return;if(e.code==='Space'){e.preventDefault();$('play').click();}if(e.code==='ArrowRight'){e.preventDefault();setTime(time+10000);}if(e.code==='ArrowLeft'){e.preventDefault();setTime(time-10000);}});

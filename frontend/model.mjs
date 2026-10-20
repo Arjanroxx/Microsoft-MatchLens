@@ -17,7 +17,9 @@ export function prepare(metadata, rawEvents) {
   }
   events.sort((a,b)=>a.t-b.t||a.sequence-b.sequence);
   if(!events.length)throw Error('No match events found.');
-  return {metadata,events,actions:events.filter(e=>e.kick!==undefined),duration:metadata.period_duration_ms*2,players:Object.fromEntries(metadata.players.map(p=>[p.player_id,p]))};
+  const match={metadata,events,actions:events.filter(e=>e.kick!==undefined).sort((a,b)=>a.kick-b.kick||a.sequence-b.sequence),duration:metadata.period_duration_ms*2,players:Object.fromEntries(metadata.players.map(p=>[p.player_id,p]))};
+  match.visualFrames=visualFrames(match);
+  return match;
 }
 export function statistics(match, time) {
   const counts=Object.fromEntries(['home','away'].map(t=>[t,{goals:0,attempted:0,completed:0,shots:0,onTarget:0,recoveries:0,turnovers:0,pressure:0,interceptions:0,saves:0,distance:[],difficulty:[],speed:[],shotSpeed:[]} ]));
@@ -51,16 +53,107 @@ export function statistics(match, time) {
   for(const team of ['home','away']){const s=counts[team];s.accuracy=s.attempted?100*s.completed/s.attempted:null;s.possession=total?100*times[team]/total:null;s.time=times[team];}
   return {teams:counts,times};
 }
-export function boardAt(match,time){
-  let action=null;for(const a of match.actions){if(a.kick<=time)action=a;else break;}
-  if(!action)return {positions:{},ball:null,action:null,active:false};
-  const positions=structuredClone(action.pitch_snapshot.players),local=time-(action.period-1)*match.metadata.period_duration_ms,samples=action.ball_trajectory;
-  let ball=samples[0];
-  for(let i=1;i<samples.length;i++){const b=samples[i],a=samples[i-1];if(local<b.period_time_ms){const u=Math.max(0,(local-a.period_time_ms)/(b.period_time_ms-a.period_time_ms));ball={x_m:a.x_m+(b.x_m-a.x_m)*u,y_m:a.y_m+(b.y_m-a.y_m)*u};break;}ball=b;}
-  if(time>=action.t){const recipient=action.recipient_id||action.interceptor_id;if(recipient)positions[recipient]=action.end;}
-  // A restart/recovery after this action may move the ball before the next kick.
-  for(const e of match.events){if(e.t>time)break;if(e.t>=action.t&&e.start&&['restart','recovery'].includes(e.type))ball=e.start;}
-  return {positions,ball,action,active:time<action.t};
+
+const mixPoint=(a,b,u)=>({x_m:a.x_m+(b.x_m-a.x_m)*u,y_m:a.y_m+(b.y_m-a.y_m)*u});
+// This is PitchState.FORMATION in simulator/pitch.py, used only for the
+// explicit kickoff resets in engine.py. Other versions wait for a snapshot.
+function kickoffPositions(match, period, owner, ball) {
+  if (match.metadata.schema_version !== '1.3') return null;
+  const formation=[[5,34],[25,8],[25,25],[25,43],[25,60],[48,15],[50,34],[48,53],[72,14],[76,34],[72,54]];
+  const positions={};
+  for(const player of match.metadata.players){
+    const anchor=formation[player.shirt_number-1];
+    if(!anchor)return null;
+    const [x,y]=anchor,positive=(player.team_id==='home')===(period===1);
+    positions[player.player_id]={x_m:positive?x:105-x,y_m:y};
+  }
+  if(owner&&ball)positions[owner]={...ball};
+  return positions;
+}
+function visualFrames(match){
+  const frames=[];
+  for(const action of match.actions){
+    frames.push({t:action.kick,sequence:action.sequence,period:action.period,blend:true,positions:action.pitch_snapshot.players});
+    const positions=structuredClone(action.pitch_snapshot.players);
+    const recipient=action.recipient_id||action.interceptor_id||
+      (action.type==='shot'&&action.outcome_reason==='saved'?
+        match.metadata.players.find(p=>p.team_id!==action.team_id&&p.role==='GK')?.player_id:null);
+    if(recipient)positions[recipient]={...action.end};
+    frames.push({t:action.t,sequence:action.sequence,period:action.period,blend:true,positions});
+  }
+  for(const event of match.events){
+    if(event.type!=='restart'||event.reason!=='kickoff')continue;
+    const positions=kickoffPositions(match,event.period,event.player_id,event.start);
+    if(positions)frames.push({t:event.t,sequence:event.sequence,period:event.period,blend:false,positions});
+  }
+  const order=(a,b)=>a.t-b.t||a.sequence-b.sequence;
+  frames.sort(order);
+  // engine.py moves a recoverer to the stationary ball before emitting recovery.
+  // Anchor that arrival so control never changes early and the gap is continuous.
+  for(const event of match.events){
+    if(event.type!=='recovery'||!event.start||!event.player_id)continue;
+    let previous=null;
+    for(const frame of frames){
+      if(frame.t<event.t||(frame.t===event.t&&frame.sequence<=event.sequence))previous=frame;
+      else break;
+    }
+    if(!previous||previous.period!==event.period)continue;
+    const positions=structuredClone(previous.positions);
+    if(positions[event.player_id])positions[event.player_id]={...event.start};
+    frames.push({t:event.t,sequence:event.sequence,period:event.period,blend:true,positions});
+    frames.sort(order);
+  }
+  return frames;
+}
+export function boardAt(match,time,{smooth=true}={}){
+  let action=null;
+  for(const a of match.actions){if(a.kick<=time)action=a;else break;}
+  let previous=null,next=null;
+  for(const frame of match.visualFrames){
+    if(frame.t<=time)previous=frame;else {next=frame;break;}
+  }
+  let positions=previous?structuredClone(previous.positions):{};
+  // Interpolate only the presentation between exact source-state anchors.
+  // A kickoff is a reset in the simulator: never move toward it early.
+  if(smooth&&previous&&next&&next.blend&&previous.period===next.period&&next.t>previous.t){
+    const u=(time-previous.t)/(next.t-previous.t);
+    for(const id of Object.keys(positions)){
+      if(next.positions[id])positions[id]=mixPoint(positions[id],next.positions[id],u);
+    }
+  }
+  let ball=null,carrierId=null,latestControl=null,lastEvent=null;
+  for(const event of match.events){
+    if(event.t>time)break;lastEvent=event;
+    if(['period_start','period_end','goal','turnover'].includes(event.type)){
+      carrierId=null;latestControl=event;
+    }
+    if(['restart','recovery'].includes(event.type)){
+      carrierId=event.player_id;latestControl=event;
+    }
+    if(event.type==='pass'){
+      carrierId=event.outcome==='complete'?event.recipient_id:null;
+      latestControl=event;
+    }
+    if(event.type==='shot'){carrierId=null;latestControl=event;}
+    if(['restart','recovery','turnover'].includes(event.type)&&event.start)ball=event.start;
+    if(['pass','shot'].includes(event.type))ball=event.end;
+  }
+  const active=!!action&&time<action.t;
+  if(active){
+    carrierId=null; // Flight is not possession by the intended receiver.
+    const local=time-(action.period-1)*match.metadata.period_duration_ms;
+    const samples=action.ball_trajectory;ball=samples[0];
+    for(let i=1;i<samples.length;i++){
+      const b=samples[i],a=samples[i-1];
+      if(local<b.period_time_ms){ball=mixPoint(a,b,Math.max(0,(local-a.period_time_ms)/(b.period_time_ms-a.period_time_ms)));break;}
+      ball=b;
+    }
+  }
+  // The engine keeps the carrier at the ball throughout the decision interval.
+  if(carrierId&&ball&&positions[carrierId])positions[carrierId]={x_m:ball.x_m,y_m:ball.y_m};
+  const period=time<match.metadata.period_duration_ms?1:2;
+  const phase=active?'flight':carrierId?'controlled':lastEvent?.type==='goal'?'goal':lastEvent?.type==='period_end'?'interval':'loose';
+  return {positions,ball,action,active,carrierId,phase,period,lastEvent,latestControl};
 }
 
 // Event labels must also handle boundaries/restarts, which have no outcome field.

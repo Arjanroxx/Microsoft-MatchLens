@@ -17,6 +17,8 @@ test('app startup draws 22 players; Names, playback, seek and player inspection 
     assert.equal(get('status').textContent,'','Startup must not trigger the load-error handler');
     assert.equal((get('players-layer').innerHTML.match(/class="player /g)||[]).length,22);
     assert.ok(!get('players-layer').innerHTML.includes('class="name"'));
+    assert.ok(get('players-layer').innerHTML.includes('carrier '));
+    get('smooth').click();get('smooth').click();
     get('labels').click();assert.equal((get('players-layer').innerHTML.match(/class="name"/g)||[]).length,22);
     get('play').click();assert.equal(get('play').textContent,'Ⅱ');get('play').click();assert.equal(get('play').textContent,'▶');
     get('seek').oninput({target:{value:600000}});assert.equal(String(get('home-score').textContent),'1');assert.equal(String(get('away-score').textContent),'1');
