@@ -12,7 +12,7 @@ Synthetic football match simulation and explainable match intelligence for the M
 - Side-by-side team statistics and time-based possession, derived from events.
 - Validation, replay to the terminal, and automated tests.
 
-This repository currently provides the **data-generation layer**. A virtual board, UI, AI narratives, cloud deployment, and video recognition are not implemented.
+This repository provides the **data-generation layer** and a buildless **Replay Studio frontend**. Run `python -m http.server 8080` from the repository root and open `http://localhost:8080/frontend/`. See [frontend/README.md](frontend/README.md) for controls, import and integration details. AI narratives, cloud backend integration, and video recognition are not implemented.
 
 ## Quick start
 
