@@ -1,5 +1,7 @@
 # Player statistics and match ratings
 
+**Current schema 1.6 uses rating v2.** The original v1 formula below remains the baseline and is preserved for legacy files. See [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md) for the added tackle/foul/card/penalty components, dismissal lifecycle and UI integration.
+
 Every generated `summary.json` now includes **all roster players**, keyed by player ID in `players`, plus a versioned `player_rating_model` specification. Team fields remain compatible. Neither counters nor ratings are independent random outputs.
 
 ## Run or upgrade
@@ -92,3 +94,8 @@ Schema 1.4 now includes 40 roster records (11 starters + 9 substitutes per team)
 ## Schema 1.5 clock update
 
 Player stint times now include added time and use monotonic `match_time_ms`. Keep active players provisional through the actual final whistle, not nominal minute 90; finalise departing players at their exit as before. Restart/clearance/held/parried/rebound counters are additive descriptive fields, without new rating weights. Saved shots credit one save; the follow-up `save` event does not credit another. See [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md) for the clock and UI migration.
+
+
+## Schema 1.6 discipline version
+
+New matches select `matchlens-event-rating-v2`; legacy 1.3–1.5 files retain v1. V2 adds clean-tackle defence credit and separately displayed foul, yellow-card, dismissal and penalty-miss debits, with caps. The weights and integration details are in [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md). A dismissed player's stint/rating freezes at exit and status is `sent_off`. Only the assigned keeper receives contextual goals-conceded credit. Team player minutes now subtract each dismissal's remaining elapsed time, including added time; do not assume 11 × duration after a red.

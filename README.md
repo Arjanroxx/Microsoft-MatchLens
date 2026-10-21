@@ -15,6 +15,8 @@ Synthetic football match simulation and explainable match intelligence for the M
 - Whole-ball touchline/goal-line detection, throw-ins, goal kicks and corners.
 - Keeper holds/parries, connected rebounds and defender clearances.
 - Natural substitution stoppages, logged lost time and added-time clocks.
+- Evidence-backed tackles/fouls, direct/indirect free kicks, advantage and penalties.
+- Cautions, second-yellow/straight-red dismissals, emergency keepers and rating model v2.
 - Validation, replay to the terminal, and automated tests.
 
 This repository provides the **data-generation layer** and a buildless **Replay Studio frontend**. Run `python -m http.server 8080` from the repository root and open `http://localhost:8080/frontend/`. See [frontend/README.md](frontend/README.md) for controls, import and integration details. AI narratives, cloud backend integration, and video recognition are not implemented.
@@ -32,7 +34,7 @@ py -3.13 -m simulator.replay --input data/generated/evolving-match --speed 60
 
 On systems where Python is exposed as `python` or `python3`, substitute that executable. Replay prints JSON events; it does not display a visual match.
 
-For ten regulation minutes plus added time (two five-minute halves), exercising all Priority 1 features:
+For ten regulation minutes plus added time (two five-minute halves):
 
 ```powershell
 py -3.13 -m simulator.generate --seed 51 --minutes-per-half 5 --output data/generated/priority-one-demo
@@ -63,6 +65,7 @@ Tests cover reproducibility, multiple seeds, event consistency, geometry-based o
 - [UI and virtual board integration](docs/UI-INTEGRATION.md)
 - [Player statistics and rating definitions](docs/PLAYER-RATINGS.md)
 - [Substitutions and frontend integration](docs/SUBSTITUTIONS.md)
+- [Priority 2 fouls, cards, set pieces and UI contract](docs/DISCIPLINE-AND-SET-PIECES.md)
 - [Priority 1 implementation, clock migration and UI contract](docs/RESTARTS-AND-CLOCK.md)
 - [Match-realism checklist and priorities](docs/MATCH-REALISM-CHECKLIST.md)
 - [Hackathon approach and stack audit](MatchLens-Hackathon-Guide.md)
@@ -81,6 +84,9 @@ Read `summary.teams.home` and `summary.teams.away` for comparable metrics. Posse
 
 ## Limitations
 
-This is a simplified, uncalibrated 2D simulation, not professional match tracking. It does not model offside, fouls, ball height, or complete goalkeeper/restart physics. Player snapshots are not continuous tracking. Difficulty is a heuristic, not a probability; speeds are synthetic pitch-plane measurements. See the generator documentation for detailed assumptions.
+This is a simplified, uncalibrated 2D simulation, not professional match tracking. It does not model offside, ball height, every offence in the Laws, or complete goalkeeper/restart physics. Player snapshots are not continuous tracking. Difficulty is a heuristic, not a probability; speeds are synthetic pitch-plane measurements. See the generator documentation for detailed assumptions.
 
-New schema 1.5 matches include 11 starters and nine bench players per team, mainly 60–70 minute substitutions, and occasional half-time changes. Substitutions now wait for ball-out/goal stoppages. Added time extends both halves: consumers must use `match_time_ms`, actual period offsets and `match_duration_ms`, as described in the Priority 1 guide. Offsides, cards, and the remaining realism gaps are documented on the checklist; they are not yet generated.
+New schema 1.6 matches include 11 starters and nine bench players per team, mainly 60–70 minute substitutions, and occasional half-time changes. Substitutions now wait for ball-out, goal or foul stoppages. Added time extends both halves: consumers must use `match_time_ms`, actual period offsets and `match_duration_ms`, as described in the Priority 1 guide. Offsides and the remaining realism gaps are documented on the checklist; they are not yet generated.
+
+
+Priority 2 showcase: `py -3.13 -m simulator.generate --seed 6 --output data/generated/priority-two-demo`. Load its metadata/events into Replay Studio, or use `data/examples/discipline-match/`. The UI adapter handles reduced lineups, shown-card badges, advantage carries, current keeper assignments and new side-by-side counters. Read the Priority 2 guide before assuming 22 active markers or using original keeper IDs.

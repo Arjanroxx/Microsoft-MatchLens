@@ -1,5 +1,6 @@
-"""Connected ball/control/restart state machine for schema 1.5."""
+"""Connected ball/control/restart state machine for schema 1.6."""
 import math
+import random
 
 from simulator.clock import PeriodClock
 from simulator.metrics import ball_speed, make_trajectory, pass_difficulty
@@ -7,6 +8,7 @@ from simulator.pitch import PitchState, distance, pass_context, point, resolve_p
 from simulator.player_statistics import PlayerStatistics
 from simulator.restarts import award_restart, first_exit, other, parry_target, raw_point, resolve_shot
 from simulator.substitutions import SubstitutionManager
+from simulator.discipline import resolve_challenge, foul_restart, separation_target, in_penalty_area
 
 
 class Simulation:
@@ -20,15 +22,22 @@ class Simulation:
         self.players = PlayerStatistics(metadata)
         self.manager = SubstitutionManager(metadata["seed"], self.duration, self.roster)
         self.offset = 0
+        self.pending_cards = []
+        self.abandoned = False
+        self.contact_rng = random.Random(f"{metadata['seed']}-challenges-v1")
         metadata.update(period_offsets_ms={"1": 0}, period_actual_durations_ms={},
                         clock_model="period_plus_added_time_v1")
         metadata["simulation_model"].update(ball_radius_m=.11, shot_outcome="goal-mouth / keeper contact geometry",
             restart_model="whole-ball first boundary and last touch; explicit dead-ball placement and delivery",
             added_time="qualifying lost-time ledger, rounded-up scaled minute minimum; further losses extend it")
+        metadata["discipline_model"] = {"version": "challenge-contact-v1", "laws": "IFAB 2026/27 selected offences",
+            "challenge_probability_per_eligible_decision": .12, "max_challenge_start_distance_m": 2.5,
+            "advantage": "one bounded carry evaluation; direct careless/reckless non-penalty offences only",
+            "goalkeeper_dismissal": "active outfielder becomes emergency keeper; no extra player enters"}
 
     def emit(self, kind, team=None, player=None, possession=None, at=None, **fields):
         stamp = self.t if at is None else at
-        event = {"schema_version": "1.5", "match_id": self.metadata["match_id"],
+        event = {"schema_version": "1.6", "match_id": self.metadata["match_id"],
                  "event_id": f"evt-{len(self.events) + 1:06}", "sequence": len(self.events) + 1,
                  "period": self.period, "period_time_ms": stamp, "match_time_ms": self.offset + stamp,
                  "type": kind, "source": "synthetic", "team_id": team, "player_id": player,
@@ -120,12 +129,127 @@ class Simulation:
         self.emit("recovery", self.team, pid, self.possession_id, start=self.ball.copy(), reason=reason,
                   positions_after=self.positions())
 
+    def keeper(self, team):
+        return next(pid for pid, slot in self.pitch.slots.items() if slot == 1 and self.roster[pid]["team_id"] == team)
+
+    def issue_card(self, foul, stop_id):
+        actor, team, card = foul["player_id"], foul["team_id"], foul["decision"]["card"]
+        if card is None or actor not in self.pitch.positions:
+            return
+        self.emit("card", team, actor, card=card, reason="serious_foul_play" if card == "red" else "reckless_challenge",
+                  foul_event_id=foul["event_id"], stoppage_event_id=stop_id,
+                  caution_number=self.players.players[actor]["yellow_cards"]+1 if card == "yellow" else None)
+        second = card == "yellow" and self.players.players[actor]["yellow_cards"] == 2
+        if card == "red" or second:
+            was_keeper = self.pitch.slots[actor] == 1
+            self.pitch.dismiss(actor)
+            self.emit("dismissal", team, actor, reason="second_yellow" if second else "direct_red",
+                      foul_event_id=foul["event_id"], stoppage_event_id=stop_id, positions_after=self.positions())
+            if len(self.pitch.team_positions(team)) < 7:
+                self.abandoned = True
+                self.emit("match_abandoned", reason="fewer_than_seven_players", affected_team_id=team)
+                return
+            if was_keeper:
+                replacement = min(self.pitch.team_positions(team), key=lambda pid: distance(self.pitch.positions[pid],
+                    point(2 if self.pitch.direction(team) == 1 else 103, 34)))
+                self.pitch.slots[replacement] = 1
+                self.emit("goalkeeper_change", team, replacement, previous_goalkeeper_id=actor,
+                          reason="emergency_after_dismissal", formation_slot=1, positions_after=self.positions())
+
+    def flush_cards(self, stop_id):
+        cards, self.pending_cards = self.pending_cards, []
+        for foul in cards:
+            self.issue_card(foul, stop_id)
+            if self.abandoned:
+                break
+            start = self.t
+            self.tick(max(250, round(8000*self.scale)))
+            self.lost(start, self.t, "disciplinary_administration", stop_id)
+
+    def challenge(self):
+        """A reachable defender may choose a challenge; no fabricated incident."""
+        if self.pitch.slots[self.owner] == 1:
+            return None  # do not model challenges on a keeper holding the ball
+        candidates = [p for p in self.pitch.team_positions(other(self.team))
+                      if distance(self.pitch.positions[p], self.ball) <= 2.5
+                      and not any(f["player_id"] == p for f in self.pending_cards)]
+        if not candidates or self.contact_rng.random() >= .12:
+            return None
+        tackler = min(candidates, key=lambda p: distance(self.pitch.positions[p], self.ball))
+        # Move for an actual 0.25s lunge. The same bounded pitch state feeds
+        # the recorded contact evidence and the subsequent outcome.
+        controls = {"effort": round(self.contact_rng.uniform(.2, 1), 4),
+                    "timing_error_ms": self.contact_rng.randint(-120, 360),
+                    "technique": "raised_boot" if self.contact_rng.random() < .08 else "standing_tackle"}
+        target = self.ball
+        if controls["technique"] == "raised_boot":
+            # A non-contact high boot threatens the nearby carrier without
+            # first lunging all the way through them as a ground tackle would.
+            pos = self.pitch.positions[tackler]
+            gap = distance(pos, self.ball)
+            if gap > 1.2:
+                target = point(self.ball["x_m"]+(pos["x_m"]-self.ball["x_m"])*1.2/gap,
+                               self.ball["y_m"]+(pos["y_m"]-self.ball["y_m"])*1.2/gap)
+        self.pitch.move(tackler, target, .25)
+        self.tick(250)
+        decision = resolve_challenge(self.ball, self.pitch.positions[tackler], **controls)
+        victim, attacking = self.owner, self.team
+        tackle = self.emit("tackle", other(attacking), tackler, victim_id=victim, location=self.ball.copy(),
+                           outcome=decision["outcome"], controls=controls, decision=decision,
+                           challenge_snapshot={"players": self.positions(), "period_time_ms": self.t})
+        if decision["outcome"] == "missed":
+            return None
+        self.pending_rebound = self.pending_clearance = False
+        if decision["outcome"] == "won":
+            self.emit("turnover", attacking, victim, self.possession_id, start=self.ball.copy(), reason="clean_tackle")
+            self.recover(tackler, "clean_tackle")
+            return True
+        return self.handle_foul(tackle)
+
+    def handle_foul(self, tackle):
+        actor, team, victim = tackle["player_id"], tackle["team_id"], tackle["victim_id"]
+        decision = tackle["decision"]
+        award = foul_restart(tackle["location"], team, self.period, decision["offence"])
+        foul = self.emit("foul", team, actor, victim_id=victim, location=tackle["location"].copy(),
+                         tackle_event_id=tackle["event_id"], decision=decision, restart=award)
+        # The referee considers advantage only if an attacking continuation is
+        # plausible, never for serious foul play or a pending second caution.
+        progress = self.ball["x_m"] if self.pitch.direction(self.team) == 1 else 105-self.ball["x_m"]
+        advantage = (award["type"] == "direct_free_kick" and decision["card"] != "red"
+                     and not (decision["card"] == "yellow" and self.players.players[actor]["yellow_cards"] >= 1)
+                     and progress > 50 and self.contact_rng.random() < .5)
+        if advantage:
+            self.emit("advantage", self.team, victim, self.possession_id, foul_event_id=foul["event_id"], outcome="pending")
+            target = point(self.ball["x_m"]+self.pitch.direction(self.team)*3, self.ball["y_m"])
+            # Assess the actual lane after defenders have a short reaction.
+            self.pitch.advance(.5, self.team, victim, self.ball, press=True)
+            self.tick(500)
+            opponents = {p: pos for p, pos in self.pitch.team_positions(team).items() if p != actor}
+            safe = distance(self.ball, target) >= 1 and min(distance(pos, target) for pos in opponents.values()) > 2.5
+            if safe:
+                carry = self.flight("carry", target, 4, foul_event_id=foul["event_id"], commanded_mean_speed_mps=4)
+                self.pitch.positions[victim] = target.copy()
+                self.emit("advantage", self.team, victim, self.possession_id, foul_event_id=foul["event_id"], outcome="played",
+                          continuation_event_id=carry["event_id"])
+                if decision["card"]:
+                    self.pending_cards.append(foul)
+                return True
+            self.emit("advantage", self.team, victim, self.possession_id, foul_event_id=foul["event_id"], outcome="recalled")
+        if decision["card"]:
+            self.pending_cards.append(foul)
+        return self.dead_ball(award, foul["event_id"])
+
     def dead_ball(self, award, source, goal=False, initial=False):
-        stop = self.emit("stoppage", reason="goal_celebration" if goal else "period_interval" if initial else "ball_out",
+        is_foul = award["type"] in ("direct_free_kick", "indirect_free_kick", "penalty")
+        stop = self.emit("stoppage", reason="goal_celebration" if goal else "period_interval" if initial else "foul" if is_foul else "ball_out",
                          source_event_id=source, restart=award, start=self.ball.copy())
+        self.flush_cards(stop["event_id"])
+        if self.abandoned:
+            return False
         self.substitutions(stop["event_id"], halftime=initial and self.period == 2)
         start = self.t
         ranges = {"throw_in": (8000, 16000), "goal_kick": (12000, 20000), "corner_kick": (15000, 24000),
+                  "direct_free_kick": (16000, 26000), "indirect_free_kick": (10000, 18000), "penalty": (35000, 50000),
                   "kickoff": (35000, 55000) if goal else (0, 0)}
         prep = round(self.rng.uniform(*ranges[award["type"]]) * self.scale)
         self.tick(prep)
@@ -138,7 +262,7 @@ class Simulation:
             if prep > allowance:
                 self.lost(start + allowance, self.t, "excess_restart_delay", stop["event_id"])
         # A half may end with a pending restart. Do not force a kick after time.
-        if not initial and self.clock.announced is not None and self.t >= self.clock.end:
+        if not initial and award["type"] != "penalty" and self.clock.announced is not None and self.t >= self.clock.end:
             return False
         self.team = award["team_id"]
         location = award["location"]
@@ -147,11 +271,14 @@ class Simulation:
             for pid, pos in self.pitch.positions.items():
                 direction = self.pitch.direction(self.roster[pid]["team_id"])
                 pos["x_m"] = min(pos["x_m"], 51) if direction == 1 else max(pos["x_m"], 54)
-            taker = next(p for p, s in self.pitch.slots.items() if self.roster[p]["team_id"] == self.team and s == 7)
+            taker = next((p for p, s in self.pitch.slots.items() if self.roster[p]["team_id"] == self.team and s == 7),
+                         next(p for p in self.pitch.team_positions(self.team) if self.pitch.slots[p] != 1))
         elif award["type"] == "goal_kick":
-            taker = f"{self.team}-01"
+            taker = self.keeper(self.team)
+        elif award["type"] in ("penalty", "direct_free_kick"):
+            taker = max((p for p in self.pitch.team_positions(self.team) if self.pitch.slots[p] != 1), key=lambda p: self.roster[p]["shooting_skill"])
         else:
-            eligible = [pid for pid in self.pitch.team_positions(self.team) if self.roster[pid]["role"] != "GK"]
+            eligible = [pid for pid in self.pitch.team_positions(self.team) if self.pitch.slots[pid] != 1]
             taker = min(eligible, key=lambda p: distance(self.pitch.positions[p], location))
         # The ball is explicitly carried/placed while dead; no open-play jump.
         self.emit("ball_placement", start=self.ball.copy(), end=location.copy(), reason=award["type"],
@@ -169,21 +296,34 @@ class Simulation:
         # maximum travel time, never a sum of individual journeys.
         targets = {}
         for pid, pos in self.pitch.positions.items():
+            if award["type"] == "penalty":
+                if pid == self.keeper(other(self.team)):
+                    targets[pid] = point(105 if self.pitch.direction(self.team) == 1 else 0, 34)
+                elif pid != taker:
+                    targets[pid] = point(min(pos["x_m"], 84) if self.pitch.direction(self.team) == 1 else max(pos["x_m"], 21), pos["y_m"])
+                continue
             if self.roster[pid]["team_id"] == self.team:
                 continue
-            if award["type"] in ("throw_in", "corner_kick", "kickoff"):
+            if award["type"] in ("direct_free_kick", "indirect_free_kick") and self.pitch.slots[pid] == 1:
+                goal_x = 105 if self.pitch.direction(self.team) == 1 else 0
+                if distance(location, point(goal_x, 34)) < 12:
+                    targets[pid] = point(goal_x, max(30.5, min(37.5, pos["y_m"])))
+                    continue  # own goal line, between posts, distance exception
+            if award["type"] in ("throw_in", "corner_kick", "kickoff", "direct_free_kick", "indirect_free_kick"):
                 minimum = 2 if award["type"] == "throw_in" else 9.15
                 gap = distance(pos, location)
                 if gap < minimum:
-                    dx, dy = pos["x_m"]-location["x_m"], pos["y_m"]-location["y_m"]
-                    if gap < .001:
-                        dx, dy, gap = 1 if location["x_m"] < 52.5 else -1, 0, 1
-                    targets[pid] = point(location["x_m"]+dx/gap*(minimum+.1), location["y_m"]+dy/gap*(minimum+.1))
+                    targets[pid] = separation_target(pos, location, minimum)
             elif award["type"] == "goal_kick":
                 own_left = self.pitch.direction(self.team) == 1
                 inside_x = pos["x_m"] < 16.5 if own_left else pos["x_m"] > 88.5
                 if inside_x and 13.84 < pos["y_m"] < 54.16:
                     targets[pid] = point(17 if own_left else 88, pos["y_m"])
+            if award["type"] in ("direct_free_kick", "indirect_free_kick") and in_penalty_area(location, self.team, self.period):
+                candidate = targets.get(pid, pos)
+                if in_penalty_area(candidate, self.team, self.period):
+                    left = self.pitch.direction(self.team) == 1
+                    targets[pid] = point(max(17, location["x_m"]+10) if left else min(88, location["x_m"]-10), candidate["y_m"])
         if award["type"] == "corner_kick":
             target = point(90 if self.pitch.direction(self.team) == 1 else 15, 34)
             mates = [p for p in self.pitch.team_positions(self.team) if p != taker and self.roster[p]["role"] != "GK"]
@@ -197,7 +337,7 @@ class Simulation:
             self.tick(math.ceil(setup_seconds*1000))
             if award["type"] != "kickoff":
                 self.lost(before, self.t, "restart_repositioning", stop["event_id"])
-        if not initial and self.clock.announced is not None and self.t >= self.clock.end:
+        if not initial and award["type"] != "penalty" and self.clock.announced is not None and self.t >= self.clock.end:
             return False
         self.owner = taker
         self.possession()
@@ -208,6 +348,9 @@ class Simulation:
                             stoppage_event_id=stop["event_id"], source_event_id=source,
                             positions_after=self.positions())
         if award["type"] != "kickoff":
+            if award["type"] == "penalty" or (award["type"] == "direct_free_kick" and distance(self.ball, point(105 if self.pitch.direction(self.team) == 1 else 0, 34)) < 32 and self.rng.random() < .55):
+                self.emit("resume", self.team, self.owner, self.possession_id, reason=award["type"], start=self.ball.copy())
+                return self.shoot(set_piece_type=award["type"], restart_event_id=restart["event_id"])
             return self.deliver_restart(award["type"], restart["event_id"])
         return True
 
@@ -325,17 +468,20 @@ class Simulation:
         self.recover(min(self.pitch.positions, key=lambda p: distance(self.pitch.positions[p], self.ball)), "clearance_loose_ball")
         return True
 
-    def shoot(self, rebound=False):
+    def shoot(self, rebound=False, set_piece_type=None, restart_event_id=None):
         opponent, direction = other(self.team), self.pitch.direction(self.team)
-        keeper = f"{opponent}-01"
+        keeper = self.keeper(opponent)
         skill, effort = self.roster[self.owner]["shooting_skill"], round(self.rng.uniform(.2, 1), 4)
         aimed = raw_point(108 if direction == 1 else -3, 34 + self.rng.uniform(-1, 1)*(3+15*(1-skill)))
+        if set_piece_type == "penalty":
+            aimed = raw_point(108 if direction == 1 else -3, 34+self.rng.choice((-1, 1))*(2.1+self.rng.uniform(-.5, 1.2)*(1.1-skill)))
         speed = 20+12*effort+2*skill
         result = resolve_shot(self.ball, aimed, self.pitch.positions[keeper], speed)
         trajectory = make_trajectory(self.ball, result["end"], self.t, speed, decelerate=True)
         metrics = ball_speed(trajectory)
         shot = self.flight("shot", result["end"], speed, outcome="goal" if result["outcome_reason"] == "goal" else "no_goal",
             **{k: result[k] for k in ("outcome_reason", "save_outcome")}, goalkeeper_id=keeper,
+            set_piece_type=set_piece_type, restart_event_id=restart_event_id,
             is_rebound=rebound, rebound_of_shot_event_id=self.rebound_source if rebound else None,
             kick={"effort": effort, "shooting_skill": skill, "aimed_end": aimed, "commanded_mean_speed_mps": speed},
             shot_speed={"source": "synthetic_trajectory", "method": "initial_segment_average",
@@ -348,6 +494,8 @@ class Simulation:
                 self.progression.goal(self.team, self.period, self.t, goal["event_id"])
             return self.dead_ball({"type": "kickoff", "team_id": opponent, "location": point(52.5, 34)}, goal["event_id"], goal=True)
         if result["outcome_reason"] == "off_target":
+            if set_piece_type == "penalty" and self.clock.announced is not None and self.t >= self.clock.end:
+                return False
             crossing = first_exit(shot["start"], aimed)
             return self.ball_out(crossing, self.team, self.owner, shot["event_id"])
         # Save is credited once, from the shot. These explicit follow-up records
@@ -355,6 +503,8 @@ class Simulation:
         self.pitch.positions[keeper] = point(self.ball["x_m"], self.ball["y_m"])
         self.emit("save", opponent, keeper, start=self.ball.copy(), shot_event_id=shot["event_id"], outcome=result["save_outcome"])
         if result["save_outcome"] == "hold":
+            if set_piece_type == "penalty" and self.clock.announced is not None and self.t >= self.clock.end:
+                return False
             self.team, self.owner = opponent, keeper
             self.possession()
             self.emit("recovery", opponent, keeper, self.possession_id, start=self.ball.copy(), reason="keeper_hold",
@@ -366,6 +516,8 @@ class Simulation:
         self.possession_id = None  # a parry is a touch, not controlled possession
         parry = self.flight("parry", crossing["location"] if crossing else target, max(6, speed*.35),
                             shot_event_id=shot["event_id"], commanded_mean_speed_mps=max(6, speed*.35))
+        if set_piece_type == "penalty" and self.clock.announced is not None and self.t >= self.clock.end:
+            return False
         if crossing:
             return self.ball_out(crossing, opponent, keeper, parry["event_id"])
         self.emit("loose_ball", start=self.ball.copy(), reason="keeper_parry", shot_event_id=shot["event_id"])
@@ -401,6 +553,11 @@ class Simulation:
                 self.tick(round(hold*1000))
                 if self.clock.announced is not None and self.t >= self.clock.end:
                     break
+                challenge = self.challenge()
+                if challenge is not None:
+                    if challenge is False:
+                        break
+                    continue
                 progress = self.ball["x_m"] if self.pitch.direction(self.team) == 1 else 105-self.ball["x_m"]
                 attacking = progress > 78 and abs(self.ball["y_m"]-34) < 22
                 rebound, clearing = self.pending_rebound, self.pending_clearance
@@ -415,14 +572,20 @@ class Simulation:
                     keep_playing = self.pass_ball()
                 if keep_playing is False:
                     break
+            if self.pending_cards and not self.abandoned:
+                stop = self.emit("stoppage", reason="referee_whistle", source_event_id=self.pending_cards[0]["event_id"], restart=None)
+                self.flush_cards(stop["event_id"])
             self.emit("period_end", score=self.score.copy(), regulation_duration_ms=self.duration,
                       minimum_added_ms=self.clock.announced or 0, actual_added_ms=max(0, self.t-self.duration),
                       lost_time_ms=self.clock.lost_ms, lost_time_ledger=self.clock.losses.copy())
             self.metadata["period_actual_durations_ms"][str(period)] = self.t
             self.offset += self.t
             slots = self.pitch.slots.copy()
+            if self.abandoned:
+                break
         self.metadata["match_duration_ms"] = self.offset
         self.metadata["final_score"] = self.score.copy()
+        self.metadata["match_status"] = "abandoned" if self.abandoned else "completed"
         if self.scenario == "match":
             self.metadata["simulation_model"]["progression"] = {
                 "interval_min_ms": self.progression.minimum_interval_ms,

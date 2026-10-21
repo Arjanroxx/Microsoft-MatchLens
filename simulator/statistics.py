@@ -26,13 +26,17 @@ class MatchStatistics:
             "pressure_events": 0, "possessions": 0, "substitutions": 0, "event_counts": {},
             "throw_ins": 0, "goal_kicks": 0, "corners": 0, "clearances": 0,
             "saves_held": 0, "saves_parried": 0, "rebound_shots": 0,
+            "tackles": {"attempted": 0, "won": 0, "foul": 0, "missed": 0},
+            "fouls_committed": 0, "fouls_won": 0, "yellow_cards": 0, "red_cards": 0,
+            "second_yellow_dismissals": 0, "free_kicks": 0, "direct_free_kicks": 0, "indirect_free_kicks": 0,
+            "penalties_won": 0, "penalties_conceded": 0, "penalties_taken": 0, "penalties_scored": 0, "penalties_missed": 0,
         } for team in ("home", "away")}
         self.values = {team: {metric: [] for metric in METRICS} for team in self.counts}
         self.player_statistics = PlayerStatistics(self.metadata)
 
     def _time(self, period, period_time_ms):
         limit = self.metadata.get("period_actual_durations_ms", {}).get(str(period),
-                    float("inf") if self.metadata.get("schema_version") == "1.5" else self.duration)
+                    float("inf") if self.metadata.get("schema_version") in ("1.5", "1.6") else self.duration)
         if period not in (1, 2) or not 0 <= period_time_ms <= limit:
             raise ValueError("Invalid statistics clock")
         return elapsed(self.metadata, period, period_time_ms)
@@ -63,7 +67,7 @@ class MatchStatistics:
             self._advance(max(self.cursor, kick))
             self.owner = None
         self._advance(when)
-        if kind in ("period_start", "period_end", "turnover", "goal", "stoppage", "ball_out", "loose_ball", "save", "ball_release"):
+        if kind in ("period_start", "period_end", "turnover", "goal", "stoppage", "ball_out", "loose_ball", "save", "ball_release", "match_abandoned"):
             self.owner = None
         if kind == "resume":
             self.owner = team if event.get("player_id") else None
@@ -84,9 +88,27 @@ class MatchStatistics:
             if kind == event_type:
                 stats[counter] += 1
         if kind == "restart":
-            field = {"throw_in": "throw_ins", "goal_kick": "goal_kicks", "corner_kick": "corners"}.get(event.get("reason"))
+            field = {"throw_in": "throw_ins", "goal_kick": "goal_kicks", "corner_kick": "corners",
+                     "direct_free_kick": "direct_free_kicks", "indirect_free_kick": "indirect_free_kicks"}.get(event.get("reason"))
             if field:
                 stats[field] += 1
+                if field.endswith("free_kicks"):
+                    stats["free_kicks"] += 1
+        if kind == "tackle":
+            stats["tackles"]["attempted"] += 1
+            stats["tackles"][event["outcome"]] += 1
+        if kind == "card" and event["card"] == "yellow":
+            stats["yellow_cards"] += 1
+        if kind == "dismissal":
+            stats["red_cards"] += 1
+            stats["second_yellow_dismissals"] += event["reason"] == "second_yellow"
+        if kind == "foul":
+            stats["fouls_committed"] += 1
+            victim_team = self.roster[event["victim_id"]]
+            self.counts[victim_team]["fouls_won"] += 1
+            if event["restart"]["type"] == "penalty":
+                stats["penalties_conceded"] += 1
+                self.counts[victim_team]["penalties_won"] += 1
         if kind == "restart_delivery":
             defender_team = self.roster.get(event.get("interceptor_id"))
             if defender_team:
@@ -101,6 +123,9 @@ class MatchStatistics:
             if interceptor_team:
                 self.counts[interceptor_team]["interceptions"] += 1
         else:
+            if event.get("set_piece_type") == "penalty":
+                stats["penalties_taken"] += 1
+                stats["penalties_scored" if event["outcome"] == "goal" else "penalties_missed"] += 1
             if event.get("is_rebound"):
                 stats["rebound_shots"] += 1
             stats["shots"]["total"] += 1
@@ -136,11 +161,13 @@ class MatchStatistics:
         lineups = {team: {
             "on_pitch": sorted(pid for pid in self.player_statistics.active if self.roster[pid] == team),
             "bench": sorted(pid for pid, s in self.player_statistics.stints.items() if self.roster[pid] == team and s["entered_at_ms"] is None),
-            "substituted_off": sorted(pid for pid, s in self.player_statistics.stints.items() if self.roster[pid] == team and s["left_at_ms"] is not None),
+            "substituted_off": sorted(pid for pid, s in self.player_statistics.stints.items() if self.roster[pid] == team and s["left_at_ms"] is not None and pid not in self.player_statistics.dismissed),
+            "sent_off": sorted(pid for pid in self.player_statistics.dismissed if self.roster[pid] == team),
+            "goalkeeper_id": self.player_statistics._keeper(team),
         } for team in self.counts}
         return {"teams": teams, "players": self.player_statistics.snapshot(target), "lineups": lineups,
                 "substitutions": copy.deepcopy(self.player_statistics.substitutions),
-                "player_rating_model": copy.deepcopy(RATING_MODEL), "possession": {
+                "player_rating_model": copy.deepcopy(self.player_statistics.rating_model), "possession": {
             "method": "team_phase_time_v1",
             "definition": "Live restart/recovery to loss; pass/restart-delivery flights belong to initiating team; shot/clearance/parry flights and loose/dead-ball gaps unassigned",
             "percentage_denominator": "home_time_ms + away_time_ms (excludes unassigned time)",
@@ -180,7 +207,7 @@ def main():
     summary.update(calculate_statistics(metadata, events))
     path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"updated": str(path), "teams": summary["teams"], "possession": summary["possession"],
-                      "player_count": len(summary["players"]), "rating_model": RATING_MODEL["version"]}, indent=2))
+                      "player_count": len(summary["players"]), "rating_model": summary["player_rating_model"]["version"]}, indent=2))
 
 
 if __name__ == "__main__":

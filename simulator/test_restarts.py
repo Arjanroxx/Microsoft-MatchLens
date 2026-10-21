@@ -102,7 +102,9 @@ class AddedTimeTests(unittest.TestCase):
 class ConnectedRestartTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.metadata, cls.events, _ = generate(51, minutes_per_half=5)
+        base = Path(__file__).resolve().parents[1]/"data"/"examples"/"restarts-match"
+        cls.metadata = json.loads((base/"metadata.json").read_text())
+        cls.events = [json.loads(line) for line in (base/"events.jsonl").read_text().splitlines()]
         cls.result = calculate_statistics(cls.metadata, cls.events)
 
     def test_showcase_exercises_every_priority_one_outcome(self):

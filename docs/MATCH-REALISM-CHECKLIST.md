@@ -2,7 +2,7 @@
 
 This is a connected, simplified football simulation. Adding event labels alone does not make it a complete match engine. Each new feature must change the underlying state, restart, eligible actors, statistics, and UI consistently.
 
-Schema 1.5 implements substitutions and all of Priority 1. Features below are **not implemented** unless checked. See [the implementation and UI handoff](RESTARTS-AND-CLOCK.md) for the exact scope and remaining 2D limitations. Priorities are engineering recommendations, not additional hackathon requirements.
+Schema 1.6 implements substitutions and all of Priorities 1 and 2 (within the documented selected-offence model). Features below are **not implemented** unless checked. See [the implementation and UI handoff](RESTARTS-AND-CLOCK.md) for the exact scope and remaining 2D limitations. Priorities are engineering recommendations, not additional hackathon requirements.
 
 ## Implemented foundations
 
@@ -27,18 +27,18 @@ Schema 1.5 implements substitutions and all of Priority 1. Features below are **
 
 Acceptance is tested: the next actor/restart follows ball location and last touch, only explicit dead-ball placement relocates the ball, and no live possession accrues while out. The remaining simplifications (2D technique, motion heuristics, no illegal-restart sanctions) are stated in [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md).
 
-## Priority 2: fouls, cards, free kicks, and penalties
+## Priority 2: fouls, cards, free kicks, and penalties — implemented in 1.6
 
-- [ ] **Tackles and fouls:** distinguish clean ball wins from offences; attribute offender/victim, location, and stoppage.
-- [ ] **Free kicks:** use the correct restart team/location; separate direct/indirect types and advantage decisions.
-- [ ] **Penalties:** trigger from an applicable offence, not a random unrelated penalty label; use a separate kick sequence and keeper response.
-- [ ] **Yellow cards:** record player identity, reason, and count without automatically changing the on-pitch lineup.
-- [ ] **Second-yellow and direct-red dismissals:** remove the player, stop their minutes/rating, change active team size and positioning, and prevent replacing the dismissed player as an ordinary substitution.
-- [ ] **Discipline in ratings:** version the rating model when adding card/foul penalties. Do not treat every foul as a booking or every team-conceded goal as individual fault.
+- [x] **Tackles and fouls:** reachable, evidence-backed clean wins/misses/contact or dangerous-play offences, offender/victim/location and proper continuation.
+- [x] **Free kicks:** correct team/location, direct and indirect distinction, bounded advantage with played/recalled outcomes and delayed cautions.
+- [x] **Penalties:** applicable direct-contact offence in the defending penalty area, separate setup/release/shot/keeper response and end-of-half completion.
+- [x] **Yellow cards:** attributable offence/reason and caution count; no automatic lineup removal for a single yellow.
+- [x] **Second-yellow and direct-red dismissals:** remove the player, freeze minutes/ratings, reduce active team size, preserve subsequent snapshots/restarts, and prevent ordinary replacement. Emergency keeper assignment is supported.
+- [x] **Discipline in ratings:** schema 1.6 uses rating v2 with published tackle/foul/card/penalty components; legacy matches retain v1. Goals conceded are not debited to every defender.
 
-Reference for future implementation: [IFAB Law 12](https://theifab.com/laws/latest/fouls-and-misconduct/). Rules and competition settings should be verified for the intended season when implementing.
+Acceptance is tested: sent-off players cannot act or remain in later snapshots; the lineup, keeper, substitutes, team/player statistics and board follow the event stream. Fewer than seven players terminates the match without inventing a forfeiture score. See [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md) for the exact event/UI contract and selected-offence scope; handball, DOGSO/SPA and other unmodelled sanctions are explicitly outside this simplified engine.
 
-Acceptance: a dismissal affects subsequent movement, pass targets, goalkeeping arrangements where relevant, statistics, and the board; there are no actions by a sent-off player.
+Rule grounding: [IFAB Law 12](https://theifab.com/laws/latest/fouls-and-misconduct/), with Laws 3/13/14 linked in the implementation guide.
 
 ## Priority 3: offside
 
@@ -60,7 +60,7 @@ Acceptance: an offside cannot be appended to a sequence while leaving the invali
 - [ ] Better receiving movement, carries, dribbles, aerial balls, and headers; current players are mostly held fixed during ball flight.
 - [ ] Distinguish clearances, blocked shots, duels, deflections, and loose balls.
 - [ ] More realistic keeper positioning, catches/parries, reaction and reach rather than a simple distance test.
-- [ ] Captain/keeper role reassignment for exceptional lineup changes.
+- [x] Emergency keeper role reassignment after goalkeeper dismissal (captain and injury-related role changes remain future work).
 - [ ] Score/time-dependent risk changes without scripting a successful comeback.
 
 ## Priority 5: calibration and explainability
@@ -78,4 +78,4 @@ Acceptance: an offside cannot be appended to a sequence while leaving the invali
 - [ ] VAR/review corrections only with an explicit review/evidence model and state rollback.
 - [ ] Special concussion or temporary-absence protocols only after choosing applicable competition rules.
 
-Recommended next build: **fouls/free kicks/discipline → offside → movement/calibration**, with source-grounded tests at each step. A connected smaller model is preferable to random cards, offsides, or penalties that do not affect the match.
+Recommended next build: **offside → movement/calibration**, with source-grounded tests at each step. A connected smaller model is preferable to random cards, offsides, or penalties that do not affect the match.

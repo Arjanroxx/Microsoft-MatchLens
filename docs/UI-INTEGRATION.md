@@ -1,8 +1,8 @@
 # Virtual board handoff
 
-**Current schema: 1.5.** Priority 1 is implemented end to end: ball-out/last-touch awards, throw-ins/goal kicks/corners, holds/parries/rebounds/clearances, natural substitution opportunities and added time. Read [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md) for the full event contract, clock migration, statistics mapping, demo and frontend acceptance checklist. The existing `model.mjs` and main screen already support the new timeline, ball actions and team counters.
+**Current schema: 1.6.** Priority 2 now adds tackles/fouls, advantage, direct/indirect free kicks, penalties, bookings and dismissals. Read [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md) for the full UI contract, rating v2, reduced lineups, emergency keeper identity and demo commands. Priority 1 remains implemented end to end: ball-out/last-touch awards, throw-ins/goal kicks/corners, holds/parries/rebounds/clearances, natural substitution opportunities and added time. Read [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md) for the full event contract, clock migration, statistics mapping, demo and frontend acceptance checklist. The existing `model.mjs` and main screen already support the new timeline, ball actions and team counters.
 
-Player data extension: `summary.players` provides all squad records and role-aware heuristic ratings. Schema 1.4/1.5 has 40 roster players, but only 22 on the pitch. See [PLAYER-RATINGS.md](PLAYER-RATINGS.md) and [SUBSTITUTIONS.md](SUBSTITUTIONS.md) for participation, live ratings, lineup changes, and UI fields. The shared Python reducer includes these fields; the current frontend JavaScript reducer needs a deliberate port or backend connection before displaying live ratings.
+Player data extension: `summary.players` provides all squad records and role-aware heuristic ratings. Schema 1.4–1.6 has 40 roster players; at most 22 are on the pitch, with fewer after dismissals. See [PLAYER-RATINGS.md](PLAYER-RATINGS.md) and [SUBSTITUTIONS.md](SUBSTITUTIONS.md) for participation, live ratings, lineup changes, and UI fields. The shared Python reducer includes these fields; the current frontend JavaScript reducer needs a deliberate port or backend connection before displaying live ratings.
 
 The frontend can be developed entirely from the generated data. No video detection or recognition is required to start.
 
@@ -18,12 +18,12 @@ Use `data/examples/restarts-match/` as the current checked-in fixture (the older
 - Convert to board pixels: `x / length_m * width_px`, `y / width_m * height_px`. Flip y if the board uses a bottom-left origin and the browser uses top-left.
 - Home attacks positive x in period 1 and negative x in period 2; the physical coordinate system itself does not change at half-time.
 - Use `sequence` to break timestamp ties. Deduplicate using `(match_id, event_id)`.
-- Schema 1.5 playback time is `event.match_time_ms`; trajectory samples use `metadata.period_offsets_ms[String(period)] + sample.period_time_ms`. Seek duration is `metadata.match_duration_ms`. The old `(period - 1) * period_duration_ms + period_time_ms` applies only to legacy 1.3/1.4 files. Format the broadcast clock separately with `clockAt`: nominal 45/90 plus added time.
+- Schema 1.5/1.6 playback time is `event.match_time_ms`; trajectory samples use `metadata.period_offsets_ms[String(period)] + sample.period_time_ms`. Seek duration is `metadata.match_duration_ms`. The old `(period - 1) * period_duration_ms + period_time_ms` applies only to legacy 1.3/1.4 files. Format the broadcast clock separately with `clockAt`: nominal 45/90 plus added time.
 - Pause, seek, and replay speed must use one shared playback clock.
 
 ## Player and ball rendering
 
-Each pass, shot, clearance, parry and restart delivery includes:
+Each pass, shot, clearance, parry, restart delivery and advantage carry includes:
 
 - `pitch_snapshot.period_time_ms`: kick timestamp within the half.
 - `pitch_snapshot.players`: all player IDs mapped to `x_m` and `y_m` at kick time.
@@ -89,6 +89,10 @@ Keep the data-reader boundary separate from the renderer. A future backend or vi
 | Restarts taken | `throw_ins`, `goal_kicks`, `corners` |
 | Clearances and rebounds | `clearances`, `rebound_shots` |
 | Save breakdown | `saves_held`, `saves_parried` (already included in `saves`) |
+| Tackles | `tackles.attempted`, `.won`, `.foul`, `.missed` |
+| Fouls / cards | `fouls_committed`, `fouls_won`, `yellow_cards`, `red_cards`, `second_yellow_dismissals` |
+| Free kicks | `free_kicks`, `direct_free_kicks`, `indirect_free_kicks` |
+| Penalties | `penalties_won`, `penalties_conceded`, `penalties_taken`, `penalties_scored`, `penalties_missed` |
 | Defensive actions | `saves`, `interceptions`, `recoveries`, `turnovers`, `pressure_events` |
 | Possession sequences | `possessions` |
 
@@ -126,10 +130,15 @@ live = calculate_statistics(metadata, events, as_of=(current_period, current_per
 
 Only process events through the current playback time. The reducer ignores duplicate IDs and does not use metadata's final score. Snapshots can extend the last known possession to the current clock without mutating stored totals. To rewind or apply a correction, rebuild from the appropriate event prefix; do not feed backwards events into an existing reducer.
 
-Schema 1.5 emits `ball_release` at the release of shots/clearances/parries, clearing possession immediately while their full action/trajectory arrives at completion. An `added_time` announcement during flight does not resolve it. Legacy streams without release records reclassify shot flight only at arrival; their intermediate estimates are provisional. True live ball animation still needs observations at source time or a delayed playback clock.
+Schema 1.5/1.6 emits `ball_release` at the release of shots/clearances/parries, clearing possession immediately while their full action/trajectory arrives at completion. An `added_time` announcement during flight does not resolve it. Legacy streams without release records reclassify shot flight only at arrival; their intermediate estimates are provisional. True live ball animation still needs observations at source time or a delayed playback clock.
 
 Existing matches can have these additive summary fields recalculated without changing their event files:
 
 ```powershell
 py -3.13 -m simulator.statistics --input data/generated/evolving-match
 ```
+
+
+## Discipline and lineup migration (1.6)
+
+Use `dismissal` to remove markers and `goalkeeper_change` to assign the current keeper. A yellow card alone does not change headcount. `lineupsAt` now exposes `sentOff` and `goalkeepers`; `disciplineAt` exposes each player's shown cautions/dismissals/current role from the event prefix. Rewind rebuilds them, without reading final counts. The main screen includes yellow badges and the new team counters. Player records use `sent_off` with a frozen rating/stint; team minutes subtract the time lost to each dismissal. Never assume 11 active players or hardcode keeper IDs. See the Priority 2 guide for complete fields, direct/indirect/penalty rendering, bounded advantage, v2 rating changes and the UI-owner acceptance list.

@@ -44,6 +44,7 @@ class SubstitutionManager:
                  and pid not in self.used_players and pid not in active and p["role"] != "GK"]
         candidates = [pid for pid in active if self.roster[pid]["team_id"] == team
                       and self.roster[pid]["is_starter"] and self.roster[pid]["role"] != "GK"
+                      and players[pid].get("current_role") != "GK"
                       and any(self.roster[b]["position_group"] == self.roster[pid]["position_group"] for b in bench)]
         # NR is unknown, not a poor score. Rated players are considered first.
         candidates.sort(key=lambda pid: (players[pid]["rating"]["value"] is None,

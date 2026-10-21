@@ -1,6 +1,6 @@
 # Priority 1: ball-out, restarts, saves and added time
 
-Schema **1.5** implements all five Priority 1 checklist items. This is the detailed frontend/backend handoff; [UI-INTEGRATION.md](UI-INTEGRATION.md) remains the main UI report. No new dependencies are required. Fouls, cards and offside remain future work.
+Schema **1.5** implements all five Priority 1 checklist items. This is the detailed frontend/backend handoff; [UI-INTEGRATION.md](UI-INTEGRATION.md) remains the main UI report. No new dependencies are required. Schema 1.6 now adds fouls/cards/set pieces in [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md); offside remains future work.
 
 ## Try the complete demonstration
 
@@ -10,7 +10,7 @@ py -3.13 -m simulator.replay --input data/generated/priority-one-demo --speed 60
 py -3.13 -m http.server 8080
 ```
 
-Open `http://localhost:8080/frontend/`, choose **Load a match**, and select the generated `metadata.json` and `events.jsonl` together. A checked-in copy is also available at `data/examples/restarts-match/`. Seed 51 with five-minute halves exercises throw-ins, goal kicks, corners, held and parried saves, a rebound shot, a goal, clearances, substitutions and added time. Short-demo substitution timings and stoppage policies scale; travel still uses actual pitch metres and the movement cap, so short demos are not exact accelerated copies of full matches.
+Open `http://localhost:8080/frontend/`, choose **Load a match**, and select the generated `metadata.json` and `events.jsonl` together. A checked-in copy is also available at `data/examples/restarts-match/`. The checked-in schema 1.5 seed-51 fixture with five-minute halves exercises throw-ins, goal kicks, corners, held and parried saves, a rebound shot, a goal, clearances, substitutions and added time. Generating that seed with newer schema 1.6 also enables discipline and can change the realised events; use the checked-in fixture for the original complete Priority 1 showcase. Short-demo substitution timings and stoppage policies scale; travel still uses actual pitch metres and the movement cap, so short demos are not exact accelerated copies of full matches.
 
 For an ordinary full match:
 
@@ -186,4 +186,4 @@ node --test frontend/tests/replay.test.mjs frontend/tests/substitutions.test.mjs
 
 Rule grounding checked against IFAB's 2026/27 pages: [ball in/out](https://www.theifab.com/laws/latest/the-ball-in-and-out-of-play/), [throw-in](https://theifab.com/laws/latest/the-throw-in/), [goal kick](https://theifab.com/laws/latest/the-goal-kick/), [corner](https://theifab.com/laws/latest/the-corner-kick/) and [duration/allowance](https://www.theifab.com/laws/latest/the-duration-of-the-match/). Those support the restart/clock distinctions; the numerical motion, hold/parry thresholds and lost-time policy are our simulation choices.
 
-Still outside this model: aerial/hand technique and illegal-restart retakes, ball spin/height/woodwork, own goals, fouls/cards/penalties, offside, referee countdown sanctions, calibrated full goalkeeper behaviour and continuous player tracking. These limitations do not create disconnected synthetic labels; they define the scope of the implemented connected 2D engine.
+Still outside this model: aerial/hand technique and illegal-restart retakes, ball spin/height/woodwork, own goals, offside, referee countdown sanctions, calibrated full goalkeeper behaviour and continuous player tracking. These limitations do not create disconnected synthetic labels; they define the scope of the implemented connected 2D engine.

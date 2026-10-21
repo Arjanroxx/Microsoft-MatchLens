@@ -25,9 +25,20 @@ RATING_MODEL = {
 }
 
 
-def player_rating(stats, evidence_ids, provisional):
+import copy
+
+RATING_MODEL_V2 = copy.deepcopy(RATING_MODEL)
+RATING_MODEL_V2["version"] = "matchlens-event-rating-v2"
+RATING_MODEL_V2["weights"].update(clean_tackle=.06, foul=-.02, yellow_card=-.2, red_card=-.8, penalty_missed=-.2)
+RATING_MODEL_V2["caps"].update(fouls=-.4, cautions=-.4, dismissals=-.8, penalty_misses=-.6)
+RATING_MODEL_V2["eligibility"] += ", or a dismissal"
+RATING_MODEL_V2["limitations"][1] = "No off-ball positioning, running distance or unobserved mistakes scored; discipline weights are original heuristics"
+
+
+def player_rating(stats, evidence_ids, provisional, model=None):
+    model = model or RATING_MODEL
     role = stats["role"] if stats["role"] in ("GK", "DF", "MF", "FW") else "MF"
-    weights, caps = RATING_MODEL["weights"], RATING_MODEL["caps"]
+    weights, caps = model["weights"], model["caps"]
     attempts, completed = stats["passes"]["attempted"], stats["passes"]["completed"]
     components = {
         "scoring": min(caps["scoring"], stats["goals"] * weights["goal"][role]),
@@ -36,20 +47,26 @@ def player_rating(stats, evidence_ids, provisional):
         "passing": max(-0.7, min(0.3, 1.2 * (completed - 0.75 * attempts) / max(attempts, 5))),
         "hard_passing": min(caps["hard_passing"], stats["passes"]["hard_completed"] * weights["hard_completed_pass"]),
         "defence": min(caps["defence"], weights["defence_multiplier"][role] * (
-            stats["interceptions"] * weights["interception"] + stats["recoveries"] * weights["recovery"])),
+            stats["interceptions"] * weights["interception"] + stats["recoveries"] * weights["recovery"]
+            + stats.get("tackles", {}).get("won", 0) * weights.get("clean_tackle", 0))),
         "saves": min(caps["saves"], stats["saves"] * weights["save"]),
-        "goals_conceded": max(caps["goals_conceded"], stats["goals_conceded"] * weights["goalkeeper_goal_conceded"]) if role == "GK" else 0,
+        "goals_conceded": max(caps["goals_conceded"], stats["goals_conceded"] * weights["goalkeeper_goal_conceded"]) if role == "GK" or stats.get("has_kept_goal") else 0,
         "shooting": min(caps["shooting"], max(0, stats["shots"]["on_target"] - stats["goals"]) * weights["non_goal_shot_on_target"]),
         "misses": max(caps["misses"], stats["shots"]["off_target"] * weights["off_target_shot"]),
     }
-    decisive = stats["goals"] + stats["assists"] + stats["saves"] + stats["goals_conceded"] > 0
-    eligible = len(evidence_ids) >= RATING_MODEL["minimum_evidence_events"] or decisive
+    if "foul" in weights:
+        components.update(fouls=max(caps["fouls"], stats.get("fouls_committed", 0)*weights["foul"]),
+                          cautions=max(caps["cautions"], stats.get("yellow_cards", 0)*weights["yellow_card"]),
+                          dismissals=max(caps["dismissals"], stats.get("red_cards", 0)*weights["red_card"]),
+                          penalty_misses=max(caps["penalty_misses"], stats.get("penalties_missed", 0)*weights["penalty_missed"]))
+    decisive = stats["goals"] + stats["assists"] + stats["saves"] + stats["goals_conceded"] + (stats.get("red_cards", 0) if "foul" in weights else 0) > 0
+    eligible = len(evidence_ids) >= model["minimum_evidence_events"] or decisive
     rounded = {key: round(value, 4) for key, value in components.items()}
-    unclamped = round(RATING_MODEL["baseline"] + sum(rounded.values()), 4)
+    unclamped = round(model["baseline"] + sum(rounded.values()), 4)
     value = round(max(1, min(10, unclamped)), 1) if eligible else None
-    return {"model": RATING_MODEL["version"], "value": value,
+    return {"model": model["version"], "value": value,
             "status": "rated" if eligible else "insufficient_evidence",
-            "provisional": provisional, "baseline": RATING_MODEL["baseline"],
+            "provisional": provisional, "baseline": model["baseline"],
             "components": rounded, "unclamped_value": unclamped if eligible else None,
             "evidence_event_count": len(evidence_ids), "evidence_event_ids": sorted(evidence_ids),
-            "explanation": "6.0 baseline plus displayed components, clamped to 1–10 and rounded to one decimal" if eligible else "Not enough attributable action evidence to assign a rating"}
+            "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal" if eligible else "Not enough attributable action evidence to assign a rating"}

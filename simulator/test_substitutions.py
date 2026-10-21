@@ -81,7 +81,8 @@ class SubstitutionTests(unittest.TestCase):
         self.assertTrue(all(e["period"] == 2 and e["period_time_ms"] == 0 for e in halftime))
         for event in (e for e in stream if e["type"] == "substitution" and not e["halftime"]):
             scaled_minute = ((event["period"] - 1) * match["period_duration_ms"] + event["period_time_ms"]) / (match["period_duration_ms"] / 45)
-            self.assertTrue(60 <= scaled_minute <= 75)
+            self.assertGreaterEqual(scaled_minute, 60)  # next natural opportunity can be delayed
+            self.assertIn(event["stoppage_event_id"], {e["event_id"] for e in stream if e["type"] == "stoppage"})
 
     def test_invalid_lineup_and_off_player_action_are_rejected(self):
         changed = copy.deepcopy(self.events)

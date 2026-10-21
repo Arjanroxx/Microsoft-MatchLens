@@ -1,6 +1,6 @@
 # Substitutions, participation, and evolving ratings
 
-Schema **1.4** introduced a matchday squad and automatic substitutions to the existing connected simulation. It does not add a tactical configuration system. Offsides, bookings, and other gaps remain on the [realism checklist](MATCH-REALISM-CHECKLIST.md).
+Schema **1.4** introduced a matchday squad and automatic substitutions to the existing connected simulation. It does not add a tactical configuration system. Offside and the remaining gaps are on the [realism checklist](MATCH-REALISM-CHECKLIST.md). Bookings and dismissals are now implemented in schema 1.6.
 
 Schema **1.5** now uses natural ball-out/goal stoppages and includes added time. The former synthetic-break description below is retained only as a legacy-format note. See [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md) for current execution, event fields and clock semantics.
 
@@ -54,7 +54,7 @@ Fields in `summary.players.<id>`:
 
 An outgoing player's existing counters are retained. Incoming players earn their own passes, goals, assists, saves, distributions, and rating using the same formula. Administrative substitution/resume records do not earn rating evidence or points. No per-90 extrapolation is used to artificially inflate a short cameo.
 
-In this implementation, team-player minutes sum to 11 × actual elapsed match time including added time. That invariant will deliberately change when dismissals or temporary absences are introduced.
+Without dismissals, team-player minutes sum to 11 × actual elapsed match time including added time. That invariant will deliberately change when dismissals or temporary absences are introduced.
 
 ## Frontend integration contract
 
@@ -104,3 +104,8 @@ py -3.13 -m simulator.replay --input data/generated/substitutions-match-001 --sp
 ```
 
 For a short checked-in example with a half-time substitution and later changes, load `data/examples/substitutions-match/metadata.json` and `events.jsonl` together in Replay Studio. It uses two five-minute halves and scaled substitution times.
+
+
+## Schema 1.6 dismissals
+
+Natural foul stoppages also offer substitution opportunities. Cards/dismissals are resolved before the manager chooses changes; a sent-off player cannot be replaced, and an emergency outfield keeper cannot be selected as an ordinary substitution. Team size stays reduced after every subsequent restart. Preserve `sent_off` history separately from the bench and `substituted_off`; see [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md).

@@ -2,6 +2,10 @@
 
 An interactive, buildless HTML/CSS/JavaScript frontend for the MatchLens simulator. No npm install, framework, Azure account, or AI key is needed.
 
+## Schema 1.6 and Priority 2
+
+Load `data/examples/discipline-match/metadata.json` and `events.jsonl` together for a full-match second-yellow/penalty/advantage demo. `lineupsAt` exposes sent-off players/current keepers; `disciplineAt` exposes shown cards/current roles. Markers disappear only at dismissal, yellow badges use shown cards, and rewinds rebuild the correct state. The comparison panel includes tackles, fouls, cards, free kicks and penalties. `carry` trajectories keep controller highlighting and do not add passes. See [the Priority 2 UI contract](../docs/DISCIPLINE-AND-SET-PIECES.md) for event fields, emergency keeper handling, rating v2 and specialised panel guidance.
+
 ## Schema 1.5 and Priority 1
 
 The adapter/main screen now supports ball-out/restarts, holds/parries/rebounds, natural substitutions and added time. See [the full UI contract](../docs/RESTARTS-AND-CLOCK.md). Load `data/examples/restarts-match/metadata.json` and `events.jsonl` together for a complete demonstration. The original default fixture is preserved.
@@ -61,7 +65,7 @@ The pitch interpolates player positions between exact state anchors for presenta
 Node 18+ is required only for tests:
 
 ```bash
-node --test frontend/tests/replay.test.mjs frontend/tests/startup.test.mjs frontend/tests/substitutions.test.mjs frontend/tests/restarts.test.mjs
+node --test frontend/tests/replay.test.mjs frontend/tests/startup.test.mjs frontend/tests/substitutions.test.mjs frontend/tests/restarts.test.mjs frontend/tests/discipline.test.mjs
 node --check frontend/app.mjs
 ```
 

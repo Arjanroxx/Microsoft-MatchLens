@@ -2,7 +2,7 @@
 import copy
 
 from simulator.aggregates import METRICS, distribution, record_action_metrics
-from simulator.ratings import RATING_MODEL, player_rating
+from simulator.ratings import RATING_MODEL, RATING_MODEL_V2, player_rating
 from simulator.clock import event_time, total_duration
 
 
@@ -10,12 +10,16 @@ class PlayerStatistics:
     def __init__(self, metadata):
         self.metadata = metadata
         self.finished_at = None
+        self.abandoned = False
+        self.rating_model = RATING_MODEL_V2 if metadata.get("rating_model_version") == RATING_MODEL_V2["version"] or metadata.get("schema_version") == "1.6" else RATING_MODEL
         self.duration = metadata["period_duration_ms"]
         self.roster = {p["player_id"]: p for p in metadata["players"]}
         self.stints = {pid: {"entered_at_ms": 0 if p.get("is_starter", True) else None,
                              "left_at_ms": None} for pid, p in self.roster.items()}
         self.active = {pid for pid, stint in self.stints.items() if stint["entered_at_ms"] is not None}
         self.substitutions = []
+        self.dismissed = set()
+        self.goalkeepers = {p["team_id"]: pid for pid, p in self.roster.items() if pid in self.active and p.get("role") == "GK"}
         self.players = {pid: {
             "player_id": pid, "team_id": p["team_id"], "name": p.get("name", pid),
             "shirt_number": p.get("shirt_number"), "role": p.get("role", "unknown"),
@@ -28,6 +32,12 @@ class PlayerStatistics:
             "turnovers": 0, "pressure_events": 0, "clearances": 0,
             "saves_held": 0, "saves_parried": 0, "rebound_shots": 0,
             "throw_ins": 0, "goal_kicks": 0, "corners": 0, "event_counts": {},
+            "current_role": p.get("role", "unknown"), "has_kept_goal": p.get("role") == "GK",
+            "fouls_committed": 0, "fouls_won": 0, "yellow_cards": 0, "red_cards": 0,
+            "second_yellow_dismissals": 0, "tackles": {"attempted": 0, "won": 0, "foul": 0, "missed": 0},
+            "free_kicks": 0, "direct_free_kicks": 0, "indirect_free_kicks": 0,
+            "penalties_won": 0, "penalties_conceded": 0, "penalties_taken": 0,
+            "penalties_scored": 0, "penalties_missed": 0,
         } for pid, p in self.roster.items()}
         self.values = {pid: {key: [] for key in METRICS} for pid in self.roster}
         self.evidence = {pid: set() for pid in self.roster}
@@ -40,6 +50,8 @@ class PlayerStatistics:
         self.evidence[pid].add(event["event_id"])
 
     def _keeper(self, team):
+        if self.goalkeepers.get(team) in self.active:
+            return self.goalkeepers[team]
         candidates = [pid for pid, p in self.roster.items() if pid in self.active and p["team_id"] == team and p.get("role") == "GK"]
         return candidates[0] if len(candidates) == 1 else None
 
@@ -48,6 +60,29 @@ class PlayerStatistics:
             return
         self.seen.add(event["event_id"])
         kind, actor, team = event["type"], event.get("player_id"), event.get("team_id")
+        if kind == "dismissal":
+            if actor not in self.active:
+                raise ValueError("Dismissal of inactive player")
+            self._credit(actor, "red_cards", event)
+            if event["reason"] == "second_yellow":
+                self._credit(actor, "second_yellow_dismissals", event)
+            self.stints[actor]["left_at_ms"] = event_time(self.metadata, event)
+            self.active.remove(actor)
+            self.dismissed.add(actor)
+            self.last_pass.clear()
+            return
+        if kind == "goalkeeper_change":
+            if actor not in self.active or self.roster[actor]["team_id"] != team:
+                raise ValueError("Inactive goalkeeper assignment")
+            self.goalkeepers[team] = actor
+            self.players[actor]["current_role"] = "GK"
+            self.players[actor]["has_kept_goal"] = True
+            return
+        if kind == "match_abandoned":
+            self.finished_at = event_time(self.metadata, event)
+            self.abandoned = True
+            self.last_pass.clear()
+            return
         if kind == "substitution":
             off, on = event["player_off_id"], event["player_on_id"]
             if (off not in self.active or on not in self.roster or on in self.active
@@ -86,9 +121,23 @@ class PlayerStatistics:
             if kind in ("pass", "shot"):
                 record_action_metrics(self.values[actor], event)
             if kind == "restart":
-                field = {"throw_in": "throw_ins", "goal_kick": "goal_kicks", "corner_kick": "corners"}.get(event.get("reason"))
+                field = {"throw_in": "throw_ins", "goal_kick": "goal_kicks", "corner_kick": "corners",
+                         "direct_free_kick": "direct_free_kicks", "indirect_free_kick": "indirect_free_kicks"}.get(event.get("reason"))
                 if field:
                     self.players[actor][field] += 1
+                    if field.endswith("free_kicks"):
+                        self.players[actor]["free_kicks"] += 1
+            if kind == "tackle":
+                self.players[actor]["tackles"]["attempted"] += 1
+                self.players[actor]["tackles"][event["outcome"]] += 1
+            if kind == "card" and event["card"] == "yellow":
+                self.players[actor]["yellow_cards"] += 1
+            if kind == "foul":
+                self.players[actor]["fouls_committed"] += 1
+                self._credit(event["victim_id"], "fouls_won", event)
+                if event["restart"]["type"] == "penalty":
+                    self.players[actor]["penalties_conceded"] += 1
+                    self._credit(event["victim_id"], "penalties_won", event)
         if kind == "pass":
             if actor in self.players:
                 passes = self.players[actor]["passes"]
@@ -106,6 +155,9 @@ class PlayerStatistics:
         elif kind == "restart_delivery":
             self._credit(event.get("interceptor_id"), "interceptions", event)
         elif kind == "shot":
+            if event.get("set_piece_type") == "penalty":
+                self._credit(actor, "penalties_taken", event)
+                self._credit(actor, "penalties_scored" if event["outcome"] == "goal" else "penalties_missed", event)
             if event.get("is_rebound"):
                 self._credit(actor, "rebound_shots", event)
             if actor in self.players:
@@ -152,11 +204,11 @@ class PlayerStatistics:
             stats["minutes_played_ms"] = max(0, end - entered) if entered is not None else 0
             stats["entered_at_ms"], stats["left_at_ms"] = entered, left
             stats["minutes_basis"] = "starting_lineup_and_substitution_events" if any("is_starter" in p for p in self.roster.values()) else "legacy_all_roster_players_start"
-            finished = self.finished_at is not None or (self.metadata.get("schema_version") != "1.5" and elapsed_ms >= total_duration(self.metadata))
-            stats["squad_status"] = ("substituted_off" if left is not None else
+            finished = self.finished_at is not None or (self.metadata.get("schema_version") not in ("1.5", "1.6") and elapsed_ms >= total_duration(self.metadata))
+            stats["squad_status"] = ("sent_off" if pid in self.dismissed else "substituted_off" if left is not None else
                                       "on_bench" if entered is None and not finished else
                                       "unused_substitute" if entered is None else
-                                      "full_time" if finished else "on_pitch")
-            stats["rating"] = player_rating(stats, self.evidence[pid], left is None and not finished)
+                                      "match_ended" if finished and self.abandoned else "full_time" if finished else "on_pitch")
+            stats["rating"] = player_rating(stats, self.evidence[pid], left is None and not finished, self.rating_model)
             stats["rating"]["finalised_at_ms"] = left if left is not None else (self.finished_at or total_duration(self.metadata)) if finished else None
         return players

@@ -5,8 +5,9 @@ from simulator.clock import elapsed
 from simulator.metrics import ball_speed, make_trajectory, pass_difficulty
 from simulator.pitch import distance, pass_context, resolve_pass
 from simulator.restarts import award_restart, first_exit, resolve_shot, parry_target
+from simulator.discipline import resolve_challenge, foul_restart
 
-ACTIONS = {"pass", "shot", "clearance", "parry", "restart_delivery"}
+ACTIONS = {"pass", "shot", "clearance", "parry", "restart_delivery", "carry"}
 
 
 def validate_stream(metadata, events):
@@ -18,13 +19,16 @@ def validate_stream(metadata, events):
     windows = {t: set() for t in score}
     previous, ball, stopped, pending, last_touch = -1, None, False, None, None
     starts, ends, announcements = {}, {}, {}
+    cautions, red_cards = {}, set()
+    card_fouls, dismissed, abandoned = set(), set(), False
+    foul_tackles, advantages = set(), {}
     for index, e in enumerate(events, 1):
         def require(test, message):
             if not test:
                 raise ValueError(f"Event {index}: {message}")
         kind, team, actor = e["type"], e.get("team_id"), e.get("player_id")
         period, t = e["period"], e["period_time_ms"]
-        require(e["schema_version"] == "1.5" and e["match_id"] == metadata["match_id"], "wrong schema/match")
+        require(e["schema_version"] == metadata["schema_version"] and e["match_id"] == metadata["match_id"], "wrong schema/match")
         require(e["sequence"] == index and e["event_id"] not in seen, "duplicate identity/sequence gap")
         seen.add(e["event_id"])
         require(period in (1, 2) and type(t) is int and 0 <= t <= metadata["period_actual_durations_ms"][str(period)], "invalid period clock")
@@ -42,7 +46,12 @@ def validate_stream(metadata, events):
                 require(1 in ends and ends[1] == e["match_time_ms"], "period overlap/gap")
             starts[period], ball, pending = e["match_time_ms"], None, None
         if kind == "stoppage":
-            require(e["reason"] in ("ball_out", "goal_celebration", "period_interval"), "synthetic substitution break returned")
+            require(e["reason"] in ("ball_out", "goal_celebration", "period_interval", "foul", "referee_whistle"), "unknown stoppage")
+            if e["reason"] == "foul":
+                foul = by_id.get(e["source_event_id"], {})
+                require(foul.get("type") == "foul" and e["restart"] == foul["restart"], "foul stoppage without offence")
+                require(advantages.get(foul["event_id"]) != "played", "foul recalled after advantage already realised")
+                pending = foul["restart"]
             stopped = True
         if kind == "ball_placement":
             require(stopped, "placement during open play")
@@ -54,22 +63,70 @@ def validate_stream(metadata, events):
             off, on = e["player_off_id"], e["player_on_id"]
             require(stopped and off in active and on in roster and on not in ever, "invalid substitution lifecycle")
             require(roster[off]["team_id"] == roster[on]["team_id"] == team, "wrong substitution team")
-            require(roster[off]["role"] != "GK" and roster[off]["position_group"] == roster[on]["position_group"], "invalid substitute position")
+            require(active[off] != 1 and roster[off]["position_group"] == roster[on]["position_group"], "invalid substitute position")
             require(e["formation_slot"] == active[off], "formation slot changed")
             require(not e["halftime"] or (period == 2 and t == 0), "invalid halftime substitution")
             stop = by_id.get(e["stoppage_event_id"], {})
-            require(stop.get("type") == "stoppage" and stop.get("reason") in ("ball_out", "goal_celebration", "period_interval"), "missing natural opportunity")
+            require(stop.get("type") == "stoppage" and stop.get("reason") in ("ball_out", "goal_celebration", "period_interval", "foul"), "missing natural opportunity")
             active[on] = active.pop(off)
             ever.add(on)
             used[team] += 1
             if not e["halftime"]:
                 windows[team].add(e["window_id"])
             require(used[team] <= 5 and len(windows[team]) <= 3, "substitution limits exceeded")
+        if kind == "tackle":
+            require(not stopped and e["victim_id"] in active and roster[e["victim_id"]]["team_id"] != team, "invalid tackle actors")
+            require(e["location"] == ball and set(e["challenge_snapshot"]["players"]) == set(active), "disconnected challenge")
+            result = resolve_challenge(ball, e["challenge_snapshot"]["players"][actor], **e["controls"])
+            require(e["decision"] == result and e["outcome"] == result["outcome"], "challenge not supported by evidence")
+        if kind == "foul":
+            tackle = by_id.get(e["tackle_event_id"], {})
+            require(tackle.get("type") == "tackle" and tackle.get("outcome") == "foul" and tackle.get("player_id") == actor and tackle.get("victim_id") == e["victim_id"], "foul without attributable challenge")
+            require(e["location"] == tackle["location"] and e["decision"] == tackle["decision"], "foul evidence changed")
+            require(e["tackle_event_id"] not in foul_tackles, "duplicate foul for one challenge")
+            foul_tackles.add(e["tackle_event_id"])
+            require(e["restart"] == foul_restart(e["location"], team, period, e["decision"]["offence"]), "incorrect foul restart")
+        if kind == "advantage":
+            foul = by_id.get(e["foul_event_id"], {})
+            require(foul.get("type") == "foul" and foul.get("victim_id") == actor and foul["restart"]["type"] == "direct_free_kick", "invalid advantage offence")
+            require(foul["decision"]["card"] != "red" and e["outcome"] in ("pending", "played", "recalled"), "invalid advantage decision")
+            require((e["outcome"] == "pending" and e["foul_event_id"] not in advantages) or
+                    (e["outcome"] != "pending" and advantages.get(e["foul_event_id"]) == "pending"), "advantage phase repeated or missing")
+            advantages[e["foul_event_id"]] = e["outcome"]
+            if e["outcome"] == "played":
+                carry = by_id.get(e["continuation_event_id"], {})
+                require(carry.get("type") == "carry" and carry.get("foul_event_id") == foul["event_id"], "advantage without continuation")
+        if kind == "card":
+            foul = by_id.get(e["foul_event_id"], {})
+            require(stopped and foul.get("player_id") == actor and foul["decision"]["card"] == e["card"], "card without matching offence/stoppage")
+            require(by_id.get(e["stoppage_event_id"], {}).get("type") == "stoppage", "card without stoppage reference")
+            require(e["foul_event_id"] not in card_fouls, "duplicate sanction")
+            card_fouls.add(e["foul_event_id"])
+            if e["card"] == "yellow":
+                cautions[actor] = cautions.get(actor, 0)+1
+                require(cautions[actor] <= 2 and e["caution_number"] == cautions[actor], "invalid caution number")
+            elif e["card"] == "red":
+                red_cards.add(actor)
+            else:
+                require(False, "unknown card colour")
+        if kind == "dismissal":
+            require(stopped and actor in active and actor not in dismissed, "invalid dismissal")
+            require((e["reason"] == "second_yellow" and cautions.get(actor) == 2) or (e["reason"] == "direct_red" and actor in red_cards), "dismissal without sanction")
+            active.pop(actor)
+            dismissed.add(actor)
+        if kind == "goalkeeper_change":
+            require(stopped and e["previous_goalkeeper_id"] in dismissed and actor in active, "invalid keeper reassignment")
+            require(not any(s == 1 and roster[p]["team_id"] == team for p, s in active.items()), "duplicate active keeper")
+            active[actor] = 1
+        if kind == "match_abandoned":
+            require(sum(roster[p]["team_id"] == e["affected_team_id"] for p in active) < 7, "abandonment without team-size cause")
+            abandoned = True
         if "positions_after" in e:
             require(set(e["positions_after"]) == set(active), "incorrect active positions")
         if kind == "restart":
             require(stopped and e["start"] == ball, "restart without placement/stoppage")
-            require(e["reason"] in ("throw_in", "corner_kick", "goal_kick", "kickoff"), "unknown restart")
+            require(e["reason"] in ("throw_in", "corner_kick", "goal_kick", "kickoff", "direct_free_kick", "indirect_free_kick", "penalty"), "unknown restart")
+            require(not abandoned and all(sum(roster[p]["team_id"] == side for p in active) >= 7 for side in ("home", "away")), "restart with too few players")
             if pending:
                 require(team == pending["team_id"] and e["reason"] == pending["type"] and e["start"] == pending["location"], "restart disagrees with award")
             pending = None
@@ -123,7 +180,11 @@ def validate_stream(metadata, events):
             if kind == "shot":
                 require(abs(speed-(20+12*e["kick"]["effort"]+2*e["kick"]["shooting_skill"])) < 1e-9, "incorrect shot command")
                 keeper = e["goalkeeper_id"]
-                require(keeper in active and roster[keeper]["team_id"] != team and roster[keeper]["role"] == "GK", "invalid keeper")
+                require(keeper in active and roster[keeper]["team_id"] != team and active[keeper] == 1, "invalid keeper")
+                if e.get("set_piece_type"):
+                    restart = by_id.get(e["restart_event_id"], {})
+                    require(restart.get("reason") == e["set_piece_type"] and e["set_piece_type"] in ("penalty", "direct_free_kick") and restart.get("player_id") == actor, "illegal direct set-piece shot")
+                    require(e["start"] == restart["start"], "set-piece shot moved from restart")
                 result = resolve_shot(e["start"], e["kick"]["aimed_end"], snapshot["players"][keeper], speed)
                 require(e["end"] == result["end"] and e["outcome_reason"] == result["outcome_reason"] and e["save_outcome"] == result["save_outcome"], "shot not supported by contact geometry")
                 require(e["outcome"] == ("goal" if result["outcome_reason"] == "goal" else "no_goal"), "invalid shot outcome")
@@ -135,6 +196,14 @@ def validate_stream(metadata, events):
             if kind == "clearance":
                 crossing = first_exit(e["start"], e["aimed_end"])
                 require(e["end"] == (crossing["location"] if crossing else e["aimed_end"]), "invalid clearance boundary")
+            if kind == "carry":
+                foul = by_id.get(e["foul_event_id"], {})
+                require(foul.get("victim_id") == actor and speed <= 4.5, "unsupported advantage carry")
+                require(advantages.get(e["foul_event_id"]) == "pending", "carry outside advantage evaluation")
+                direction = 1 if (team == "home") == (period == 1) else -1
+                require(1 <= direction*(e["end"]["x_m"]-e["start"]["x_m"]) <= 3.001 and abs(e["end"]["y_m"]-e["start"]["y_m"]) < .001, "invalid bounded advantage path")
+                opponents = [p for pid, p in snapshot["players"].items() if roster[pid]["team_id"] != team and pid != foul["player_id"]]
+                require(min(distance(p, e["end"]) for p in opponents) > 2.5, "advantage not supported by open continuation")
             if kind == "parry":
                 prior = by_id.get(e["shot_event_id"], {})
                 require(prior.get("save_outcome") == "parry" and actor == prior.get("goalkeeper_id"), "parry without keeper save")
@@ -186,15 +255,15 @@ def validate_stream(metadata, events):
             require(0 <= e["start_ms"] < e["end_ms"] <= t and e["duration_ms"] == e["end_ms"]-e["start_ms"], "invalid lost-time interval")
             require(e["source_event_id"] in by_id, "missing time-loss source")
         if kind == "period_end":
-            require(period in announcements, "half ended before added time announced")
-            require(t >= metadata["period_duration_ms"] + announcements[period]["minimum_added_ms"], "half ended too early")
+            require(abandoned or period in announcements, "half ended before added time announced")
+            require(abandoned or t >= metadata["period_duration_ms"] + announcements[period]["minimum_added_ms"], "half ended too early")
             ledger = e["lost_time_ledger"]
             logged = [x for x in events[:index] if x["period"] == period and x["type"] == "time_lost"]
             require(sum(r["duration_ms"] for r in ledger) == e["lost_time_ms"] == sum(x["duration_ms"] for x in logged), "lost-time ledger mismatch")
-            require(e["actual_added_ms"] == t-metadata["period_duration_ms"], "incorrect actual added time")
+            require(e["actual_added_ms"] == max(0, t-metadata["period_duration_ms"]), "incorrect actual added time")
             ends[period], stopped = e["match_time_ms"], True
         by_id[e["event_id"]] = e
-    if score != metadata["final_score"] or set(starts) != {1, 2} or set(ends) != {1, 2}:
+    if score != metadata["final_score"] or set(starts) != set(ends) or (not abandoned and set(starts) != {1, 2}):
         raise ValueError("Incomplete match/final score mismatch")
-    if ends[2] != metadata["match_duration_ms"]:
+    if ends[max(ends)] != metadata["match_duration_ms"]:
         raise ValueError("Incorrect match duration")

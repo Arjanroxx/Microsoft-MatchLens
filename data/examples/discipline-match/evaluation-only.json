@@ -1,0 +1,290 @@
+[
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 1723,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 1723,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 315990,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 478311,
+    "behaviour": "quick-play",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 563629,
+    "behaviour": "higher-press",
+    "reason": "after_conceding",
+    "trigger_event_id": "evt-000235"
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 745435,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 753686,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 849284,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 1194753,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 1323416,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 1644175,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 1677385,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 2058826,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 2096767,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 2474067,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 2544434,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 1,
+    "period_time_ms": 2795974,
+    "behaviour": "quick-play",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 1,
+    "period_time_ms": 2867801,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 232866,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 310521,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 647602,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 672424,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 1017531,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 1017531,
+    "behaviour": "quick-play",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 1231031,
+    "behaviour": "higher-press",
+    "reason": "after_conceding",
+    "trigger_event_id": "evt-001501"
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 1429715,
+    "behaviour": "patient",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 1429715,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 1819259,
+    "behaviour": "quick-play",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 1855163,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 2171268,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 2175797,
+    "behaviour": "balanced",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 2577278,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "away",
+    "period": 2,
+    "period_time_ms": 2612774,
+    "behaviour": "quick-play",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 2651762,
+    "behaviour": "higher-press",
+    "reason": "after_conceding",
+    "trigger_event_id": "evt-001986"
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 2833195,
+    "behaviour": "higher-press",
+    "reason": "interval_change",
+    "trigger_event_id": null
+  },
+  {
+    "team_id": "home",
+    "period": 2,
+    "period_time_ms": 3233380,
+    "behaviour": "higher-press",
+    "reason": "after_conceding",
+    "trigger_event_id": "evt-002215"
+  }
+]

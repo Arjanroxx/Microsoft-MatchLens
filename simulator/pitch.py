@@ -85,6 +85,12 @@ class PitchState:
         self.positions[player_on] = self.positions.pop(player_off)
         self.slots[player_on] = self.slots.pop(player_off)
 
+    def dismiss(self, player):
+        if player not in self.positions:
+            raise ValueError("Inactive player cannot be dismissed")
+        self.positions.pop(player)
+        self.slots.pop(player)
+
     def direction(self, team):
         return 1 if (team == "home") == (self.period == 1) else -1
 
