@@ -14,6 +14,9 @@ from simulator.statistics import calculate_statistics
 
 def validate(metadata, events):
     """Validate core stream invariants; raise ValueError on the first violation."""
+    if metadata.get("schema_version") == "1.5":
+        from simulator.validation import validate_stream
+        return validate_stream(metadata, events)
     roster = {p["player_id"]: p["team_id"] for p in metadata["players"]}
     player_metadata = {p["player_id"]: p for p in metadata["players"]}
     active = {pid for pid, p in player_metadata.items() if p.get("is_starter", True)}

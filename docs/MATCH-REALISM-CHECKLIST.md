@@ -2,7 +2,7 @@
 
 This is a connected, simplified football simulation. Adding event labels alone does not make it a complete match engine. Each new feature must change the underlying state, restart, eligible actors, statistics, and UI consistently.
 
-Substitutions are the focus of this implementation. The remaining features below are **not implemented** unless checked. Priorities are engineering recommendations, not additional hackathon requirements.
+Schema 1.5 implements substitutions and all of Priority 1. Features below are **not implemented** unless checked. See [the implementation and UI handoff](RESTARTS-AND-CLOCK.md) for the exact scope and remaining 2D limitations. Priorities are engineering recommendations, not additional hackathon requirements.
 
 ## Implemented foundations
 
@@ -15,17 +15,17 @@ Substitutions are the focus of this implementation. The remaining features below
 - [x] Bench, position-compatible substitutions, current-rating selection, active lineup and stint minutes.
 - [x] Mostly 60–70 minute changes; occasional half-time changes; configurable limits represented in metadata.
 - [x] Interval behaviour changes and temporary pressure response after conceding.
-- [x] Explicit simplified substitution breaks and resume events.
+- [x] Natural ball-out/goal stoppages, explicit restart placement/delivery, and resume events.
 
-## Priority 1: coherent ball-out and restart model
+## Priority 1: coherent ball-out and restart model — implemented in 1.5
 
-- [ ] **Touchline exits and throw-ins:** detect actual line crossings instead of clamping the ball to the pitch; record last touch, restart team/location, and possession change.
-- [ ] **Goal kicks and corners:** distinguish an unsuccessful shot/clearance crossing the goal line from a goalkeeper save. Current non-goal shots simplify to opponent recoveries.
-- [ ] **Saved shots and rebounds:** save-to-hold, parry, rebound shot, and defender clearance should be different outcomes with consistent ball continuation.
-- [ ] **Natural substitution opportunities:** attach changes to these real modelled stoppages; replace the synthetic substitution-break approximation.
-- [ ] **Added time and clock:** log lost time, announce added time, finish each half after its added interval, and update every timestamp/renderer assumption. Current duration is two fixed halves, with no added time.
+- [x] **Touchline exits and throw-ins:** actual whole-ball first crossing, last touch, restart team/location and possession transition.
+- [x] **Goal kicks and corners:** goal-line decisions use the defending end and last toucher; misses and keeper parries have distinct continuations.
+- [x] **Saved shots and rebounds:** geometry-derived save-to-hold/parry, continuous parry paths, linked rebound shots and defender clearances.
+- [x] **Natural substitution opportunities:** queued plans execute at ball-out/goal stoppages or halftime; no synthetic substitution-only break.
+- [x] **Added time and clock:** explicit qualifying lost-time ledger, minimum announcement, further allowance, actual half durations, monotonic replay timestamps, renderer/statistics/stint updates.
 
-Acceptance: the next actor/restart follows the ball location and last touch, no ball teleportation in open play, and no live possession accrues while the ball is out.
+Acceptance is tested: the next actor/restart follows ball location and last touch, only explicit dead-ball placement relocates the ball, and no live possession accrues while out. The remaining simplifications (2D technique, motion heuristics, no illegal-restart sanctions) are stated in [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md).
 
 ## Priority 2: fouls, cards, free kicks, and penalties
 
@@ -78,4 +78,4 @@ Acceptance: an offside cannot be appended to a sequence while leaving the invali
 - [ ] VAR/review corrections only with an explicit review/evidence model and state rollback.
 - [ ] Special concussion or temporary-absence protocols only after choosing applicable competition rules.
 
-Recommended next build: **ball-out/restarts → fouls/free kicks/discipline → added time → offside**, with source-grounded tests at each step. A connected smaller model is preferable to random cards, offsides, or penalties that do not affect the match.
+Recommended next build: **fouls/free kicks/discipline → offside → movement/calibration**, with source-grounded tests at each step. A connected smaller model is preferable to random cards, offsides, or penalties that do not affect the match.

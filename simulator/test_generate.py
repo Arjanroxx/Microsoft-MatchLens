@@ -19,15 +19,23 @@ class GeneratorTests(unittest.TestCase):
                     self.assertEqual(sum(e["type"] == "period_start" for e in events), 2)
                     self.assertEqual(sum(e["type"] == "period_end" for e in events), 2)
                     self.assertTrue(all(e["source"] == "synthetic" for e in events))
-                    # Each pass starts where the preceding action left the ball.
-                    locations = {}
+                    # Every live flight continues from the prior ball endpoint.
+                    # Only explicit dead-ball placement and period resets relocate it.
+                    ball = None
                     for e in events:
-                        pid = e["possession_id"]
-                        if e["type"] in ("restart", "recovery"):
-                            locations[pid] = e["start"]
-                        elif e["type"] in ("pass", "shot"):
-                            self.assertEqual(e["start"], locations[pid])
-                            locations[pid] = e["end"]
+                        if e["type"] == "period_start":
+                            ball = None
+                        if e["type"] == "ball_placement":
+                            if ball is not None:
+                                self.assertEqual(e["start"], ball)
+                            ball = e["end"]
+                        elif e["type"] in ("restart", "recovery"):
+                            if ball is not None:
+                                self.assertEqual(e["start"], ball)
+                            ball = e["start"]
+                        elif e["type"] in ("pass", "shot", "restart_delivery", "clearance", "parry"):
+                            self.assertEqual(e["start"], ball)
+                            ball = e["end"]
                         if e["type"] == "pass":
                             self.assertNotEqual(e["player_id"], e["recipient_id"])
                             self.assertGreater(e["distance_m"], 0)
@@ -62,7 +70,8 @@ class GeneratorTests(unittest.TestCase):
             validate(metadata, events)
             times = [scheduled_time(e, metadata["period_duration_ms"]) for e in events]
             self.assertEqual(times, sorted(times))
-            self.assertEqual(times[-1], minutes * 120_000)
+            self.assertEqual(times[-1], metadata["match_duration_ms"])
+            self.assertGreaterEqual(times[-1], minutes * 120_000)
         for minutes in (0, 46):
             with self.assertRaises(ValueError):
                 generate(minutes_per_half=minutes)

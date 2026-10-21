@@ -1,4 +1,6 @@
-# Synthetic match data: first working version
+# Synthetic match data
+
+**Current schema 1.5:** all Priority 1 features are implemented. Read [RESTARTS-AND-CLOCK.md](../docs/RESTARTS-AND-CLOCK.md) for whole-ball exits, natural restarts/substitutions, keeper holds/parries/rebounds, lost-time policy, actual clocks and UI integration. The current complete showcase is `data/examples/restarts-match/` (seed 51, five-minute halves).
 
 This generator creates original, explicitly synthetic event streams. No downloaded football data, real player identities, cloud account, AI model, paid service, or third-party Python package is needed.
 
@@ -39,7 +41,7 @@ py -3.13 -m simulator.generate --seed 42 --scenario chaotic --output data/genera
 py -3.13 -m unittest simulator.test_generate simulator.test_metrics simulator.test_pitch simulator.test_progression -v
 ```
 
-Use `python` instead of `py -3.13` if that is how your environment exposes Python. Same generator version, seed, scenario, and duration produce identical content. Output files in the selected folder are replaced on rerun; choose a new output folder to keep an earlier run. Schema **1.4** adds benches and rating-driven substitutions to automatic match progression. Versioned match IDs distinguish new fixtures. The default `--scenario` is `match`; `balanced` is a separate baseline test profile.
+Use `python` instead of `py -3.13` if that is how your environment exposes Python. Same generator version, seed, scenario, and duration produce identical content. Output files in the selected folder are replaced on rerun; choose a new output folder to keep an earlier run. Schema **1.5** adds natural restarts, holds/parries/rebounds and added time to benches and rating-driven substitutions. Versioned match IDs distinguish new fixtures. The default `--scenario` is `match`; `balanced` is a separate baseline test profile.
 
 ## One simulated match, then calculated metrics
 
@@ -53,7 +55,7 @@ The architecture is **pitch state → player action → resolved outcome → eve
 - Shots are considered within 25 m of the opponent's goal line and within 18 m of the pitch centreline. Their result follows the goal-mouth position and goalkeeper reach, rather than an independent goal-probability draw. Goalkeepers retain goal-side positioning.
 - Distance, speeds, difficulty, and accuracy aggregates are then calculated from those events and their evidence. Validators reconstruct context, action resolution, trajectories, and metrics to check consistency.
 
-Every pass/shot contains a `pitch_snapshot` of all players at kick time. This makes the chain inspectable and supports a future pitch animation. It is a basic 2D simulation, not a professional physics engine: players are frozen during ball flight except for the receiver/interceptor (or saving keeper); fouls, offside, goalkeeper dives, ball height, and continuous off-ball trajectories are not modelled. Non-goal shots simplify to opponent recoveries rather than explicit goal kicks/corners/rebounds. Event and scoring distributions still need calibration against a documented target before claiming football realism.
+Every pass/shot contains a `pitch_snapshot` of all players at kick time. This makes the chain inspectable and supports a future pitch animation. It is a basic 2D simulation, not a professional physics engine: players are frozen during ball flight except for the receiver/interceptor (or saving keeper); fouls, offside, goalkeeper dives, ball height, and continuous off-ball trajectories are not modelled. Saved shots hold or parry into connected rebound/corner sequences; off-target shots produce a goal kick rather than an invented opponent recovery. Event and scoring distributions still need calibration against a documented target before claiming football realism.
 
 The earlier version sampled defender proximity/lane counts independently. Version 1.2 replaces that design; do not use old schema 1.1 fixtures to demonstrate shared-state difficulty.
 
@@ -68,7 +70,7 @@ For a shorter fixture, add `--minutes-per-half 5`. Default duration is two 45-mi
 | `summary.json` | Team/player metrics, event-based ratings, possession, final score, and pooled distributions for compatibility |
 | `evaluation-only.json` | Intended scenario window and scripted shot references; never provide this to insight detectors |
 
-Events include period boundaries, restarts, passes, pressure, turnovers, recoveries, shots, and goals. Not every profile or seed must produce every type. Tackles, fouls, substitutions, tracking, and corrections are not implemented yet.
+Events include period boundaries, restarts, passes, pressure, turnovers, recoveries, shots, and goals. Not every profile or seed must produce every type. Ball-outs, restart deliveries, saves/parries, clearances, substitutions and added-time records are also generated in 1.5. Tackles, fouls, offside, continuous tracking and corrections are not implemented yet.
 
 Only feed `events.jsonl` and the necessary roster/pitch metadata to analytics. The metadata match ID contains the scenario name for human traceability: detectors must treat IDs as opaque and must not read the seed, filename, scenario labels, or evaluation-only file to infer stories. Use neutral external IDs when building a blinded evaluation.
 
@@ -77,8 +79,8 @@ Only feed `events.jsonl` and the necessary roster/pitch metadata to analytics. T
 - **match (default):** evolving behaviour for each team, with interval changes and temporary higher pressing after conceding.
 - **balanced:** teammate selection favours progression and space; shots are considered in attacking positions.
 - **high-press:** a five-minute window in each full-length half where two home defenders chase the away carrier. Failed passes, recoveries, and shots emerge from geometry; no fixed number of chances or forced narrative is guaranteed.
-- **quiet-possession:** longer lateral/backward-biased passing chains in the scenario window, without shots in those chains.
-- **chaotic:** shorter possessions and more frequent turnovers in the scenario window.
+- **quiet-possession:** lateral/backward-biased selection and no shot attempts during the policy window.
+- **chaotic:** shorter decision intervals in the policy window; actual turnovers still depend on geometry.
 
 For shortened halves, the scenario window is compressed to fit. Outside the window all profiles use the baseline process. Measure actual output rather than assuming the profile label proves a particular insight.
 
@@ -88,7 +90,7 @@ For shortened halves, the scenario window is compressed to fit. Outside the wind
 py -3.13 -m simulator.replay --input data/generated/high-press --speed 60
 ```
 
-At 60×, a nominal 90-minute match takes about 90 seconds to emit. Event timestamps stay in match time. Replay writes JSON lines to the terminal; it does not yet send HTTP requests, stream through a browser, or render overlays. To inspect without waiting:
+At 60×, a full match takes its actual duration in minutes as seconds to emit, including added time. Event timestamps stay in match time. Replay writes JSON lines to the terminal; it does not yet send HTTP requests, stream through a browser, or render overlays. To inspect without waiting:
 
 ```powershell
 py -3.13 -m simulator.replay --input data/generated/high-press --no-delay
@@ -96,7 +98,7 @@ py -3.13 -m simulator.replay --input data/generated/high-press --no-delay
 
 ## Data contract
 
-Coordinates are metres on a fixed 105 × 68 pitch. Home attacks positive x in period 1 and negative x in period 2. `period_time_ms` is elapsed time within that half. Pass and shot event times represent ball arrival/action completion; the first trajectory sample gives the kick time. Events expose the complete trajectory only at completion, so replay does not reveal future observations. Tied timestamps are ordered by `sequence`; they are intentional for related event records. `event_id` is unique within a match; consumers should deduplicate by `(match_id, event_id)`.
+Coordinates are metres on a fixed 105 × 68 pitch. Home attacks positive x in period 1 and negative x in period 2. `period_time_ms` is elapsed time within that half, including added time. In 1.5, schedule using `match_time_ms`, with `period_offsets_ms` for samples and `match_duration_ms` for seeking. Pass and shot event times represent ball arrival/action completion; the first trajectory sample gives the kick time. Events expose the complete trajectory only at completion, so replay does not reveal future observations. Tied timestamps are ordered by `sequence`; they are intentional for related event records. `event_id` is unique within a match; consumers should deduplicate by `(match_id, event_id)`.
 
 Completed passes name a recipient on the same team. Incomplete passes have no successful recipient but retain `intended_recipient_id`. `intended_end` is that teammate's position at kick time; `end` is the resolved arrival/interception point. `distance_m` is actual straight-line ball displacement; `intended_distance_m` describes the attempted pass. Pressure has the defending team as actor and refers to the attacking possession. Goal records reference a preceding scoring shot; count goals once rather than adding shot and goal records together.
 
@@ -173,7 +175,7 @@ py -3.13 -m unittest discover -s simulator -p "test_*.py" -v
 
 Player records are now included automatically for every roster ID in `summary.players`, with a versioned `summary.player_rating_model`. Goals, passes, receptions, shots, interceptions, recoveries, saves, pressure observations, and linked assists/key passes come from the event stream. Ratings use only those actions and role metadata, not latent player skill or unrelated random scores. See `docs/PLAYER-RATINGS.md` for the formula, eligibility, evidence, and UI fields. The existing statistics recalculation command adds these to older matches without changing events.
 
-New matches also generate substitutions, mainly between the 60th and 70th minute, plus occasional half-time changes. They use current ratings, exclude the keeper, match position groups, and preserve player identities/formation slots. `summary.lineups`, `summary.substitutions`, and player stint fields support the UI. Recalculating an older match does not invent substitution events: generate a new schema 1.4 match to use this feature. See `docs/SUBSTITUTIONS.md` and `docs/MATCH-REALISM-CHECKLIST.md`.
+New matches also generate substitutions, mainly between the 60th and 70th minute, plus occasional half-time changes. They use current ratings, exclude the keeper, match position groups, and preserve player identities/formation slots. `summary.lineups`, `summary.substitutions`, and player stint fields support the UI. Recalculating an older match does not invent substitution events: generate a new schema 1.5 match to use this feature. See `docs/SUBSTITUTIONS.md` and `docs/MATCH-REALISM-CHECKLIST.md`.
 
 The tests cover reproducible seeds, all four profiles across multiple seeds, event ordering, valid players/teams, bounds, pass continuity, score consistency, and rejection of selected corruptions. Metric tests check a known 30 m / 3 s trajectory (10 m/s; 36 km/h), direction-normalised difficulty, pressure/distance/congestion effects, zero-distance trajectories, invalid timestamps, initial versus average shot speed, and rejection of altered metric values. Pitch tests move defenders while holding the attempt fixed: context/difficulty must change, and a blocked pass becomes an interception while the open version succeeds. Movement is bounded, and doubled traversal speed produces doubled measured speed. This checks causality and engineering invariants, not realism against professional match distributions.
 
@@ -184,4 +186,4 @@ The tests cover reproducible seeds, all four profiles across multiple seeds, eve
 3. AI owner: take only computed evidence; write two audience variants and factual fallback text.
 4. Interface owner: map fixed pitch coordinates to a pitch view and drive its clock from replay time.
 
-Next generator extensions should be intentional: tackles with distinct success outcomes, fouls/restarts, roster substitutions, player tracking if running metrics are needed, and adversarial copies with duplicate/delayed/corrected events. Keep clean source fixtures separate from intentionally corrupted ingestion tests. Reserve unseen seeds for evaluation. Video auto-eventing remains out of scope.
+Next generator extensions should be intentional: tackles with distinct success outcomes, fouls/discipline, offside, player tracking if running metrics are needed, and adversarial copies with duplicate/delayed/corrected events. Keep clean source fixtures separate from intentionally corrupted ingestion tests. Reserve unseen seeds for evaluation. Video auto-eventing remains out of scope.

@@ -1,11 +1,13 @@
 # Substitutions, participation, and evolving ratings
 
-Schema **1.4** adds a matchday squad and automatic substitutions to the existing connected simulation. It does not add a tactical configuration system. Offsides, bookings, and other gaps remain on the [realism checklist](MATCH-REALISM-CHECKLIST.md).
+Schema **1.4** introduced a matchday squad and automatic substitutions to the existing connected simulation. It does not add a tactical configuration system. Offsides, bookings, and other gaps remain on the [realism checklist](MATCH-REALISM-CHECKLIST.md).
+
+Schema **1.5** now uses natural ball-out/goal stoppages and includes added time. The former synthetic-break description below is retained only as a legacy-format note. See [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md) for current execution, event fields and clock semantics.
 
 ## What happens in a match
 
 - Each team has **11 starters and nine named substitutes** (40 player records in metadata). `is_starter` distinguishes the initial lineup from the bench.
-- Most changes occur around the **60th–70th minute**: two players around minutes 60–64, then one around 66–69, applied at the next safe completed action. Short matches scale these times proportionally.
+- Most changes occur around the **60th–70th minute**: two players around minutes 60–64, then one around 66–69, queued for the next natural ball-out or goal stoppage (so a change can be delayed beyond minute 70). Short matches scale these times proportionally.
 - A seeded 20% policy chance per team adds one half-time change. That percentage is our simulation choice, not an empirical claim about managers.
 - Automatic changes exclude the goalkeeper. A replacement must have the same `position_group`: GK, full-back (FB), centre-back (CB), wide midfield (WM), central midfield (CM), winger (W), or striker (ST).
 - Among starters with suitable unused bench cover, choose the lowest **current** rated outfield player. NR means unknown, not zero, so rated candidates are considered first. Ties use stable player IDs.
@@ -13,7 +15,7 @@ Schema **1.4** adds a matchday squad and automatic substitutions to the existing
 - Preserve the outgoing player's formation slot. Player IDs never become formation indices; substitutes can wear shirts above 11.
 - Maximum five substitutions per team, no return substitutions, maximum three in-play opportunities. A batch shares one `window_id`; half-time changes do not use an in-play opportunity. We use this selected competition configuration based on [IFAB Law 3](https://theifab.com/laws/latest/the-players/); not every competition uses identical limits.
 
-## Event sequence and simplification
+## Legacy 1.4 event sequence and simplification
 
 ```text
 completed action / period boundary
@@ -23,9 +25,9 @@ completed action / period boundary
   → next football action
 ```
 
-A substitution never interrupts an in-flight ball or appears between a scoring shot and its linked goal record. In-play breaks consume 20 simulated clock seconds in a full match; short fixtures scale that duration. Half-time changes consume no playing-clock interval. Stoppage time is unassigned in possession statistics. Added time is not implemented.
+A substitution never interrupts an in-flight ball or appears between a scoring shot and its linked goal record. In-play breaks consume 20 simulated clock seconds in a full match; short fixtures scale that duration. Half-time changes consume no playing-clock interval. Stoppage time is unassigned in possession statistics. In legacy 1.4, added time was not implemented.
 
-These are explicit **synthetic referee-authorised substitution breaks**, not a full reproduction of natural stoppages and restart laws. The current engine does not yet provide the throw-ins, corners, fouls, and goal kicks that would normally offer those opportunities. A player taking over the ball at a modelled resume is a control-state continuation, not a claim about a particular legal real-world restart. Replacements inherit the position at the break; walking off/on is not tracked.
+These are explicit **synthetic referee-authorised substitution breaks**, not a full reproduction of natural stoppages and restart laws. The legacy 1.4 engine did not yet provide the throw-ins, corners, fouls, and goal kicks that would normally offer those opportunities. A player taking over the ball at a modelled resume is a control-state continuation, not a claim about a particular legal real-world restart. Replacements inherit the position at the break; walking off/on is not tracked.
 
 ## Selection uses live evidence
 
@@ -46,13 +48,13 @@ The event's `selection` object contains the rating model, the departing player's
 Fields in `summary.players.<id>`:
 
 - `is_starter`, `position_group`, `squad_status`.
-- `entered_at_ms`, `left_at_ms`: absolute **playing-clock** milliseconds; null for unknown/not-applicable endpoints.
+- `entered_at_ms`, `left_at_ms`: absolute **monotonic match-clock** milliseconds (including added time in 1.5); null for unknown/not-applicable endpoints.
 - `minutes_played_ms`: exact stint time, suitable for reconciliation; `minutes_played` is rounded for display.
 - `rating.provisional` and `rating.finalised_at_ms`.
 
 An outgoing player's existing counters are retained. Incoming players earn their own passes, goals, assists, saves, distributions, and rating using the same formula. Administrative substitution/resume records do not earn rating evidence or points. No per-90 extrapolation is used to artificially inflate a short cameo.
 
-In this implementation, team-player minutes sum to 11 × elapsed match time. That invariant will deliberately change when dismissals or temporary absences are introduced.
+In this implementation, team-player minutes sum to 11 × actual elapsed match time including added time. That invariant will deliberately change when dismissals or temporary absences are introduced.
 
 ## Frontend integration contract
 
@@ -68,6 +70,7 @@ Do **not** draw every entry in `metadata.players`: metadata now contains the ben
 team_id, period, period_time_ms, sequence
 player_off_id, player_on_id
 window_id, halftime
+stoppage_event_id        # 1.5: originating natural stoppage
 formation_slot, position_group
 positions_after          # exactly 22 active positions after this swap
 selection               # decision-time rating evidence
@@ -91,7 +94,7 @@ The existing JavaScript adapter now exposes `lineupsAt(match, time)` and returns
 
 Rebuild lineups, participation, and ratings from the event prefix when seeking backwards. A substitute disappears from the pitch before their entrance; an outgoing player reappears when rewinding to before exit. Keep stable IDs for history, selected-player panels, and assists.
 
-New roster size is 40, but every normal action snapshot has **22 active players**, not 40. Existing 1.3 files remain supported. Recalculating an old summary will not invent a bench or substitution events; regenerate a new match for this feature.
+New roster size is 40, but every normal action snapshot has **22 active players**, not 40. Existing 1.3/1.4 files remain supported. In 1.5 use `match_time_ms`, actual period offsets and the final whistle; nominal duration no longer finalises ratings. Recalculating an old summary will not invent a bench or substitution events; regenerate a new match for this feature.
 
 ## Generate a demonstration
 

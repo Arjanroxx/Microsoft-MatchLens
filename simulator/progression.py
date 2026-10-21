@@ -8,8 +8,9 @@ BEHAVIOURS = ("balanced", "higher-press", "patient", "quick-play")
 class MatchProgression:
     def __init__(self, seed, period_duration_ms):
         self.duration = period_duration_ms
+        self.period_offsets = {}
         self.schedules, self.responses, self.previous, self.audit = {}, {}, {}, []
-        # Normal matches change every 5–8 minutes. Short demos scale the interval.
+        # Normal matches change every 5â€“8 minutes. Short demos scale the interval.
         self.minimum_interval_ms = min(300_000, max(15_000, period_duration_ms // 5))
         self.maximum_interval_ms = min(480_000, max(30_000, period_duration_ms // 3))
         self.response_duration_ms = min(180_000, max(10_000, period_duration_ms // 4))
@@ -24,7 +25,7 @@ class MatchProgression:
             self.schedules[team] = schedule
 
     def absolute_time(self, period, period_time_ms):
-        return (period - 1) * self.duration + period_time_ms
+        return self.period_offsets.get(period, (period - 1) * self.duration) + period_time_ms
 
     def states(self, period, period_time_ms):
         now = self.absolute_time(period, period_time_ms)

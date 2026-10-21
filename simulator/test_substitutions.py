@@ -29,7 +29,7 @@ class SubstitutionTests(unittest.TestCase):
             self.assertEqual(roster[event["player_off_id"]]["position_group"], roster[event["player_on_id"]]["position_group"])
             if not event["halftime"]:
                 minute = ((event["period"] - 1) * self.metadata["period_duration_ms"] + event["period_time_ms"]) / 60_000
-                self.assertTrue(60 <= minute <= 70)
+                self.assertTrue(60 <= minute <= 75)  # waits for the next natural stoppage
             self.assertEqual(len(event["positions_after"]), 22)
 
     def test_selection_uses_rating_at_decision_not_final_rating(self):
@@ -47,7 +47,7 @@ class SubstitutionTests(unittest.TestCase):
 
     def test_off_player_freezes_on_player_builds_own_minutes_and_rating(self):
         event = self.subs[0]
-        now = (event["period"] - 1) * self.metadata["period_duration_ms"] + event["period_time_ms"]
+        now = event["match_time_ms"]
         at_sub = calculate_statistics(self.metadata, self.events, as_of=(event["period"], event["period_time_ms"]))
         off, on = event["player_off_id"], event["player_on_id"]
         self.assertEqual(at_sub["players"][off]["rating"], self.result["players"][off]["rating"])
@@ -56,7 +56,7 @@ class SubstitutionTests(unittest.TestCase):
         self.assertEqual(at_sub["players"][on]["minutes_played_ms"], 0)
         self.assertIsNone(at_sub["players"][on]["rating"]["value"])
         self.assertGreater(self.result["players"][on]["involvement_events"], 0)
-        self.assertEqual(self.result["players"][on]["minutes_played_ms"], 2 * self.metadata["period_duration_ms"] - now)
+        self.assertEqual(self.result["players"][on]["minutes_played_ms"], self.metadata["match_duration_ms"] - now)
         before = calculate_statistics(self.metadata, self.events, as_of=(event["period"], event["period_time_ms"] - 1))
         self.assertEqual(before["players"][on]["squad_status"], "on_bench")
         self.assertEqual(before["players"][on]["minutes_played_ms"], 0)
@@ -64,7 +64,7 @@ class SubstitutionTests(unittest.TestCase):
     def test_evolving_ratings_and_team_minutes_reconcile(self):
         for team in ("home", "away"):
             players = [p for p in self.result["players"].values() if p["team_id"] == team]
-            self.assertEqual(sum(p["minutes_played_ms"] for p in players), 11 * self.metadata["period_duration_ms"] * 2)
+            self.assertEqual(sum(p["minutes_played_ms"] for p in players), 11 * self.metadata["match_duration_ms"])
             for p in players:
                 if p["squad_status"] == "unused_substitute":
                     self.assertEqual(p["minutes_played_ms"], 0)
@@ -81,7 +81,7 @@ class SubstitutionTests(unittest.TestCase):
         self.assertTrue(all(e["period"] == 2 and e["period_time_ms"] == 0 for e in halftime))
         for event in (e for e in stream if e["type"] == "substitution" and not e["halftime"]):
             scaled_minute = ((event["period"] - 1) * match["period_duration_ms"] + event["period_time_ms"]) / (match["period_duration_ms"] / 45)
-            self.assertTrue(60 <= scaled_minute <= 71)
+            self.assertTrue(60 <= scaled_minute <= 75)
 
     def test_invalid_lineup_and_off_player_action_are_rejected(self):
         changed = copy.deepcopy(self.events)

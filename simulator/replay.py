@@ -8,7 +8,7 @@ from simulator.generate import validate
 
 
 def scheduled_time(event, period_duration_ms):
-    return (event["period"] - 1) * period_duration_ms + event["period_time_ms"]
+    return event.get("match_time_ms", (event["period"] - 1) * period_duration_ms + event["period_time_ms"])
 
 
 def main():

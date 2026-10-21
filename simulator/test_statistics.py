@@ -102,7 +102,7 @@ class StatisticsTests(unittest.TestCase):
         self.assertEqual(sum(t["goals"] for t in result["teams"].values()), sum(e["type"] == "goal" for e in stream))
         self.assertEqual(sum(t["passes"]["attempted"] for t in result["teams"].values()), sum(e["type"] == "pass" for e in stream))
         controlled = sum(t["possession"]["time_ms"] for t in result["teams"].values())
-        self.assertEqual(controlled + result["possession"]["unassigned_time_ms"], match["period_duration_ms"] * 2)
+        self.assertEqual(controlled + result["possession"]["unassigned_time_ms"], match["match_duration_ms"])
         self.assertEqual(sum(t["possession"]["percentage"] for t in result["teams"].values()), 100)
 
 

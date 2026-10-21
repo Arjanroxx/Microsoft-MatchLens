@@ -87,3 +87,8 @@ The Python `MatchStatistics` reducer automatically includes `players` and `playe
 The existing frontend's JavaScript reducer does not yet implement player ratings. The frontend owner can port the published formula/definitions or consume shared Python snapshots from a backend. This change provides the data and integration contract; it does not change the teammate's board interface or the existing AI evidence whitelist.
 
 Schema 1.4 now includes 40 roster records (11 starters + 9 substitutes per team), with only 22 active at once. See [substitution lifecycle and UI contract](SUBSTITUTIONS.md). The original rating formula is unchanged: live event evidence evolves before a player leaves, the final appearance rating freezes at exit, and an incoming player starts with their own zero-minute, NR record. Legacy metadata without starter flags continues to treat its original roster as starters.
+
+
+## Schema 1.5 clock update
+
+Player stint times now include added time and use monotonic `match_time_ms`. Keep active players provisional through the actual final whistle, not nominal minute 90; finalise departing players at their exit as before. Restart/clearance/held/parried/rebound counters are additive descriptive fields, without new rating weights. Saved shots credit one save; the follow-up `save` event does not credit another. See [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md) for the clock and UI migration.

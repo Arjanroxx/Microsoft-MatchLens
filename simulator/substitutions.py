@@ -27,6 +27,10 @@ class SubstitutionManager:
         due = []
         for team, plans in self.plans.items():
             for plan in plans:
+                # Added time in half one can exceed the nominal halftime
+                # threshold. Keep this plan pending until the actual interval.
+                if plan["halftime"] and not (period == 2 and t == 0):
+                    continue
                 if plan.get("done") or now < plan["at_ms"]:
                     continue
                 plan["done"] = True

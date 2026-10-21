@@ -108,7 +108,7 @@ class PlayerStatisticsTests(unittest.TestCase):
             for metric in METRICS:
                 self.assertEqual(sum(p["metrics"][metric]["count"] for p in players), aggregate["metrics"][metric]["count"])
             for p in players:
-                self.assertTrue(0 <= p["minutes_played"] <= 10)
+                self.assertTrue(0 <= p["minutes_played_ms"] <= match["match_duration_ms"])
                 self.assertFalse(p["rating"]["provisional"])
         modified = copy.deepcopy(match)
         for p in modified["players"]:

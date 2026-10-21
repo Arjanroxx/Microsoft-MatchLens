@@ -31,24 +31,33 @@ def pass_context(start, intended_end, defenders, corridor_m=2):
             "corridor_half_width_m": corridor_m}
 
 
-def resolve_pass(start, aimed_end, intended_end, defenders, speed_mps):
+def resolve_pass(start, aimed_end, intended_end, defenders, speed_mps, stop_at_boundary=False):
     """Intercept using kick-time geometry and bounded straight-line defender reach."""
     length = distance(start, aimed_end)
     candidates = []
+    boundary = None
+    if stop_at_boundary:
+        from simulator.restarts import first_exit
+        boundary = first_exit(start, aimed_end)
     if length:
         for pid, pos in defenders.items():
             u = ((pos["x_m"] - start["x_m"]) * (aimed_end["x_m"] - start["x_m"])
                  + (pos["y_m"] - start["y_m"]) * (aimed_end["y_m"] - start["y_m"])) / length ** 2
             if not 0.1 <= u <= 0.9:
                 continue
-            crossing = point(start["x_m"] + u * (aimed_end["x_m"] - start["x_m"]),
-                             start["y_m"] + u * (aimed_end["y_m"] - start["y_m"]))
+            if boundary and u >= boundary["fraction"]:
+                continue  # no interception after the whole ball left the field
+            x = start["x_m"] + u * (aimed_end["x_m"] - start["x_m"])
+            y = start["y_m"] + u * (aimed_end["y_m"] - start["y_m"])
+            crossing = {"x_m": round(x, 4), "y_m": round(y, 4)} if stop_at_boundary else point(x, y)
             arrival_s = distance(start, crossing) / speed_mps
             if distance(pos, crossing) <= 4.5 * arrival_s:
                 candidates.append((arrival_s, pid, crossing))
     if candidates:
         _, interceptor, end = min(candidates)
         return {"outcome": "incomplete", "reason": "intercepted", "end": end, "interceptor_id": interceptor}
+    if boundary:
+        return {"outcome": "incomplete", "reason": "out_of_play", "end": boundary["location"], "interceptor_id": None}
     flight_s = length / speed_mps
     if distance(aimed_end, intended_end) <= min(2.5, 4.5 * flight_s):
         return {"outcome": "complete", "reason": "received", "end": aimed_end, "interceptor_id": None}

@@ -4,13 +4,14 @@ import copy
 from simulator.aggregates import METRICS, distribution, record_action_metrics
 from simulator.player_statistics import PlayerStatistics
 from simulator.ratings import RATING_MODEL
+from simulator.clock import elapsed, event_time
 
 
 class MatchStatistics:
     """Consume an ordered stream; snapshots never read future events or final score."""
 
     def __init__(self, metadata):
-        self.metadata = metadata
+        self.metadata = copy.deepcopy(metadata)
         self.duration = metadata["period_duration_ms"]
         self.team_names = {t["team_id"]: t["name"] for t in metadata["teams"]}
         self.roster = {p["player_id"]: p["team_id"] for p in metadata["players"]}
@@ -23,14 +24,18 @@ class MatchStatistics:
             "shots": {"total": 0, "on_target": 0, "off_target": 0},
             "saves": 0, "interceptions": 0, "recoveries": 0, "turnovers": 0,
             "pressure_events": 0, "possessions": 0, "substitutions": 0, "event_counts": {},
+            "throw_ins": 0, "goal_kicks": 0, "corners": 0, "clearances": 0,
+            "saves_held": 0, "saves_parried": 0, "rebound_shots": 0,
         } for team in ("home", "away")}
         self.values = {team: {metric: [] for metric in METRICS} for team in self.counts}
-        self.player_statistics = PlayerStatistics(metadata)
+        self.player_statistics = PlayerStatistics(self.metadata)
 
     def _time(self, period, period_time_ms):
-        if period not in (1, 2) or not 0 <= period_time_ms <= self.duration:
+        limit = self.metadata.get("period_actual_durations_ms", {}).get(str(period),
+                    float("inf") if self.metadata.get("schema_version") == "1.5" else self.duration)
+        if period not in (1, 2) or not 0 <= period_time_ms <= limit:
             raise ValueError("Invalid statistics clock")
-        return (period - 1) * self.duration + period_time_ms
+        return elapsed(self.metadata, period, period_time_ms)
 
     def _advance(self, target):
         if target < self.cursor:
@@ -45,23 +50,25 @@ class MatchStatistics:
         if identity in self.seen:
             return
         self.seen.add(identity)
-        when = self._time(event["period"], event["period_time_ms"])
+        if event["type"] == "period_start" and "match_time_ms" in event:
+            self.metadata.setdefault("period_offsets_ms", {})[str(event["period"])] = event["match_time_ms"]
+        when = event_time(self.metadata, event)
         kind, team = event["type"], event.get("team_id")
         # At shot completion, resolve the previously unknown release interval.
-        if kind == "shot":
+        if kind in ("shot", "parry", "clearance"):
             samples = event.get("ball_trajectory", [])
             if not samples:
                 raise ValueError("Shot observations are required for possession timing")
-            kick = self._time(event["period"], samples[0]["period_time_ms"])
-            self._advance(kick)
+            kick = elapsed(self.metadata, event["period"], samples[0]["period_time_ms"])
+            self._advance(max(self.cursor, kick))
             self.owner = None
         self._advance(when)
-        if kind in ("period_start", "period_end", "turnover", "goal", "stoppage"):
+        if kind in ("period_start", "period_end", "turnover", "goal", "stoppage", "ball_out", "loose_ball", "save", "ball_release"):
             self.owner = None
         if kind == "resume":
             self.owner = team if event.get("player_id") else None
         if kind in ("restart", "recovery"):
-            self.owner = team
+            self.owner = team if event.get("ball_in_play", True) else None
             pid = event.get("possession_id")
             if pid and pid not in self.possessions:
                 self.possessions.add(pid)
@@ -73,9 +80,17 @@ class MatchStatistics:
         stats["event_counts"][kind] = stats["event_counts"].get(kind, 0) + 1
         for event_type, counter in (("goal", "goals"), ("recovery", "recoveries"),
                                     ("turnover", "turnovers"), ("pressure", "pressure_events"),
-                                    ("substitution", "substitutions")):
+                                    ("substitution", "substitutions"), ("clearance", "clearances")):
             if kind == event_type:
                 stats[counter] += 1
+        if kind == "restart":
+            field = {"throw_in": "throw_ins", "goal_kick": "goal_kicks", "corner_kick": "corners"}.get(event.get("reason"))
+            if field:
+                stats[field] += 1
+        if kind == "restart_delivery":
+            defender_team = self.roster.get(event.get("interceptor_id"))
+            if defender_team:
+                self.counts[defender_team]["interceptions"] += 1
         if kind not in ("pass", "shot"):
             return
         record_action_metrics(values, event)
@@ -86,6 +101,8 @@ class MatchStatistics:
             if interceptor_team:
                 self.counts[interceptor_team]["interceptions"] += 1
         else:
+            if event.get("is_rebound"):
+                stats["rebound_shots"] += 1
             stats["shots"]["total"] += 1
             reason = event.get("outcome_reason")
             if event["outcome"] == "goal" or reason == "saved":
@@ -93,7 +110,10 @@ class MatchStatistics:
             if reason == "off_target":
                 stats["shots"]["off_target"] += 1
             if reason == "saved":
-                self.counts["away" if team == "home" else "home"]["saves"] += 1
+                keeper_team = self.counts["away" if team == "home" else "home"]
+                keeper_team["saves"] += 1
+                if event.get("save_outcome") in ("hold", "parry"):
+                    keeper_team["saves_held" if event["save_outcome"] == "hold" else "saves_parried"] += 1
 
     def snapshot(self, as_of=None):
         """Optionally extend the current state to a known playback time, without mutation."""
@@ -122,7 +142,7 @@ class MatchStatistics:
                 "substitutions": copy.deepcopy(self.player_statistics.substitutions),
                 "player_rating_model": copy.deepcopy(RATING_MODEL), "possession": {
             "method": "team_phase_time_v1",
-            "definition": "Restart/recovery to loss; pass flights belong to passing team; shot flights and loose-ball/restart gaps unassigned",
+            "definition": "Live restart/recovery to loss; pass/restart-delivery flights belong to initiating team; shot/clearance/parry flights and loose/dead-ball gaps unassigned",
             "percentage_denominator": "home_time_ms + away_time_ms (excludes unassigned time)",
             "elapsed_time_ms": target, "controlled_time_ms": controlled,
             "unassigned_time_ms": times["unassigned"],

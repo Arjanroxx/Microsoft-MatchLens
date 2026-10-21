@@ -2,6 +2,12 @@
 
 An interactive, buildless HTML/CSS/JavaScript frontend for the MatchLens simulator. No npm install, framework, Azure account, or AI key is needed.
 
+## Schema 1.5 and Priority 1
+
+The adapter/main screen now supports ball-out/restarts, holds/parries/rebounds, natural substitutions and added time. See [the full UI contract](../docs/RESTARTS-AND-CLOCK.md). Load `data/examples/restarts-match/metadata.json` and `events.jsonl` together for a complete demonstration. The original default fixture is preserved.
+
+Use `clockAt(match,time)` for the displayed match clock/period, `match.duration` for actual seeking, and actual period offsets for samples. New team comparison rows include throw-ins, goal kicks, corners, clearances, held/parried saves and rebound shots. A non-kickoff restart remains neutral until release. Administrative time-loss/release/placement records stay out of the main feed; their evidence remains available. Dedicated restart/added-time/bench/rating panels are optional UI-owner presentation work.
+
 ## Run locally
 
 From the repository root:
@@ -44,7 +50,7 @@ Click **Load a match**, and select **metadata.json and events.jsonl together** f
 
 For a backend, replace `load()` with a fetch to your match endpoints while retaining `prepare(metadata, events)`. Do not expose API keys to the browser. Current `prepare` expects a complete preloaded replay; true live streaming requires a delayed clock or kick/trajectory/completion observation messages, as documented in `docs/UI-INTEGRATION.md`.
 
-The JS reducer follows `simulator/statistics.py`. Possession uses `team_phase_time_v1`: excludes shot flights and unassigned gaps; denominator is the sum of assigned home/away phase time. While a shot is unresolved it provisionally extends the last known possession, consistent with the Python reducer. Empty metrics display a dash. Pass speed is whole-flight mean; shot initial speed is separately labelled. Metric means are event-weighted.
+The JS reducer follows `simulator/statistics.py`. Possession uses `team_phase_time_v1`: excludes shot flights and unassigned gaps; denominator is the sum of assigned home/away phase time. Schema 1.5 release events clear shot/clearance/parry possession immediately; legacy shots without a release record remain provisional until completion. Empty metrics display a dash. Pass speed is whole-flight mean; shot initial speed is separately labelled. Metric means are event-weighted.
 
 To add Foundry, send computed evidence from a backend to the model; attach verified event references and an `as_of` clock to returned insights. Refuse future insights when replaying an earlier time. The current recap is a factual template, not an AI integration.
 
@@ -55,7 +61,7 @@ The pitch interpolates player positions between exact state anchors for presenta
 Node 18+ is required only for tests:
 
 ```bash
-node --test frontend/tests/replay.test.mjs frontend/tests/startup.test.mjs frontend/tests/substitutions.test.mjs
+node --test frontend/tests/replay.test.mjs frontend/tests/startup.test.mjs frontend/tests/substitutions.test.mjs frontend/tests/restarts.test.mjs
 node --check frontend/app.mjs
 ```
 
