@@ -9,9 +9,15 @@ class PlayerStatistics:
     def __init__(self, metadata):
         self.duration = metadata["period_duration_ms"]
         self.roster = {p["player_id"]: p for p in metadata["players"]}
+        self.stints = {pid: {"entered_at_ms": 0 if p.get("is_starter", True) else None,
+                             "left_at_ms": None} for pid, p in self.roster.items()}
+        self.active = {pid for pid, stint in self.stints.items() if stint["entered_at_ms"] is not None}
+        self.substitutions = []
         self.players = {pid: {
             "player_id": pid, "team_id": p["team_id"], "name": p.get("name", pid),
             "shirt_number": p.get("shirt_number"), "role": p.get("role", "unknown"),
+            "position_group": p.get("position_group", p.get("role", "unknown")),
+            "is_starter": p.get("is_starter", True),
             "goals": 0, "assists": 0, "key_passes": 0, "passes_received": 0,
             "passes": {"attempted": 0, "completed": 0, "incomplete": 0, "hard_completed": 0},
             "shots": {"total": 0, "on_target": 0, "off_target": 0},
@@ -23,13 +29,13 @@ class PlayerStatistics:
         self.seen, self.last_pass, self.shot_creators = set(), {}, {}
 
     def _credit(self, pid, field, event):
-        if pid not in self.players:
+        if pid not in self.active:
             return
         self.players[pid][field] += 1
         self.evidence[pid].add(event["event_id"])
 
     def _keeper(self, team):
-        candidates = [pid for pid, p in self.roster.items() if p["team_id"] == team and p.get("role") == "GK"]
+        candidates = [pid for pid, p in self.roster.items() if pid in self.active and p["team_id"] == team and p.get("role") == "GK"]
         return candidates[0] if len(candidates) == 1 else None
 
     def update(self, event):
@@ -37,7 +43,29 @@ class PlayerStatistics:
             return
         self.seen.add(event["event_id"])
         kind, actor, team = event["type"], event.get("player_id"), event.get("team_id")
-        if kind in ("period_start", "period_end"):
+        if kind == "substitution":
+            off, on = event["player_off_id"], event["player_on_id"]
+            if (off not in self.active or on not in self.roster or on in self.active
+                    or self.stints[on]["entered_at_ms"] is not None
+                    or self.roster[off]["team_id"] != team or self.roster[on]["team_id"] != team):
+                raise ValueError("Invalid player participation transition")
+            now = (event["period"] - 1) * self.duration + event["period_time_ms"]
+            self.stints[off]["left_at_ms"] = now
+            self.stints[on]["entered_at_ms"] = now
+            self.active.remove(off)
+            self.active.add(on)
+            self.last_pass.clear()
+            self.substitutions.append({k: event[k] for k in ("event_id", "team_id", "period", "period_time_ms", "player_off_id", "player_on_id", "window_id")}
+                                      | {"halftime": event.get("halftime", False),
+                                         "formation_slot": event.get("formation_slot"),
+                                         "position_group": event.get("position_group"),
+                                         "rating_at_exit": event.get("selection", {}).get("player_off_rating")})
+            return
+        if actor in self.roster and actor not in self.active:
+            raise ValueError("An inactive player cannot perform an action")
+        if kind == "resume":
+            return
+        if kind in ("period_start", "period_end", "stoppage"):
             self.last_pass.clear()
         if actor in self.players:
             self.evidence[actor].add(event["event_id"])
@@ -98,8 +126,17 @@ class PlayerStatistics:
             stats["passes"]["accuracy_percentage"] = round(100 * stats["passes"]["completed"] / attempts, 2) if attempts else None
             stats["metrics"] = {key: distribution(values) for key, values in self.values[pid].items()}
             stats["involvement_events"] = len(self.evidence[pid])
-            # Current simulator has 22 starters, no substitutions or dismissals.
-            stats["minutes_played"] = round(elapsed_ms / 60_000, 2)
-            stats["minutes_basis"] = "all_roster_players_are_starters_no_substitutions"
-            stats["rating"] = player_rating(stats, self.evidence[pid], elapsed_ms < 2 * self.duration)
+            stint = self.stints[pid]
+            entered, left = stint["entered_at_ms"], stint["left_at_ms"]
+            end = min(elapsed_ms, left if left is not None else elapsed_ms)
+            stats["minutes_played"] = round(max(0, end - entered) / 60_000, 2) if entered is not None else 0
+            stats["minutes_played_ms"] = max(0, end - entered) if entered is not None else 0
+            stats["entered_at_ms"], stats["left_at_ms"] = entered, left
+            stats["minutes_basis"] = "starting_lineup_and_substitution_events" if any("is_starter" in p for p in self.roster.values()) else "legacy_all_roster_players_start"
+            stats["squad_status"] = ("substituted_off" if left is not None else
+                                      "on_bench" if entered is None and elapsed_ms < 2 * self.duration else
+                                      "unused_substitute" if entered is None else
+                                      "full_time" if elapsed_ms >= 2 * self.duration else "on_pitch")
+            stats["rating"] = player_rating(stats, self.evidence[pid], left is None and elapsed_ms < 2 * self.duration)
+            stats["rating"]["finalised_at_ms"] = left if left is not None else 2 * self.duration if elapsed_ms >= 2 * self.duration else None
         return players

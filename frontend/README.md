@@ -55,7 +55,7 @@ The pitch interpolates player positions between exact state anchors for presenta
 Node 18+ is required only for tests:
 
 ```bash
-node --test frontend/tests/replay.test.mjs frontend/tests/startup.test.mjs
+node --test frontend/tests/replay.test.mjs frontend/tests/startup.test.mjs frontend/tests/substitutions.test.mjs
 node --check frontend/app.mjs
 ```
 
@@ -68,6 +68,8 @@ Editable Canva UI concept: https://canva.link/v7vphmg7sg30of0
 The functional application is implemented in HTML/CSS/JS. Canva is an editable visual concept accompanying that implementation. Fonts use Google Fonts with local system fallbacks. No external JavaScript/CDN dependencies.
 
 ## Smoother replay update
+
+Schema 1.4 compatibility: `model.mjs` now understands starting lineups, substitution anchors, formation-slot inheritance, stoppage/resume possession, and rewinds through lineup changes. Metadata can contain 40 players; only 22 active markers are rendered. `lineupsAt(match,time)` exposes bench and substituted-off IDs. See `docs/SUBSTITUTIONS.md` for the frontend handoff. The included original frontend fixture remains schema 1.3; load `data/examples/substitutions-match/metadata.json` and `events.jsonl` together to exercise the new flow. Dedicated bench/substitution panels and Python-equivalent live player ratings remain frontend integration work.
 
 Default replay speed is now 4×. The amber player highlight means established ball control; while the ball travels, no intended receiver is marked as the carrier. At a simulator kickoff, old phase trails are cleared and positions reset at the recorded restart timestamp. Goal and halftime resets are not blended early. The pitch glow follows the team in control or taking the current action.
 

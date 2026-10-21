@@ -15,6 +15,13 @@ from simulator.statistics import calculate_statistics
 def validate(metadata, events):
     """Validate core stream invariants; raise ValueError on the first violation."""
     roster = {p["player_id"]: p["team_id"] for p in metadata["players"]}
+    player_metadata = {p["player_id"]: p for p in metadata["players"]}
+    active = {pid for pid, p in player_metadata.items() if p.get("is_starter", True)}
+    ever_played = active.copy()
+    active_slots = {pid: p.get("formation_slot") or p.get("shirt_number") for pid, p in player_metadata.items() if pid in active}
+    substitution_counts = {"home": 0, "away": 0}
+    substitution_windows = {"home": set(), "away": set()}
+    in_stoppage = False
     seen, previous, score = set(), (0, 0), {"home": 0, "away": 0}
     possession_team = {}
     for sequence, event in enumerate(events, 1):
@@ -33,6 +40,31 @@ def validate(metadata, events):
         require(team in (None, "home", "away"), "invalid team")
         if actor:
             require(roster.get(actor) == team, "player/team mismatch")
+            require(actor in active, "inactive player action")
+        if event["type"] == "stoppage":
+            in_stoppage = True
+        if event["type"] == "resume":
+            require(in_stoppage, "resume without stoppage")
+            in_stoppage = False
+        if event["type"] == "substitution":
+            off, on = event["player_off_id"], event["player_on_id"]
+            require(in_stoppage, "substitution outside a stoppage")
+            require(off in active and on in roster and on not in ever_played, "invalid substitution membership")
+            require(roster[off] == team and roster[on] == team, "substitution team mismatch")
+            require(player_metadata[off]["role"] != "GK", "automatic goalkeeper substitution")
+            require(player_metadata[off]["position_group"] == player_metadata[on]["position_group"], "incompatible substitute")
+            require(event["formation_slot"] == active_slots[off], "substitute did not inherit formation slot")
+            require(not event["halftime"] or (event["period"] == 2 and event["period_time_ms"] == 0), "invalid half-time window")
+            active_slots[on] = active_slots.pop(off)
+            active.remove(off)
+            active.add(on)
+            ever_played.add(on)
+            substitution_counts[team] += 1
+            if not event["halftime"]:
+                substitution_windows[team].add(event["window_id"])
+            require(substitution_counts[team] <= 5 and len(substitution_windows[team]) <= 3, "substitution limit exceeded")
+            require(sum(roster[pid] == team for pid in active) == 11, "invalid active team size")
+            require(set(event["positions_after"]) == active, "incorrect substitution position snapshot")
         for key in ("start", "end"):
             if key in event:
                 p = event[key]
@@ -46,7 +78,8 @@ def validate(metadata, events):
             require(roster.get(recipient) == team if event["outcome"] == "complete" else recipient is None,
                     "invalid pass recipient")
             require(recipient != actor, "self pass")
-            if event["schema_version"] in ("1.1", "1.2", "1.3"):
+            require(event["intended_recipient_id"] in active if "intended_recipient_id" in event else True, "inactive pass target")
+            if event["schema_version"] in ("1.1", "1.2", "1.3", "1.4"):
                 direction = 1 if (team == "home") == (event["period"] == 1) else -1
                 intended = event.get("intended_end", event["end"])
                 expected = pass_difficulty(event["start"], intended, direction,
@@ -56,9 +89,9 @@ def validate(metadata, events):
                 actual_distance = math.hypot(event["end"]["x_m"] - event["start"]["x_m"],
                                              event["end"]["y_m"] - event["start"]["y_m"])
                 require(event["distance_m"] == round(actual_distance, 2), "incorrect pass distance")
-        if event["type"] in ("pass", "shot") and event["schema_version"] in ("1.2", "1.3"):
+        if event["type"] in ("pass", "shot") and event["schema_version"] in ("1.2", "1.3", "1.4"):
             snapshot = event["pitch_snapshot"]
-            require(set(snapshot["players"]) == set(roster), "incomplete pitch snapshot")
+            require(set(snapshot["players"]) == active, "pitch snapshot does not match active lineup")
             require(snapshot["period_time_ms"] == event["ball_trajectory"][0]["period_time_ms"], "snapshot clock mismatch")
             require(distance(snapshot["players"][actor], event["start"]) < .001, "actor is not at the ball")
             for position in snapshot["players"].values():
@@ -93,7 +126,7 @@ def validate(metadata, events):
             expected_samples = make_trajectory(event["start"], event["end"], snapshot["period_time_ms"], command,
                                                decelerate=event["type"] == "shot")
             require(event["ball_trajectory"] == expected_samples, "trajectory not supported by kick command")
-        if event["type"] in ("pass", "shot") and event["schema_version"] in ("1.1", "1.2", "1.3"):
+        if event["type"] in ("pass", "shot") and event["schema_version"] in ("1.1", "1.2", "1.3", "1.4"):
             samples = event["ball_trajectory"]
             require(len(samples) >= 2, "missing ball observations")
             require(samples[0]["period_time_ms"] >= (events[sequence - 2]["period_time_ms"]

@@ -29,7 +29,8 @@ export function statistics(match, time) {
     if(e.t>time)break;
     if(e.type==='shot'){advance((e.period-1)*match.metadata.period_duration_ms+e.ball_trajectory[0].period_time_ms);owner=null;}
     advance(e.t);
-    if(['period_start','period_end','turnover','goal'].includes(e.type))owner=null;
+    if(['period_start','period_end','turnover','goal','stoppage'].includes(e.type))owner=null;
+    if(e.type==='resume')owner=e.player_id?e.team_id:null;
     if(['restart','recovery'].includes(e.type))owner=e.team_id;
     const s=counts[e.team_id];if(!s)continue;
     if(e.type==='goal')s.goals++;
@@ -57,12 +58,24 @@ export function statistics(match, time) {
 const mixPoint=(a,b,u)=>({x_m:a.x_m+(b.x_m-a.x_m)*u,y_m:a.y_m+(b.y_m-a.y_m)*u});
 // This is PitchState.FORMATION in simulator/pitch.py, used only for the
 // explicit kickoff resets in engine.py. Other versions wait for a snapshot.
-function kickoffPositions(match, period, owner, ball) {
-  if (match.metadata.schema_version !== '1.3') return null;
+export function lineupsAt(match,time) {
+  const slots=Object.fromEntries(match.metadata.players.filter(p=>p.is_starter!==false).map(p=>[p.player_id,p.formation_slot||p.shirt_number]));
+  const off=new Set();
+  for(const event of match.events){
+    if(event.t>time)break;
+    if(event.type!=='substitution')continue;
+    const slot=slots[event.player_off_id];delete slots[event.player_off_id];
+    slots[event.player_on_id]=event.formation_slot||slot;off.add(event.player_off_id);
+  }
+  return {slots,onPitch:Object.keys(slots),substitutedOff:[...off],bench:match.metadata.players.filter(p=>!(p.player_id in slots)&&!off.has(p.player_id)).map(p=>p.player_id)};
+}
+function kickoffPositions(match, period, owner, ball, time=0) {
+  if (!['1.3','1.4'].includes(match.metadata.schema_version)) return null;
   const formation=[[5,34],[25,8],[25,25],[25,43],[25,60],[48,15],[50,34],[48,53],[72,14],[76,34],[72,54]];
   const positions={};
-  for(const player of match.metadata.players){
-    const anchor=formation[player.shirt_number-1];
+  const slots=lineupsAt(match,time).slots;
+  for(const player of match.metadata.players.filter(p=>p.player_id in slots)){
+    const anchor=formation[slots[player.player_id]-1];
     if(!anchor)return null;
     const [x,y]=anchor,positive=(player.team_id==='home')===(period===1);
     positions[player.player_id]={x_m:positive?x:105-x,y_m:y};
@@ -83,10 +96,13 @@ function visualFrames(match){
   }
   for(const event of match.events){
     if(event.type!=='restart'||event.reason!=='kickoff')continue;
-    const positions=kickoffPositions(match,event.period,event.player_id,event.start);
+    const positions=kickoffPositions(match,event.period,event.player_id,event.start,event.t);
     if(positions)frames.push({t:event.t,sequence:event.sequence,period:event.period,blend:false,positions});
   }
   const order=(a,b)=>a.t-b.t||a.sequence-b.sequence;
+  for(const event of match.events){
+    if(event.type==='substitution'&&event.positions_after)frames.push({t:event.t,sequence:event.sequence,period:event.period,blend:false,positions:event.positions_after});
+  }
   frames.sort(order);
   // engine.py moves a recoverer to the stationary ball before emitting recovery.
   // Anchor that arrival so control never changes early and the gap is continuous.
@@ -124,10 +140,10 @@ export function boardAt(match,time,{smooth=true}={}){
   let ball=null,carrierId=null,latestControl=null,lastEvent=null;
   for(const event of match.events){
     if(event.t>time)break;lastEvent=event;
-    if(['period_start','period_end','goal','turnover'].includes(event.type)){
+    if(['period_start','period_end','goal','turnover','stoppage'].includes(event.type)){
       carrierId=null;latestControl=event;
     }
-    if(['restart','recovery'].includes(event.type)){
+    if(['restart','recovery','resume'].includes(event.type)){
       carrierId=event.player_id;latestControl=event;
     }
     if(event.type==='pass'){
@@ -135,7 +151,7 @@ export function boardAt(match,time,{smooth=true}={}){
       latestControl=event;
     }
     if(event.type==='shot'){carrierId=null;latestControl=event;}
-    if(['restart','recovery','turnover'].includes(event.type)&&event.start)ball=event.start;
+    if(['restart','recovery','turnover','resume'].includes(event.type)&&event.start)ball=event.start;
     if(['pass','shot'].includes(event.type))ball=event.end;
   }
   const active=!!action&&time<action.t;
@@ -152,8 +168,8 @@ export function boardAt(match,time,{smooth=true}={}){
   // The engine keeps the carrier at the ball throughout the decision interval.
   if(carrierId&&ball&&positions[carrierId])positions[carrierId]={x_m:ball.x_m,y_m:ball.y_m};
   const period=time<match.metadata.period_duration_ms?1:2;
-  const phase=active?'flight':carrierId?'controlled':lastEvent?.type==='goal'?'goal':lastEvent?.type==='period_end'?'interval':'loose';
-  return {positions,ball,action,active,carrierId,phase,period,lastEvent,latestControl};
+  const phase=active?'flight':carrierId?'controlled':['stoppage','substitution'].includes(lastEvent?.type)?'stoppage':lastEvent?.type==='goal'?'goal':lastEvent?.type==='period_end'?'interval':'loose';
+  return {positions,ball,action,active,carrierId,phase,period,lastEvent,latestControl,lineups:lineupsAt(match,time)};
 }
 
 // Event labels must also handle boundaries/restarts, which have no outcome field.
@@ -162,5 +178,5 @@ export function eventTitle(event) {
   if (event.type === 'shot') return 'Shot · ' + String(event.outcome_reason || event.outcome || 'resolved').replaceAll('_', ' ');
   return {goal:'Goal!', recovery:'Possession recovered', turnover:'Possession lost',
     pressure:'Pressure applied', restart:'Play restarts', period_start:'Half begins',
-    period_end:'Half ends'}[event.type] || event.type;
+    period_end:'Half ends',substitution:'Substitution',stoppage:'Play stopped',resume:'Play resumes'}[event.type] || event.type;
 }

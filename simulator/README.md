@@ -39,13 +39,13 @@ py -3.13 -m simulator.generate --seed 42 --scenario chaotic --output data/genera
 py -3.13 -m unittest simulator.test_generate simulator.test_metrics simulator.test_pitch simulator.test_progression -v
 ```
 
-Use `python` instead of `py -3.13` if that is how your environment exposes Python. Same generator version, seed, scenario, and duration produce identical content. Output files in the selected folder are replaced on rerun; choose a new output folder to keep an earlier run. Schema **1.3** adds automatic progression to the persistent pitch simulation and includes the version in match IDs so regenerated data is distinct from old fixtures. The default `--scenario` is now `match`; `balanced` is a separate baseline test profile.
+Use `python` instead of `py -3.13` if that is how your environment exposes Python. Same generator version, seed, scenario, and duration produce identical content. Output files in the selected folder are replaced on rerun; choose a new output folder to keep an earlier run. Schema **1.4** adds benches and rating-driven substitutions to automatic match progression. Versioned match IDs distinguish new fixtures. The default `--scenario` is `match`; `balanced` is a separate baseline test profile.
 
 ## One simulated match, then calculated metrics
 
 The architecture is **pitch state → player action → resolved outcome → event evidence → metrics**. We do not sample a pass-difficulty score or a measured speed as an unrelated random number. These deterministic calculations live in `metrics.py`; the match process and actions live in `engine.py`; persistent positions and geometry live in `pitch.py`.
 
-- All 22 players have persistent positions, roles, and seeded skill attributes. Between actions, they move toward formation/ball-related targets at a maximum 4.5 m/s. The carrier stays at the ball during the decision interval.
+- All 22 active players have persistent positions, roles, and seeded skill attributes. Metadata includes nine bench players per team. Between actions, on-pitch players move toward formation/ball-related targets at a maximum 4.5 m/s. The carrier stays at the ball during the decision interval.
 - A pass targets an actual teammate's position. Choice of teammate, kick effort, and execution error are seeded action inputs—the uncertainty of the simulated match.
 - Defender proximity and passing-lane congestion are measured from the same kick-time player positions. The nearest defender produces a pressure event only when within 2.5 m.
 - The kick creates ball samples. A defender who can reach the pass path in time intercepts it; otherwise the intended receiver must be able to reach the landing point. This resolves success/failure, actual ball endpoint, and the next possession.
@@ -63,7 +63,7 @@ For a shorter fixture, add `--minutes-per-half 5`. Default duration is two 45-mi
 
 | File | Purpose |
 |---|---|
-| `metadata.json` | Synthetic teams, 22 players, pitch dimensions, directions, seed, final score, limitations |
+| `metadata.json` | Synthetic teams, 40 squad players (22 starters), pitch dimensions, directions, seed, substitution policy, limitations |
 | `events.jsonl` | One event per line; the future ingestion input |
 | `summary.json` | Team/player metrics, event-based ratings, possession, final score, and pooled distributions for compatibility |
 | `evaluation-only.json` | Intended scenario window and scripted shot references; never provide this to insight detectors |
@@ -172,6 +172,8 @@ py -3.13 -m unittest discover -s simulator -p "test_*.py" -v
 ### Validation coverage
 
 Player records are now included automatically for every roster ID in `summary.players`, with a versioned `summary.player_rating_model`. Goals, passes, receptions, shots, interceptions, recoveries, saves, pressure observations, and linked assists/key passes come from the event stream. Ratings use only those actions and role metadata, not latent player skill or unrelated random scores. See `docs/PLAYER-RATINGS.md` for the formula, eligibility, evidence, and UI fields. The existing statistics recalculation command adds these to older matches without changing events.
+
+New matches also generate substitutions, mainly between the 60th and 70th minute, plus occasional half-time changes. They use current ratings, exclude the keeper, match position groups, and preserve player identities/formation slots. `summary.lineups`, `summary.substitutions`, and player stint fields support the UI. Recalculating an older match does not invent substitution events: generate a new schema 1.4 match to use this feature. See `docs/SUBSTITUTIONS.md` and `docs/MATCH-REALISM-CHECKLIST.md`.
 
 The tests cover reproducible seeds, all four profiles across multiple seeds, event ordering, valid players/teams, bounds, pass continuity, score consistency, and rejection of selected corruptions. Metric tests check a known 30 m / 3 s trajectory (10 m/s; 36 km/h), direction-normalised difficulty, pressure/distance/congestion effects, zero-distance trajectories, invalid timestamps, initial versus average shot speed, and rejection of altered metric values. Pitch tests move defenders while holding the attempt fixed: context/difficulty must change, and a blocked pass becomes an interception while the open version succeeds. Movement is bounded, and doubled traversal speed produces doubled measured speed. This checks causality and engineering invariants, not realism against professional match distributions.
 

@@ -1,0 +1,5649 @@
+{
+  "match_id": "synthetic-v1.4-match-0-5",
+  "event_count": 216,
+  "final_score": {
+    "home": 0,
+    "away": 0
+  },
+  "validated": true,
+  "counts": {
+    "pass": 92,
+    "period_end": 2,
+    "period_start": 2,
+    "pressure": 25,
+    "recovery": 37,
+    "restart": 2,
+    "resume": 5,
+    "shot": 2,
+    "stoppage": 5,
+    "substitution": 7,
+    "turnover": 37
+  },
+  "synthetic_metrics": {
+    "pass_difficulty_score": {
+      "count": 92,
+      "min": 15,
+      "mean": 37.05,
+      "max": 68
+    },
+    "pass_average_ball_speed_kmh": {
+      "count": 92,
+      "min": 44.4944,
+      "mean": 65.14,
+      "max": 86.3855
+    },
+    "shot_initial_segment_speed_kmh": {
+      "count": 2,
+      "min": 104.699,
+      "mean": 110.83,
+      "max": 116.9636
+    }
+  },
+  "pass_accuracy": {
+    "home": {
+      "attempted": 50,
+      "completed": 34,
+      "percentage": 68.0
+    },
+    "away": {
+      "attempted": 42,
+      "completed": 23,
+      "percentage": 54.76
+    }
+  },
+  "teams": {
+    "home": {
+      "team_id": "home",
+      "name": "Northbridge FC",
+      "goals": 0,
+      "passes": {
+        "attempted": 50,
+        "completed": 34,
+        "incomplete": 16,
+        "accuracy_percentage": 68.0
+      },
+      "shots": {
+        "total": 2,
+        "on_target": 1,
+        "off_target": 1
+      },
+      "saves": 0,
+      "interceptions": 18,
+      "recoveries": 19,
+      "turnovers": 18,
+      "pressure_events": 10,
+      "possessions": 20,
+      "substitutions": 4,
+      "event_counts": {
+        "restart": 1,
+        "pass": 50,
+        "turnover": 18,
+        "recovery": 19,
+        "shot": 2,
+        "pressure": 10,
+        "substitution": 4,
+        "resume": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 50,
+          "min": 4.14,
+          "mean": 27.17,
+          "max": 52.2
+        },
+        "intended_pass_distance_m": {
+          "count": 50,
+          "min": 7.86,
+          "mean": 31.11,
+          "max": 52.07
+        },
+        "pass_difficulty_score": {
+          "count": 50,
+          "min": 16,
+          "mean": 38.5,
+          "max": 68
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 50,
+          "min": 44.4944,
+          "mean": 66.34,
+          "max": 85.3727
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 50,
+          "min": 44.4946,
+          "mean": 66.34,
+          "max": 85.3736
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 87.8182,
+          "mean": 93.11,
+          "max": 98.4058
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 2,
+          "min": 104.699,
+          "mean": 110.83,
+          "max": 116.9636
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 2,
+          "min": 104.6992,
+          "mean": 110.83,
+          "max": 116.9636
+        },
+        "ball_average_speed_kmh": {
+          "count": 52,
+          "min": 44.4944,
+          "mean": 67.37,
+          "max": 98.4058
+        }
+      },
+      "possession": {
+        "time_ms": 325084,
+        "time_seconds": 325.084,
+        "percentage": 59.36,
+        "elapsed_time_percentage": 54.18
+      }
+    },
+    "away": {
+      "team_id": "away",
+      "name": "Southbank FC",
+      "goals": 0,
+      "passes": {
+        "attempted": 42,
+        "completed": 23,
+        "incomplete": 19,
+        "accuracy_percentage": 54.76
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 1,
+      "interceptions": 15,
+      "recoveries": 18,
+      "turnovers": 19,
+      "pressure_events": 15,
+      "possessions": 19,
+      "substitutions": 3,
+      "event_counts": {
+        "recovery": 18,
+        "pass": 42,
+        "turnover": 19,
+        "pressure": 15,
+        "restart": 1,
+        "substitution": 3,
+        "resume": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 42,
+          "min": 4.12,
+          "mean": 21.58,
+          "max": 53.94
+        },
+        "intended_pass_distance_m": {
+          "count": 42,
+          "min": 15.64,
+          "mean": 28.47,
+          "max": 53.7
+        },
+        "pass_difficulty_score": {
+          "count": 42,
+          "min": 15,
+          "mean": 35.33,
+          "max": 68
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 42,
+          "min": 48.9193,
+          "mean": 63.72,
+          "max": 86.3855
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 42,
+          "min": 48.9193,
+          "mean": 63.72,
+          "max": 86.3856
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 42,
+          "min": 48.9193,
+          "mean": 63.72,
+          "max": 86.3855
+        }
+      },
+      "possession": {
+        "time_ms": 222583,
+        "time_seconds": 222.583,
+        "percentage": 40.64,
+        "elapsed_time_percentage": 37.1
+      }
+    }
+  },
+  "players": {
+    "home-01": {
+      "player_id": "home-01",
+      "team_id": "home",
+      "name": "Northbridge Player 01",
+      "shirt_number": 1,
+      "role": "GK",
+      "position_group": "GK",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 3,
+      "passes": {
+        "attempted": 3,
+        "completed": 1,
+        "incomplete": 2,
+        "hard_completed": 0,
+        "accuracy_percentage": 33.33
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 2,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 3,
+        "turnover": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 3,
+          "min": 18.31,
+          "mean": 29.5,
+          "max": 41.13
+        },
+        "intended_pass_distance_m": {
+          "count": 3,
+          "min": 40.71,
+          "mean": 41.05,
+          "max": 41.28
+        },
+        "pass_difficulty_score": {
+          "count": 3,
+          "min": 44,
+          "mean": 47.67,
+          "max": 50
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 3,
+          "min": 76.7293,
+          "mean": 77.82,
+          "max": 78.6394
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 3,
+          "min": 76.7293,
+          "mean": 77.82,
+          "max": 78.6395
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 3,
+          "min": 76.7293,
+          "mean": 77.82,
+          "max": 78.6394
+        }
+      },
+      "involvement_events": 8,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.7,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.3,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": -0.0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.7,
+        "evidence_event_count": 8,
+        "evidence_event_ids": [
+          "evt-000061",
+          "evt-000062",
+          "evt-000063",
+          "evt-000117",
+          "evt-000118",
+          "evt-000190",
+          "evt-000191",
+          "evt-000192"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-02": {
+      "player_id": "home-02",
+      "team_id": "home",
+      "name": "Northbridge Player 02",
+      "shirt_number": 2,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 2,
+      "passes": {
+        "attempted": 2,
+        "completed": 0,
+        "incomplete": 2,
+        "hard_completed": 0,
+        "accuracy_percentage": 0.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 2,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 2,
+        "turnover": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 2,
+          "min": 23.13,
+          "mean": 23.58,
+          "max": 24.03
+        },
+        "intended_pass_distance_m": {
+          "count": 2,
+          "min": 32.8,
+          "mean": 40.99,
+          "max": 49.18
+        },
+        "pass_difficulty_score": {
+          "count": 2,
+          "min": 30,
+          "mean": 34.0,
+          "max": 38
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 67.116,
+          "mean": 75.48,
+          "max": 83.8481
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 2,
+          "min": 67.1159,
+          "mean": 75.48,
+          "max": 83.848
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 2,
+          "min": 67.116,
+          "mean": 75.48,
+          "max": 83.8481
+        }
+      },
+      "involvement_events": 6,
+      "minutes_played": 5.0,
+      "minutes_played_ms": 300000,
+      "entered_at_ms": 0,
+      "left_at_ms": 300000,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "substituted_off",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.6,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.36,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.64,
+        "evidence_event_count": 6,
+        "evidence_event_ids": [
+          "evt-000022",
+          "evt-000023",
+          "evt-000024",
+          "evt-000037",
+          "evt-000038",
+          "evt-000039"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 300000
+      }
+    },
+    "home-03": {
+      "player_id": "home-03",
+      "team_id": "home",
+      "name": "Northbridge Player 03",
+      "shirt_number": 3,
+      "role": "DF",
+      "position_group": "CB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 5,
+      "passes": {
+        "attempted": 7,
+        "completed": 7,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": 100.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 3,
+      "recoveries": 3,
+      "turnovers": 0,
+      "pressure_events": 1,
+      "event_counts": {
+        "pass": 7,
+        "recovery": 3,
+        "pressure": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 7,
+          "min": 18.03,
+          "mean": 29.06,
+          "max": 45.88
+        },
+        "intended_pass_distance_m": {
+          "count": 7,
+          "min": 18.2,
+          "mean": 28.96,
+          "max": 46.48
+        },
+        "pass_difficulty_score": {
+          "count": 7,
+          "min": 16,
+          "mean": 36.71,
+          "max": 63
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 7,
+          "min": 52.3802,
+          "mean": 63.57,
+          "max": 78.5335
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 7,
+          "min": 52.3804,
+          "mean": 63.57,
+          "max": 78.5336
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 7,
+          "min": 52.3802,
+          "mean": 63.57,
+          "max": 78.5335
+        }
+      },
+      "involvement_events": 19,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.7,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.3,
+          "hard_passing": 0.0,
+          "defence": 0.36,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.66,
+        "evidence_event_count": 19,
+        "evidence_event_ids": [
+          "evt-000012",
+          "evt-000013",
+          "evt-000021",
+          "evt-000022",
+          "evt-000034",
+          "evt-000036",
+          "evt-000037",
+          "evt-000048",
+          "evt-000049",
+          "evt-000092",
+          "evt-000096",
+          "evt-000189",
+          "evt-000190",
+          "evt-000195",
+          "evt-000197",
+          "evt-000198",
+          "evt-000211",
+          "evt-000213",
+          "evt-000214"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-04": {
+      "player_id": "home-04",
+      "team_id": "home",
+      "name": "Northbridge Player 04",
+      "shirt_number": 4,
+      "role": "DF",
+      "position_group": "CB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 1,
+      "passes_received": 2,
+      "passes": {
+        "attempted": 2,
+        "completed": 2,
+        "incomplete": 0,
+        "hard_completed": 1,
+        "accuracy_percentage": 100.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 1,
+      "event_counts": {
+        "pass": 2,
+        "pressure": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 2,
+          "min": 21.12,
+          "mean": 29.48,
+          "max": 37.84
+        },
+        "intended_pass_distance_m": {
+          "count": 2,
+          "min": 21.24,
+          "mean": 29.9,
+          "max": 38.56
+        },
+        "pass_difficulty_score": {
+          "count": 2,
+          "min": 20,
+          "mean": 44.0,
+          "max": 68
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 56.2822,
+          "mean": 63.58,
+          "max": 70.875
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 2,
+          "min": 56.282,
+          "mean": 63.58,
+          "max": 70.875
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 2,
+          "min": 56.2822,
+          "mean": 63.58,
+          "max": 70.875
+        }
+      },
+      "involvement_events": 6,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.2,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.06,
+          "passing": 0.12,
+          "hard_passing": 0.025,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.205,
+        "evidence_event_count": 6,
+        "evidence_event_ids": [
+          "evt-000078",
+          "evt-000080",
+          "evt-000081",
+          "evt-000105",
+          "evt-000188",
+          "evt-000189"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-05": {
+      "player_id": "home-05",
+      "team_id": "home",
+      "name": "Northbridge Player 05",
+      "shirt_number": 5,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-06": {
+      "player_id": "home-06",
+      "team_id": "home",
+      "name": "Northbridge Player 06",
+      "shirt_number": 6,
+      "role": "MF",
+      "position_group": "WM",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 6,
+        "completed": 3,
+        "incomplete": 3,
+        "hard_completed": 0,
+        "accuracy_percentage": 50.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 4,
+      "recoveries": 5,
+      "turnovers": 3,
+      "pressure_events": 2,
+      "event_counts": {
+        "recovery": 5,
+        "pass": 6,
+        "turnover": 3,
+        "pressure": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 6,
+          "min": 12.58,
+          "mean": 24.32,
+          "max": 35.26
+        },
+        "intended_pass_distance_m": {
+          "count": 6,
+          "min": 12.42,
+          "mean": 31.58,
+          "max": 52.07
+        },
+        "pass_difficulty_score": {
+          "count": 6,
+          "min": 18,
+          "mean": 36.83,
+          "max": 63
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 6,
+          "min": 46.1646,
+          "mean": 66.35,
+          "max": 83.9972
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 6,
+          "min": 46.1646,
+          "mean": 66.35,
+          "max": 83.9974
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 6,
+          "min": 46.1646,
+          "mean": 66.35,
+          "max": 83.9972
+        }
+      },
+      "involvement_events": 21,
+      "minutes_played": 7.54,
+      "minutes_played_ms": 452635,
+      "entered_at_ms": 0,
+      "left_at_ms": 452635,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "substituted_off",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.1,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.3,
+          "hard_passing": 0.0,
+          "defence": 0.43,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.13,
+        "evidence_event_count": 21,
+        "evidence_event_ids": [
+          "evt-000027",
+          "evt-000029",
+          "evt-000030",
+          "evt-000031",
+          "evt-000044",
+          "evt-000046",
+          "evt-000048",
+          "evt-000058",
+          "evt-000060",
+          "evt-000061",
+          "evt-000087",
+          "evt-000089",
+          "evt-000090",
+          "evt-000118",
+          "evt-000119",
+          "evt-000120",
+          "evt-000131",
+          "evt-000134",
+          "evt-000136",
+          "evt-000137",
+          "evt-000141"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 452635
+      }
+    },
+    "home-07": {
+      "player_id": "home-07",
+      "team_id": "home",
+      "name": "Northbridge Player 07",
+      "shirt_number": 7,
+      "role": "MF",
+      "position_group": "CM",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 3,
+      "passes": {
+        "attempted": 7,
+        "completed": 6,
+        "incomplete": 1,
+        "hard_completed": 1,
+        "accuracy_percentage": 85.71
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 3,
+      "recoveries": 3,
+      "turnovers": 1,
+      "pressure_events": 1,
+      "event_counts": {
+        "restart": 1,
+        "pass": 7,
+        "recovery": 3,
+        "turnover": 1,
+        "pressure": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 7,
+          "min": 18.54,
+          "mean": 31.92,
+          "max": 38.1
+        },
+        "intended_pass_distance_m": {
+          "count": 7,
+          "min": 18.49,
+          "mean": 32.23,
+          "max": 39.73
+        },
+        "pass_difficulty_score": {
+          "count": 7,
+          "min": 16,
+          "mean": 46.43,
+          "max": 65
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 7,
+          "min": 58.2007,
+          "mean": 68.9,
+          "max": 75.3954
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 7,
+          "min": 58.2008,
+          "mean": 68.9,
+          "max": 75.3955
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 7,
+          "min": 58.2007,
+          "mean": 68.9,
+          "max": 75.3954
+        }
+      },
+      "involvement_events": 19,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.5,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.1286,
+          "hard_passing": 0.025,
+          "defence": 0.3,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.4536,
+        "evidence_event_count": 19,
+        "evidence_event_ids": [
+          "evt-000002",
+          "evt-000003",
+          "evt-000049",
+          "evt-000050",
+          "evt-000065",
+          "evt-000067",
+          "evt-000069",
+          "evt-000070",
+          "evt-000072",
+          "evt-000074",
+          "evt-000076",
+          "evt-000093",
+          "evt-000095",
+          "evt-000096",
+          "evt-000103",
+          "evt-000167",
+          "evt-000172",
+          "evt-000198",
+          "evt-000199"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-08": {
+      "player_id": "home-08",
+      "team_id": "home",
+      "name": "Northbridge Player 08",
+      "shirt_number": 8,
+      "role": "MF",
+      "position_group": "WM",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 1,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 4,
+        "completed": 3,
+        "incomplete": 1,
+        "hard_completed": 0,
+        "accuracy_percentage": 75.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 3,
+      "recoveries": 3,
+      "turnovers": 1,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 4,
+        "recovery": 3,
+        "turnover": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 4,
+          "min": 7.34,
+          "mean": 25.43,
+          "max": 43.59
+        },
+        "intended_pass_distance_m": {
+          "count": 4,
+          "min": 7.86,
+          "mean": 27.95,
+          "max": 44.3
+        },
+        "pass_difficulty_score": {
+          "count": 4,
+          "min": 24,
+          "mean": 35.75,
+          "max": 48
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 4,
+          "min": 44.4944,
+          "mean": 62.68,
+          "max": 78.9816
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 4,
+          "min": 44.4946,
+          "mean": 62.68,
+          "max": 78.9818
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 4,
+          "min": 44.4944,
+          "mean": 62.68,
+          "max": 78.9816
+        }
+      },
+      "involvement_events": 13,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.4,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.06,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.3,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.36,
+        "evidence_event_count": 13,
+        "evidence_event_ids": [
+          "evt-000013",
+          "evt-000014",
+          "evt-000015",
+          "evt-000106",
+          "evt-000108",
+          "evt-000109",
+          "evt-000110",
+          "evt-000114",
+          "evt-000116",
+          "evt-000117",
+          "evt-000150",
+          "evt-000156",
+          "evt-000158"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-09": {
+      "player_id": "home-09",
+      "team_id": "home",
+      "name": "Northbridge Player 09",
+      "shirt_number": 9,
+      "role": "FW",
+      "position_group": "W",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 4,
+      "passes": {
+        "attempted": 3,
+        "completed": 3,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": 100.0
+      },
+      "shots": {
+        "total": 1,
+        "on_target": 0,
+        "off_target": 1
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 1,
+      "pressure_events": 2,
+      "event_counts": {
+        "pass": 3,
+        "recovery": 1,
+        "shot": 1,
+        "turnover": 1,
+        "pressure": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 3,
+          "min": 22.68,
+          "mean": 34.04,
+          "max": 40.12
+        },
+        "intended_pass_distance_m": {
+          "count": 3,
+          "min": 22.88,
+          "mean": 33.9,
+          "max": 39.81
+        },
+        "pass_difficulty_score": {
+          "count": 3,
+          "min": 30,
+          "mean": 38.0,
+          "max": 48
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 3,
+          "min": 57.6524,
+          "mean": 70.92,
+          "max": 77.9879
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 3,
+          "min": 57.6526,
+          "mean": 70.92,
+          "max": 77.9879
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 1,
+          "min": 87.8182,
+          "mean": 87.82,
+          "max": 87.8182
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 1,
+          "min": 104.699,
+          "mean": 104.7,
+          "max": 104.699
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 1,
+          "min": 104.6992,
+          "mean": 104.7,
+          "max": 104.6992
+        },
+        "ball_average_speed_kmh": {
+          "count": 4,
+          "min": 57.6524,
+          "mean": 75.14,
+          "max": 87.8182
+        }
+      },
+      "involvement_events": 13,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.2,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.18,
+          "hard_passing": 0.0,
+          "defence": 0.07,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.03
+        },
+        "unclamped_value": 6.22,
+        "evidence_event_count": 13,
+        "evidence_event_ids": [
+          "evt-000003",
+          "evt-000004",
+          "evt-000009",
+          "evt-000011",
+          "evt-000012",
+          "evt-000014",
+          "evt-000015",
+          "evt-000016",
+          "evt-000133",
+          "evt-000147",
+          "evt-000173",
+          "evt-000175",
+          "evt-000215"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-10": {
+      "player_id": "home-10",
+      "team_id": "home",
+      "name": "Northbridge Player 10",
+      "shirt_number": 10,
+      "role": "FW",
+      "position_group": "ST",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 2,
+      "passes": {
+        "attempted": 2,
+        "completed": 0,
+        "incomplete": 2,
+        "hard_completed": 0,
+        "accuracy_percentage": 0.0
+      },
+      "shots": {
+        "total": 1,
+        "on_target": 1,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 3,
+      "pressure_events": 1,
+      "event_counts": {
+        "pass": 2,
+        "turnover": 3,
+        "shot": 1,
+        "pressure": 1,
+        "recovery": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 2,
+          "min": 19.79,
+          "mean": 20.36,
+          "max": 20.92
+        },
+        "intended_pass_distance_m": {
+          "count": 2,
+          "min": 25.43,
+          "mean": 32.72,
+          "max": 40.0
+        },
+        "pass_difficulty_score": {
+          "count": 2,
+          "min": 21,
+          "mean": 26.0,
+          "max": 31
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 56.8508,
+          "mean": 67.15,
+          "max": 77.4411
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 2,
+          "min": 56.8508,
+          "mean": 67.15,
+          "max": 77.441
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 1,
+          "min": 98.4058,
+          "mean": 98.41,
+          "max": 98.4058
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 1,
+          "min": 116.9636,
+          "mean": 116.96,
+          "max": 116.9636
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 1,
+          "min": 116.9636,
+          "mean": 116.96,
+          "max": 116.9636
+        },
+        "ball_average_speed_kmh": {
+          "count": 3,
+          "min": 56.8508,
+          "mean": 77.57,
+          "max": 98.4058
+        }
+      },
+      "involvement_events": 11,
+      "minutes_played": 7.16,
+      "minutes_played_ms": 429754,
+      "entered_at_ms": 0,
+      "left_at_ms": 429754,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "substituted_off",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.8,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.36,
+          "hard_passing": 0.0,
+          "defence": 0.07,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.05,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.76,
+        "evidence_event_count": 11,
+        "evidence_event_ids": [
+          "evt-000050",
+          "evt-000051",
+          "evt-000052",
+          "evt-000080",
+          "evt-000081",
+          "evt-000082",
+          "evt-000084",
+          "evt-000122",
+          "evt-000124",
+          "evt-000125",
+          "evt-000126"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 429754
+      }
+    },
+    "home-11": {
+      "player_id": "home-11",
+      "team_id": "home",
+      "name": "Northbridge Player 11",
+      "shirt_number": 11,
+      "role": "FW",
+      "position_group": "W",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 2,
+      "passes": {
+        "attempted": 3,
+        "completed": 2,
+        "incomplete": 1,
+        "hard_completed": 0,
+        "accuracy_percentage": 66.67
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 1,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 3,
+        "turnover": 1,
+        "recovery": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 3,
+          "min": 24.57,
+          "mean": 37.5,
+          "max": 52.2
+        },
+        "intended_pass_distance_m": {
+          "count": 3,
+          "min": 34.92,
+          "mean": 40.73,
+          "max": 51.78
+        },
+        "pass_difficulty_score": {
+          "count": 3,
+          "min": 30,
+          "mean": 38.33,
+          "max": 47
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 3,
+          "min": 71.5355,
+          "mean": 77.21,
+          "max": 85.3727
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 3,
+          "min": 71.5356,
+          "mean": 77.21,
+          "max": 85.3736
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 3,
+          "min": 71.5355,
+          "mean": 77.21,
+          "max": 85.3727
+        }
+      },
+      "involvement_events": 8,
+      "minutes_played": 7.16,
+      "minutes_played_ms": 429754,
+      "entered_at_ms": 0,
+      "left_at_ms": 429754,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "substituted_off",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.0,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.06,
+          "hard_passing": 0.0,
+          "defence": 0.07,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.01,
+        "evidence_event_count": 8,
+        "evidence_event_ids": [
+          "evt-000004",
+          "evt-000005",
+          "evt-000006",
+          "evt-000018",
+          "evt-000020",
+          "evt-000021",
+          "evt-000076",
+          "evt-000078"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 429754
+      }
+    },
+    "home-12": {
+      "player_id": "home-12",
+      "team_id": "home",
+      "name": "Northbridge Player 12",
+      "shirt_number": 12,
+      "role": "GK",
+      "position_group": "GK",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": -0.0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-13": {
+      "player_id": "home-13",
+      "team_id": "home",
+      "name": "Northbridge Player 13",
+      "shirt_number": 13,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 1,
+        "completed": 0,
+        "incomplete": 1,
+        "hard_completed": 0,
+        "accuracy_percentage": 0.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 1,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 1,
+        "turnover": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 1,
+          "min": 4.14,
+          "mean": 4.14,
+          "max": 4.14
+        },
+        "intended_pass_distance_m": {
+          "count": 1,
+          "min": 30.6,
+          "mean": 30.6,
+          "max": 30.6
+        },
+        "pass_difficulty_score": {
+          "count": 1,
+          "min": 40,
+          "mean": 40.0,
+          "max": 40
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 1,
+          "min": 62.9089,
+          "mean": 62.91,
+          "max": 62.9089
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 1,
+          "min": 62.9089,
+          "mean": 62.91,
+          "max": 62.9089
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 1,
+          "min": 62.9089,
+          "mean": 62.91,
+          "max": 62.9089
+        }
+      },
+      "involvement_events": 3,
+      "minutes_played": 5.0,
+      "minutes_played_ms": 300000,
+      "entered_at_ms": 300000,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.18,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 3,
+        "evidence_event_ids": [
+          "evt-000137",
+          "evt-000138",
+          "evt-000139"
+        ],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-14": {
+      "player_id": "home-14",
+      "team_id": "home",
+      "name": "Northbridge Player 14",
+      "shirt_number": 14,
+      "role": "DF",
+      "position_group": "CB",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-15": {
+      "player_id": "home-15",
+      "team_id": "home",
+      "name": "Northbridge Player 15",
+      "shirt_number": 15,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-16": {
+      "player_id": "home-16",
+      "team_id": "home",
+      "name": "Northbridge Player 16",
+      "shirt_number": 16,
+      "role": "MF",
+      "position_group": "CM",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-17": {
+      "player_id": "home-17",
+      "team_id": "home",
+      "name": "Northbridge Player 17",
+      "shirt_number": 17,
+      "role": "MF",
+      "position_group": "CM",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-18": {
+      "player_id": "home-18",
+      "team_id": "home",
+      "name": "Northbridge Player 18",
+      "shirt_number": 18,
+      "role": "MF",
+      "position_group": "WM",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 2,
+        "completed": 1,
+        "incomplete": 1,
+        "hard_completed": 0,
+        "accuracy_percentage": 50.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 1,
+      "pressure_events": 2,
+      "event_counts": {
+        "pass": 2,
+        "pressure": 2,
+        "recovery": 1,
+        "turnover": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 2,
+          "min": 15.34,
+          "mean": 17.0,
+          "max": 18.66
+        },
+        "intended_pass_distance_m": {
+          "count": 2,
+          "min": 18.96,
+          "mean": 20.27,
+          "max": 21.57
+        },
+        "pass_difficulty_score": {
+          "count": 2,
+          "min": 18,
+          "mean": 25.0,
+          "max": 32
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 53.9904,
+          "mean": 54.48,
+          "max": 54.9724
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 2,
+          "min": 53.9903,
+          "mean": 54.48,
+          "max": 54.9724
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 2,
+          "min": 53.9904,
+          "mean": 54.48,
+          "max": 54.9724
+        }
+      },
+      "involvement_events": 8,
+      "minutes_played": 2.46,
+      "minutes_played_ms": 147365,
+      "entered_at_ms": 452635,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.0,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.12,
+          "hard_passing": 0.0,
+          "defence": 0.1,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.98,
+        "evidence_event_count": 8,
+        "evidence_event_ids": [
+          "evt-000172",
+          "evt-000173",
+          "evt-000194",
+          "evt-000204",
+          "evt-000206",
+          "evt-000207",
+          "evt-000208",
+          "evt-000210"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-19": {
+      "player_id": "home-19",
+      "team_id": "home",
+      "name": "Northbridge Player 19",
+      "shirt_number": 19,
+      "role": "FW",
+      "position_group": "W",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 3,
+      "passes": {
+        "attempted": 3,
+        "completed": 3,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": 100.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 3
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 3,
+          "min": 21.95,
+          "mean": 29.35,
+          "max": 37.85
+        },
+        "intended_pass_distance_m": {
+          "count": 3,
+          "min": 21.6,
+          "mean": 29.34,
+          "max": 37.9
+        },
+        "pass_difficulty_score": {
+          "count": 3,
+          "min": 44,
+          "mean": 46.33,
+          "max": 48
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 3,
+          "min": 60.9677,
+          "mean": 64.36,
+          "max": 69.2101
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 3,
+          "min": 60.9678,
+          "mean": 64.36,
+          "max": 69.21
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 3,
+          "min": 60.9677,
+          "mean": 64.36,
+          "max": 69.2101
+        }
+      },
+      "involvement_events": 6,
+      "minutes_played": 2.84,
+      "minutes_played_ms": 170246,
+      "entered_at_ms": 429754,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.2,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.18,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.18,
+        "evidence_event_count": 6,
+        "evidence_event_ids": [
+          "evt-000158",
+          "evt-000160",
+          "evt-000162",
+          "evt-000167",
+          "evt-000186",
+          "evt-000188"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "home-20": {
+      "player_id": "home-20",
+      "team_id": "home",
+      "name": "Northbridge Player 20",
+      "shirt_number": 20,
+      "role": "FW",
+      "position_group": "ST",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 4,
+      "passes": {
+        "attempted": 5,
+        "completed": 3,
+        "incomplete": 2,
+        "hard_completed": 0,
+        "accuracy_percentage": 60.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 2,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 5,
+        "turnover": 2,
+        "recovery": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 5,
+          "min": 17.78,
+          "mean": 21.53,
+          "max": 24.55
+        },
+        "intended_pass_distance_m": {
+          "count": 5,
+          "min": 17.26,
+          "mean": 22.56,
+          "max": 28.24
+        },
+        "pass_difficulty_score": {
+          "count": 5,
+          "min": 20,
+          "mean": 34.0,
+          "max": 43
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 5,
+          "min": 49.3941,
+          "mean": 57.09,
+          "max": 67.5102
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 5,
+          "min": 49.3942,
+          "mean": 57.09,
+          "max": 67.5101
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 5,
+          "min": 49.3941,
+          "mean": 57.09,
+          "max": 67.5102
+        }
+      },
+      "involvement_events": 13,
+      "minutes_played": 2.84,
+      "minutes_played_ms": 170246,
+      "entered_at_ms": 429754,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.9,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.18,
+          "hard_passing": 0.0,
+          "defence": 0.07,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.89,
+        "evidence_event_count": 13,
+        "evidence_event_ids": [
+          "evt-000160",
+          "evt-000162",
+          "evt-000175",
+          "evt-000177",
+          "evt-000178",
+          "evt-000182",
+          "evt-000184",
+          "evt-000186",
+          "evt-000199",
+          "evt-000200",
+          "evt-000201",
+          "evt-000214",
+          "evt-000215"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-01": {
+      "player_id": "away-01",
+      "team_id": "away",
+      "name": "Southbank Player 01",
+      "shirt_number": 1,
+      "role": "GK",
+      "position_group": "GK",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 2,
+      "passes": {
+        "attempted": 4,
+        "completed": 2,
+        "incomplete": 2,
+        "hard_completed": 0,
+        "accuracy_percentage": 50.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 1,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 2,
+      "turnovers": 2,
+      "pressure_events": 0,
+      "event_counts": {
+        "recovery": 2,
+        "pass": 4,
+        "turnover": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 4,
+          "min": 22.61,
+          "mean": 31.67,
+          "max": 38.48
+        },
+        "intended_pass_distance_m": {
+          "count": 4,
+          "min": 25.9,
+          "mean": 33.64,
+          "max": 41.47
+        },
+        "pass_difficulty_score": {
+          "count": 4,
+          "min": 25,
+          "mean": 41.0,
+          "max": 68
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 4,
+          "min": 62.4235,
+          "mean": 69.02,
+          "max": 75.9904
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 4,
+          "min": 62.4236,
+          "mean": 69.02,
+          "max": 75.9906
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 4,
+          "min": 62.4235,
+          "mean": 69.02,
+          "max": 75.9904
+        }
+      },
+      "involvement_events": 11,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.9,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.24,
+          "hard_passing": 0.0,
+          "defence": 0.024,
+          "saves": 0.15,
+          "goals_conceded": -0.0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.934,
+        "evidence_event_count": 11,
+        "evidence_event_ids": [
+          "evt-000017",
+          "evt-000018",
+          "evt-000019",
+          "evt-000081",
+          "evt-000083",
+          "evt-000085",
+          "evt-000086",
+          "evt-000148",
+          "evt-000149",
+          "evt-000180",
+          "evt-000181"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-02": {
+      "player_id": "away-02",
+      "team_id": "away",
+      "name": "Southbank Player 02",
+      "shirt_number": 2,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 3,
+      "passes": {
+        "attempted": 4,
+        "completed": 1,
+        "incomplete": 3,
+        "hard_completed": 0,
+        "accuracy_percentage": 25.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 1,
+      "turnovers": 3,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 4,
+        "turnover": 3,
+        "recovery": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 4,
+          "min": 11.57,
+          "mean": 26.7,
+          "max": 53.94
+        },
+        "intended_pass_distance_m": {
+          "count": 4,
+          "min": 37.19,
+          "mean": 47.49,
+          "max": 53.7
+        },
+        "pass_difficulty_score": {
+          "count": 4,
+          "min": 44,
+          "mean": 56.75,
+          "max": 68
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 4,
+          "min": 71.0049,
+          "mean": 81.43,
+          "max": 86.3855
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 4,
+          "min": 71.005,
+          "mean": 81.43,
+          "max": 86.3856
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 4,
+          "min": 71.0049,
+          "mean": 81.43,
+          "max": 86.3855
+        }
+      },
+      "involvement_events": 11,
+      "minutes_played": 6.81,
+      "minutes_played_ms": 408834,
+      "entered_at_ms": 0,
+      "left_at_ms": 408834,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "substituted_off",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.6,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.48,
+          "hard_passing": 0.0,
+          "defence": 0.036,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.556,
+        "evidence_event_count": 11,
+        "evidence_event_ids": [
+          "evt-000008",
+          "evt-000009",
+          "evt-000010",
+          "evt-000055",
+          "evt-000056",
+          "evt-000071",
+          "evt-000072",
+          "evt-000073",
+          "evt-000132",
+          "evt-000134",
+          "evt-000135"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 408834
+      }
+    },
+    "away-03": {
+      "player_id": "away-03",
+      "team_id": "away",
+      "name": "Southbank Player 03",
+      "shirt_number": 3,
+      "role": "DF",
+      "position_group": "CB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 2,
+      "passes": {
+        "attempted": 3,
+        "completed": 3,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": 100.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 0,
+      "pressure_events": 2,
+      "event_counts": {
+        "recovery": 1,
+        "pass": 3,
+        "pressure": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 3,
+          "min": 19.94,
+          "mean": 25.27,
+          "max": 33.91
+        },
+        "intended_pass_distance_m": {
+          "count": 3,
+          "min": 19.89,
+          "mean": 24.83,
+          "max": 33.12
+        },
+        "pass_difficulty_score": {
+          "count": 3,
+          "min": 17,
+          "mean": 29.0,
+          "max": 45
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 3,
+          "min": 55.1007,
+          "mean": 60.39,
+          "max": 68.3914
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 3,
+          "min": 55.1009,
+          "mean": 60.39,
+          "max": 68.3914
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 3,
+          "min": 55.1007,
+          "mean": 60.39,
+          "max": 68.3914
+        }
+      },
+      "involvement_events": 9,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.3,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.18,
+          "hard_passing": 0.0,
+          "defence": 0.12,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.3,
+        "evidence_event_count": 9,
+        "evidence_event_ids": [
+          "evt-000005",
+          "evt-000007",
+          "evt-000008",
+          "evt-000054",
+          "evt-000055",
+          "evt-000142",
+          "evt-000148",
+          "evt-000161",
+          "evt-000174"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-04": {
+      "player_id": "away-04",
+      "team_id": "away",
+      "name": "Southbank Player 04",
+      "shirt_number": 4,
+      "role": "DF",
+      "position_group": "CB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 6,
+      "event_counts": {
+        "pressure": 6
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 6,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.0,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.0,
+        "evidence_event_count": 6,
+        "evidence_event_ids": [
+          "evt-000077",
+          "evt-000157",
+          "evt-000159",
+          "evt-000166",
+          "evt-000176",
+          "evt-000185"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-05": {
+      "player_id": "away-05",
+      "team_id": "away",
+      "name": "Southbank Player 05",
+      "shirt_number": 5,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 1,
+        "completed": 0,
+        "incomplete": 1,
+        "hard_completed": 0,
+        "accuracy_percentage": 0.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 1,
+      "pressure_events": 1,
+      "event_counts": {
+        "pass": 1,
+        "turnover": 1,
+        "pressure": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 1,
+          "min": 10.72,
+          "mean": 10.72,
+          "max": 10.72
+        },
+        "intended_pass_distance_m": {
+          "count": 1,
+          "min": 25.66,
+          "mean": 25.66,
+          "max": 25.66
+        },
+        "pass_difficulty_score": {
+          "count": 1,
+          "min": 54,
+          "mean": 54.0,
+          "max": 54
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 1,
+          "min": 61.0352,
+          "mean": 61.04,
+          "max": 61.0352
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 1,
+          "min": 61.0351,
+          "mean": 61.04,
+          "max": 61.0351
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 1,
+          "min": 61.0352,
+          "mean": 61.04,
+          "max": 61.0352
+        }
+      },
+      "involvement_events": 4,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.18,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 4,
+        "evidence_event_ids": [
+          "evt-000149",
+          "evt-000150",
+          "evt-000151",
+          "evt-000187"
+        ],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-06": {
+      "player_id": "away-06",
+      "team_id": "away",
+      "name": "Southbank Player 06",
+      "shirt_number": 6,
+      "role": "MF",
+      "position_group": "WM",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 2,
+        "completed": 2,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": 100.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 0,
+      "pressure_events": 3,
+      "event_counts": {
+        "pressure": 3,
+        "pass": 2,
+        "recovery": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 2,
+          "min": 27.7,
+          "mean": 28.12,
+          "max": 28.53
+        },
+        "intended_pass_distance_m": {
+          "count": 2,
+          "min": 27.96,
+          "mean": 27.98,
+          "max": 27.99
+        },
+        "pass_difficulty_score": {
+          "count": 2,
+          "min": 22,
+          "mean": 34.5,
+          "max": 47
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 63.0297,
+          "mean": 63.28,
+          "max": 63.5244
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 2,
+          "min": 63.0299,
+          "mean": 63.28,
+          "max": 63.5245
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 2,
+          "min": 63.0297,
+          "mean": 63.28,
+          "max": 63.5244
+        }
+      },
+      "involvement_events": 8,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.2,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.12,
+          "hard_passing": 0.0,
+          "defence": 0.1,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.22,
+        "evidence_event_count": 8,
+        "evidence_event_ids": [
+          "evt-000075",
+          "evt-000088",
+          "evt-000130",
+          "evt-000132",
+          "evt-000171",
+          "evt-000177",
+          "evt-000179",
+          "evt-000180"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-07": {
+      "player_id": "away-07",
+      "team_id": "away",
+      "name": "Southbank Player 07",
+      "shirt_number": 7,
+      "role": "MF",
+      "position_group": "CM",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 4,
+        "completed": 3,
+        "incomplete": 1,
+        "hard_completed": 0,
+        "accuracy_percentage": 75.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 2,
+      "recoveries": 2,
+      "turnovers": 1,
+      "pressure_events": 1,
+      "event_counts": {
+        "recovery": 2,
+        "pass": 4,
+        "pressure": 1,
+        "restart": 1,
+        "turnover": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 4,
+          "min": 20.87,
+          "mean": 25.36,
+          "max": 36.38
+        },
+        "intended_pass_distance_m": {
+          "count": 4,
+          "min": 21.09,
+          "mean": 32.18,
+          "max": 49.96
+        },
+        "pass_difficulty_score": {
+          "count": 4,
+          "min": 18,
+          "mean": 34.25,
+          "max": 58
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 4,
+          "min": 57.4497,
+          "mean": 68.36,
+          "max": 82.5471
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 4,
+          "min": 57.4499,
+          "mean": 68.36,
+          "max": 82.5473
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 4,
+          "min": 57.4497,
+          "mean": 68.36,
+          "max": 82.5471
+        }
+      },
+      "involvement_events": 12,
+      "minutes_played": 7.66,
+      "minutes_played_ms": 459626,
+      "entered_at_ms": 0,
+      "left_at_ms": 459626,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "substituted_off",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.2,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.2,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.2,
+        "evidence_event_count": 12,
+        "evidence_event_ids": [
+          "evt-000051",
+          "evt-000053",
+          "evt-000054",
+          "evt-000068",
+          "evt-000102",
+          "evt-000104",
+          "evt-000119",
+          "evt-000121",
+          "evt-000122",
+          "evt-000123",
+          "evt-000129",
+          "evt-000130"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 459626
+      }
+    },
+    "away-08": {
+      "player_id": "away-08",
+      "team_id": "away",
+      "name": "Southbank Player 08",
+      "shirt_number": 8,
+      "role": "MF",
+      "position_group": "WM",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 2,
+        "completed": 2,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": 100.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 2,
+      "recoveries": 2,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {
+        "recovery": 2,
+        "pass": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 2,
+          "min": 29.6,
+          "mean": 33.88,
+          "max": 38.16
+        },
+        "intended_pass_distance_m": {
+          "count": 2,
+          "min": 29.15,
+          "mean": 33.42,
+          "max": 37.69
+        },
+        "pass_difficulty_score": {
+          "count": 2,
+          "min": 43,
+          "mean": 45.0,
+          "max": 47
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 66.7591,
+          "mean": 69.64,
+          "max": 72.5252
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 2,
+          "min": 66.7591,
+          "mean": 69.64,
+          "max": 72.5252
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 2,
+          "min": 66.7591,
+          "mean": 69.64,
+          "max": 72.5252
+        }
+      },
+      "involvement_events": 6,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.3,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.12,
+          "hard_passing": 0.0,
+          "defence": 0.2,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.32,
+        "evidence_event_count": 6,
+        "evidence_event_ids": [
+          "evt-000125",
+          "evt-000127",
+          "evt-000128",
+          "evt-000200",
+          "evt-000202",
+          "evt-000203"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-09": {
+      "player_id": "away-09",
+      "team_id": "away",
+      "name": "Southbank Player 09",
+      "shirt_number": 9,
+      "role": "FW",
+      "position_group": "W",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 5,
+      "passes": {
+        "attempted": 6,
+        "completed": 2,
+        "incomplete": 4,
+        "hard_completed": 0,
+        "accuracy_percentage": 33.33
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 4,
+      "pressure_events": 1,
+      "event_counts": {
+        "pass": 6,
+        "turnover": 4,
+        "pressure": 1,
+        "recovery": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 6,
+          "min": 10.1,
+          "mean": 18.28,
+          "max": 36.83
+        },
+        "intended_pass_distance_m": {
+          "count": 6,
+          "min": 17.87,
+          "mean": 25.76,
+          "max": 37.86
+        },
+        "pass_difficulty_score": {
+          "count": 6,
+          "min": 19,
+          "mean": 29.17,
+          "max": 47
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 6,
+          "min": 54.2799,
+          "mean": 62.97,
+          "max": 75.9448
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 6,
+          "min": 54.2801,
+          "mean": 62.97,
+          "max": 75.9449
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 6,
+          "min": 54.2799,
+          "mean": 62.97,
+          "max": 75.9448
+        }
+      },
+      "involvement_events": 18,
+      "minutes_played": 6.81,
+      "minutes_played_ms": 408834,
+      "entered_at_ms": 0,
+      "left_at_ms": 408834,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "substituted_off",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.6,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.5,
+          "hard_passing": 0.0,
+          "defence": 0.07,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.57,
+        "evidence_event_count": 18,
+        "evidence_event_ids": [
+          "evt-000026",
+          "evt-000027",
+          "evt-000028",
+          "evt-000033",
+          "evt-000034",
+          "evt-000035",
+          "evt-000041",
+          "evt-000042",
+          "evt-000043",
+          "evt-000044",
+          "evt-000045",
+          "evt-000047",
+          "evt-000057",
+          "evt-000058",
+          "evt-000059",
+          "evt-000138",
+          "evt-000140",
+          "evt-000142"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 408834
+      }
+    },
+    "away-10": {
+      "player_id": "away-10",
+      "team_id": "away",
+      "name": "Southbank Player 10",
+      "shirt_number": 10,
+      "role": "FW",
+      "position_group": "ST",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 4,
+      "passes": {
+        "attempted": 9,
+        "completed": 6,
+        "incomplete": 3,
+        "hard_completed": 0,
+        "accuracy_percentage": 66.67
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 5,
+      "recoveries": 5,
+      "turnovers": 3,
+      "pressure_events": 1,
+      "event_counts": {
+        "recovery": 5,
+        "pass": 9,
+        "pressure": 1,
+        "turnover": 3
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 9,
+          "min": 8.33,
+          "mean": 18.46,
+          "max": 23.0
+        },
+        "intended_pass_distance_m": {
+          "count": 9,
+          "min": 16.54,
+          "mean": 20.43,
+          "max": 26.02
+        },
+        "pass_difficulty_score": {
+          "count": 9,
+          "min": 15,
+          "mean": 25.11,
+          "max": 36
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 9,
+          "min": 48.9823,
+          "mean": 55.04,
+          "max": 61.2524
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 9,
+          "min": 48.9823,
+          "mean": 55.04,
+          "max": 61.2526
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 9,
+          "min": 48.9823,
+          "mean": 55.04,
+          "max": 61.2524
+        }
+      },
+      "involvement_events": 27,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 6.2,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.1,
+          "hard_passing": 0.0,
+          "defence": 0.35,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 6.25,
+        "evidence_event_count": 27,
+        "evidence_event_ids": [
+          "evt-000023",
+          "evt-000025",
+          "evt-000026",
+          "evt-000030",
+          "evt-000032",
+          "evt-000033",
+          "evt-000038",
+          "evt-000040",
+          "evt-000041",
+          "evt-000042",
+          "evt-000043",
+          "evt-000056",
+          "evt-000057",
+          "evt-000079",
+          "evt-000089",
+          "evt-000091",
+          "evt-000093",
+          "evt-000094",
+          "evt-000109",
+          "evt-000111",
+          "evt-000112",
+          "evt-000113",
+          "evt-000114",
+          "evt-000115",
+          "evt-000203",
+          "evt-000204",
+          "evt-000205"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-11": {
+      "player_id": "away-11",
+      "team_id": "away",
+      "name": "Southbank Player 11",
+      "shirt_number": 11,
+      "role": "FW",
+      "position_group": "W",
+      "is_starter": true,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 3,
+      "passes": {
+        "attempted": 4,
+        "completed": 2,
+        "incomplete": 2,
+        "hard_completed": 0,
+        "accuracy_percentage": 50.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 1,
+      "recoveries": 1,
+      "turnovers": 2,
+      "pressure_events": 0,
+      "event_counts": {
+        "recovery": 1,
+        "pass": 4,
+        "turnover": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 4,
+          "min": 11.18,
+          "mean": 16.64,
+          "max": 21.48
+        },
+        "intended_pass_distance_m": {
+          "count": 4,
+          "min": 15.64,
+          "mean": 24.55,
+          "max": 41.95
+        },
+        "pass_difficulty_score": {
+          "count": 4,
+          "min": 18,
+          "mean": 29.0,
+          "max": 40
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 4,
+          "min": 48.9193,
+          "mean": 59.31,
+          "max": 75.5757
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 4,
+          "min": 48.9193,
+          "mean": 59.31,
+          "max": 75.5759
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 4,
+          "min": 48.9193,
+          "mean": 59.31,
+          "max": 75.5757
+        }
+      },
+      "involvement_events": 11,
+      "minutes_played": 10.0,
+      "minutes_played_ms": 600000,
+      "entered_at_ms": 0,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.8,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.24,
+          "hard_passing": 0.0,
+          "defence": 0.07,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.83,
+        "evidence_event_count": 11,
+        "evidence_event_ids": [
+          "evt-000062",
+          "evt-000064",
+          "evt-000065",
+          "evt-000066",
+          "evt-000104",
+          "evt-000106",
+          "evt-000107",
+          "evt-000112",
+          "evt-000113",
+          "evt-000128",
+          "evt-000129"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-12": {
+      "player_id": "away-12",
+      "team_id": "away",
+      "name": "Southbank Player 12",
+      "shirt_number": 12,
+      "role": "GK",
+      "position_group": "GK",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": -0.0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-13": {
+      "player_id": "away-13",
+      "team_id": "away",
+      "name": "Southbank Player 13",
+      "shirt_number": 13,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 3.19,
+      "minutes_played_ms": 191166,
+      "entered_at_ms": 408834,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-14": {
+      "player_id": "away-14",
+      "team_id": "away",
+      "name": "Southbank Player 14",
+      "shirt_number": 14,
+      "role": "DF",
+      "position_group": "CB",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-15": {
+      "player_id": "away-15",
+      "team_id": "away",
+      "name": "Southbank Player 15",
+      "shirt_number": 15,
+      "role": "DF",
+      "position_group": "FB",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-16": {
+      "player_id": "away-16",
+      "team_id": "away",
+      "name": "Southbank Player 16",
+      "shirt_number": 16,
+      "role": "MF",
+      "position_group": "CM",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 1,
+      "passes": {
+        "attempted": 1,
+        "completed": 0,
+        "incomplete": 1,
+        "hard_completed": 0,
+        "accuracy_percentage": 0.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 1,
+      "pressure_events": 0,
+      "event_counts": {
+        "pass": 1,
+        "turnover": 1
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 1,
+          "min": 10.17,
+          "mean": 10.17,
+          "max": 10.17
+        },
+        "intended_pass_distance_m": {
+          "count": 1,
+          "min": 35.68,
+          "mean": 35.68,
+          "max": 35.68
+        },
+        "pass_difficulty_score": {
+          "count": 1,
+          "min": 33,
+          "mean": 33.0,
+          "max": 33
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 1,
+          "min": 69.8986,
+          "mean": 69.9,
+          "max": 69.8986
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 1,
+          "min": 69.8987,
+          "mean": 69.9,
+          "max": 69.8987
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 1,
+          "min": 69.8986,
+          "mean": 69.9,
+          "max": 69.8986
+        }
+      },
+      "involvement_events": 3,
+      "minutes_played": 2.34,
+      "minutes_played_ms": 140374,
+      "entered_at_ms": 459626,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.18,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 3,
+        "evidence_event_ids": [
+          "evt-000181",
+          "evt-000182",
+          "evt-000183"
+        ],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-17": {
+      "player_id": "away-17",
+      "team_id": "away",
+      "name": "Southbank Player 17",
+      "shirt_number": 17,
+      "role": "MF",
+      "position_group": "CM",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-18": {
+      "player_id": "away-18",
+      "team_id": "away",
+      "name": "Southbank Player 18",
+      "shirt_number": 18,
+      "role": "MF",
+      "position_group": "WM",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-19": {
+      "player_id": "away-19",
+      "team_id": "away",
+      "name": "Southbank Player 19",
+      "shirt_number": 19,
+      "role": "FW",
+      "position_group": "W",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 2,
+        "completed": 0,
+        "incomplete": 2,
+        "hard_completed": 0,
+        "accuracy_percentage": 0.0
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 2,
+      "recoveries": 2,
+      "turnovers": 2,
+      "pressure_events": 0,
+      "event_counts": {
+        "recovery": 2,
+        "pass": 2,
+        "turnover": 2
+      },
+      "metrics": {
+        "pass_distance_m": {
+          "count": 2,
+          "min": 4.12,
+          "mean": 4.18,
+          "max": 4.24
+        },
+        "intended_pass_distance_m": {
+          "count": 2,
+          "min": 17.28,
+          "mean": 23.62,
+          "max": 29.97
+        },
+        "pass_difficulty_score": {
+          "count": 2,
+          "min": 42,
+          "mean": 53.0,
+          "max": 64
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 2,
+          "min": 49.6067,
+          "mean": 56.36,
+          "max": 63.1065
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 2,
+          "min": 49.6069,
+          "mean": 56.36,
+          "max": 63.1066
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 2,
+          "min": 49.6067,
+          "mean": 56.36,
+          "max": 63.1065
+        }
+      },
+      "involvement_events": 8,
+      "minutes_played": 3.19,
+      "minutes_played_ms": 191166,
+      "entered_at_ms": 408834,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "full_time",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": 5.8,
+        "status": "rated",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": -0.36,
+          "hard_passing": 0.0,
+          "defence": 0.14,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": 5.78,
+        "evidence_event_count": 8,
+        "evidence_event_ids": [
+          "evt-000191",
+          "evt-000193",
+          "evt-000195",
+          "evt-000196",
+          "evt-000207",
+          "evt-000209",
+          "evt-000211",
+          "evt-000212"
+        ],
+        "explanation": "6.0 baseline plus displayed components, clamped to 1\u201310 and rounded to one decimal",
+        "finalised_at_ms": 600000
+      }
+    },
+    "away-20": {
+      "player_id": "away-20",
+      "team_id": "away",
+      "name": "Southbank Player 20",
+      "shirt_number": 20,
+      "role": "FW",
+      "position_group": "ST",
+      "is_starter": false,
+      "goals": 0,
+      "assists": 0,
+      "key_passes": 0,
+      "passes_received": 0,
+      "passes": {
+        "attempted": 0,
+        "completed": 0,
+        "incomplete": 0,
+        "hard_completed": 0,
+        "accuracy_percentage": null
+      },
+      "shots": {
+        "total": 0,
+        "on_target": 0,
+        "off_target": 0
+      },
+      "saves": 0,
+      "goals_conceded": 0,
+      "interceptions": 0,
+      "recoveries": 0,
+      "turnovers": 0,
+      "pressure_events": 0,
+      "event_counts": {},
+      "metrics": {
+        "pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "intended_pass_distance_m": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_difficulty_score": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "pass_peak_segment_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_average_ball_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_initial_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "shot_peak_segment_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        },
+        "ball_average_speed_kmh": {
+          "count": 0,
+          "min": null,
+          "mean": null,
+          "max": null
+        }
+      },
+      "involvement_events": 0,
+      "minutes_played": 0,
+      "minutes_played_ms": 0,
+      "entered_at_ms": null,
+      "left_at_ms": null,
+      "minutes_basis": "starting_lineup_and_substitution_events",
+      "squad_status": "unused_substitute",
+      "rating": {
+        "model": "matchlens-event-rating-v1",
+        "value": null,
+        "status": "insufficient_evidence",
+        "provisional": false,
+        "baseline": 6.0,
+        "components": {
+          "scoring": 0.0,
+          "assists": 0.0,
+          "creation": 0.0,
+          "passing": 0.0,
+          "hard_passing": 0.0,
+          "defence": 0.0,
+          "saves": 0.0,
+          "goals_conceded": 0,
+          "shooting": 0.0,
+          "misses": -0.0
+        },
+        "unclamped_value": null,
+        "evidence_event_count": 0,
+        "evidence_event_ids": [],
+        "explanation": "Not enough attributable action evidence to assign a rating",
+        "finalised_at_ms": 600000
+      }
+    }
+  },
+  "lineups": {
+    "home": {
+      "on_pitch": [
+        "home-01",
+        "home-03",
+        "home-04",
+        "home-05",
+        "home-07",
+        "home-08",
+        "home-09",
+        "home-13",
+        "home-18",
+        "home-19",
+        "home-20"
+      ],
+      "bench": [
+        "home-12",
+        "home-14",
+        "home-15",
+        "home-16",
+        "home-17"
+      ],
+      "substituted_off": [
+        "home-02",
+        "home-06",
+        "home-10",
+        "home-11"
+      ]
+    },
+    "away": {
+      "on_pitch": [
+        "away-01",
+        "away-03",
+        "away-04",
+        "away-05",
+        "away-06",
+        "away-08",
+        "away-10",
+        "away-11",
+        "away-13",
+        "away-16",
+        "away-19"
+      ],
+      "bench": [
+        "away-12",
+        "away-14",
+        "away-15",
+        "away-17",
+        "away-18",
+        "away-20"
+      ],
+      "substituted_off": [
+        "away-02",
+        "away-07",
+        "away-09"
+      ]
+    }
+  },
+  "substitutions": [
+    {
+      "event_id": "evt-000100",
+      "team_id": "home",
+      "period": 2,
+      "period_time_ms": 0,
+      "player_off_id": "home-02",
+      "player_on_id": "home-13",
+      "window_id": "subs-home-01",
+      "halftime": true,
+      "formation_slot": 2,
+      "position_group": "FB",
+      "rating_at_exit": 5.6
+    },
+    {
+      "event_id": "evt-000144",
+      "team_id": "away",
+      "period": 2,
+      "period_time_ms": 108834,
+      "player_off_id": "away-02",
+      "player_on_id": "away-13",
+      "window_id": "subs-away-01",
+      "halftime": false,
+      "formation_slot": 2,
+      "position_group": "FB",
+      "rating_at_exit": 5.6
+    },
+    {
+      "event_id": "evt-000145",
+      "team_id": "away",
+      "period": 2,
+      "period_time_ms": 108834,
+      "player_off_id": "away-09",
+      "player_on_id": "away-19",
+      "window_id": "subs-away-01",
+      "halftime": false,
+      "formation_slot": 9,
+      "position_group": "W",
+      "rating_at_exit": 5.6
+    },
+    {
+      "event_id": "evt-000153",
+      "team_id": "home",
+      "period": 2,
+      "period_time_ms": 129754,
+      "player_off_id": "home-10",
+      "player_on_id": "home-20",
+      "window_id": "subs-home-02",
+      "halftime": false,
+      "formation_slot": 10,
+      "position_group": "ST",
+      "rating_at_exit": 5.8
+    },
+    {
+      "event_id": "evt-000154",
+      "team_id": "home",
+      "period": 2,
+      "period_time_ms": 129754,
+      "player_off_id": "home-11",
+      "player_on_id": "home-19",
+      "window_id": "subs-home-02",
+      "halftime": false,
+      "formation_slot": 11,
+      "position_group": "W",
+      "rating_at_exit": 6.0
+    },
+    {
+      "event_id": "evt-000164",
+      "team_id": "home",
+      "period": 2,
+      "period_time_ms": 152635,
+      "player_off_id": "home-06",
+      "player_on_id": "home-18",
+      "window_id": "subs-home-04",
+      "halftime": false,
+      "formation_slot": 6,
+      "position_group": "WM",
+      "rating_at_exit": 6.1
+    },
+    {
+      "event_id": "evt-000169",
+      "team_id": "away",
+      "period": 2,
+      "period_time_ms": 159626,
+      "player_off_id": "away-07",
+      "player_on_id": "away-16",
+      "window_id": "subs-away-03",
+      "halftime": false,
+      "formation_slot": 7,
+      "position_group": "CM",
+      "rating_at_exit": 6.2
+    }
+  ],
+  "player_rating_model": {
+    "version": "matchlens-event-rating-v1",
+    "scale": {
+      "min": 1.0,
+      "max": 10.0
+    },
+    "baseline": 6.0,
+    "minimum_evidence_events": 5,
+    "eligibility": "5 attributable events, or a goal, assist, save, or goalkeeper goal conceded",
+    "assist_window_ms": 10000,
+    "limitations": [
+      "Original heuristic, not a commercial provider rating or calibrated football model",
+      "No off-ball positioning, running distance, tackles, fouls, or unobserved mistakes scored",
+      "Goalkeeper goals conceded are contextual debits, not attribution of individual fault",
+      "Pressure observations and ordinary received passes earn no direct rating bonus"
+    ],
+    "weights": {
+      "goal": {
+        "GK": 1.3,
+        "DF": 1.2,
+        "MF": 1.0,
+        "FW": 0.9
+      },
+      "assist": {
+        "GK": 0.65,
+        "DF": 0.8,
+        "MF": 0.85,
+        "FW": 0.75
+      },
+      "defence_multiplier": {
+        "GK": 0.4,
+        "DF": 1.2,
+        "MF": 1.0,
+        "FW": 0.7
+      },
+      "interception": 0.07,
+      "recovery": 0.03,
+      "non_assist_key_pass": 0.06,
+      "save": 0.15,
+      "goalkeeper_goal_conceded": -0.12,
+      "non_goal_shot_on_target": 0.05,
+      "off_target_shot": -0.03,
+      "hard_completed_pass": 0.025
+    },
+    "caps": {
+      "scoring": 3.0,
+      "assists": 1.8,
+      "creation": 0.6,
+      "defence": 1.4,
+      "saves": 2.0,
+      "goals_conceded": -1.2,
+      "shooting": 0.4,
+      "misses": -0.3,
+      "hard_passing": 0.35
+    },
+    "passing_formula": "clamp(1.2*(completed - 0.75*attempted)/max(attempted,5), -0.7, 0.3)"
+  },
+  "possession": {
+    "method": "team_phase_time_v1",
+    "definition": "Restart/recovery to loss; pass flights belong to passing team; shot flights and loose-ball/restart gaps unassigned",
+    "percentage_denominator": "home_time_ms + away_time_ms (excludes unassigned time)",
+    "elapsed_time_ms": 600000,
+    "controlled_time_ms": 547667,
+    "unassigned_time_ms": 52333,
+    "unassigned_time_percentage": 8.72
+  }
+}

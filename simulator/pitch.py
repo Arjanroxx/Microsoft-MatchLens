@@ -60,12 +60,21 @@ class PitchState:
     FORMATION = [(5, 34), (25, 8), (25, 25), (25, 43), (25, 60),
                  (48, 15), (50, 34), (48, 53), (72, 14), (76, 34), (72, 54)]
 
-    def __init__(self, period):
+    def __init__(self, period, active_slots=None):
         self.period = period
+        self.slots = dict(active_slots) if active_slots is not None else {
+            f"{team}-{i:02}": i for team in ("home", "away") for i in range(1, 12)}
         self.positions = {}
-        for team in ("home", "away"):
-            for i, (x, y) in enumerate(self.FORMATION, 1):
-                self.positions[f"{team}-{i:02}"] = point(x if self.direction(team) == 1 else 105 - x, y)
+        for pid, slot in self.slots.items():
+            team = pid.split("-")[0]
+            x, y = self.FORMATION[slot - 1]
+            self.positions[pid] = point(x if self.direction(team) == 1 else 105 - x, y)
+
+    def substitute(self, player_off, player_on):
+        if player_off not in self.positions or player_on in self.positions:
+            raise ValueError("Invalid pitch substitution")
+        self.positions[player_on] = self.positions.pop(player_off)
+        self.slots[player_on] = self.slots.pop(player_off)
 
     def direction(self, team):
         return 1 if (team == "home") == (self.period == 1) else -1
@@ -89,20 +98,21 @@ class PitchState:
         for pid in self.positions:
             if pid == owner:
                 continue
-            team, number = pid.split("-")
-            if int(number) == 1:
+            team = pid.split("-")[0]
+            slot = self.slots[pid]
+            if slot == 1:
                 # Goalkeepers retain a goal-side position instead of shifting with outfield lines.
                 target = point(2 if self.direction(team) == 1 else 103,
                                max(30, min(38, 34 + .2 * (ball["y_m"] - 34))))
                 self.move(pid, target, seconds)
                 continue
-            anchor_x, anchor_y = self.FORMATION[int(number) - 1]
+            anchor_x, anchor_y = self.FORMATION[slot - 1]
             direction = self.direction(team)
             own_ball_x = ball["x_m"] if direction == 1 else 105 - ball["x_m"]
             shift = (own_ball_x - 52.5) * 0.4 + (3 if quiet else 9) * (1 if team == possessing_team else -0.5)
             target = point(anchor_x + shift if direction == 1 else 105 - anchor_x - shift,
                            anchor_y + 0.15 * (ball["y_m"] - 34))
-            if pid in chasing and int(number) != 1:
+            if pid in chasing and slot != 1:
                 if press:
                     # Scenario changes defensive behaviour, not the reported pressure metric.
                     offset = -1 if pid == chasing[0] else 1

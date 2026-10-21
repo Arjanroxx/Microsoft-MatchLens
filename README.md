@@ -11,6 +11,7 @@ Synthetic football match simulation and explainable match intelligence for the M
 - Ball and shot speeds calculated from timestamped simulated trajectories.
 - Side-by-side team statistics and time-based possession, derived from events.
 - Per-player statistics and explainable, role-aware 1–10 event ratings for every match.
+- Rating-driven, position-compatible substitutions with bench/active lineups and exact player stint minutes.
 - Validation, replay to the terminal, and automated tests.
 
 This repository provides the **data-generation layer** and a buildless **Replay Studio frontend**. Run `python -m http.server 8080` from the repository root and open `http://localhost:8080/frontend/`. See [frontend/README.md](frontend/README.md) for controls, import and integration details. AI narratives, cloud backend integration, and video recognition are not implemented.
@@ -58,6 +59,8 @@ Tests cover reproducibility, multiple seeds, event consistency, geometry-based o
 - [Generator instructions and metric definitions](simulator/README.md)
 - [UI and virtual board integration](docs/UI-INTEGRATION.md)
 - [Player statistics and rating definitions](docs/PLAYER-RATINGS.md)
+- [Substitutions and frontend integration](docs/SUBSTITUTIONS.md)
+- [Match-realism checklist and priorities](docs/MATCH-REALISM-CHECKLIST.md)
 - [Hackathon approach and stack audit](MatchLens-Hackathon-Guide.md)
 
 The pipeline is **shared pitch state → action → resolved outcome → event evidence → metrics**. Randomness drives synthetic player skills and choices; reported metrics are calculated from the resulting evidence.
@@ -75,3 +78,5 @@ Read `summary.teams.home` and `summary.teams.away` for comparable metrics. Posse
 ## Limitations
 
 This is a simplified, uncalibrated 2D simulation, not professional match tracking. It does not model offside, fouls, ball height, or complete goalkeeper/restart physics. Player snapshots are not continuous tracking. Difficulty is a heuristic, not a probability; speeds are synthetic pitch-plane measurements. See the generator documentation for detailed assumptions.
+
+New schema 1.4 matches include 11 starters and nine bench players per team, mainly 60–70 minute substitutions, and occasional half-time changes. Substitution breaks are explicitly simulated rather than inferred from a complete natural-stoppage model. Offsides, cards, and the remaining realism gaps are documented on the checklist; they are not yet generated.

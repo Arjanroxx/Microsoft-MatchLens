@@ -5,6 +5,8 @@ import random
 from simulator.metrics import ball_speed, make_trajectory, pass_difficulty
 from simulator.pitch import PitchState, distance, pass_context, point, resolve_pass
 from simulator.progression import MatchProgression
+from simulator.player_statistics import PlayerStatistics
+from simulator.substitutions import SubstitutionManager
 
 
 SCENARIOS = ("match", "balanced", "high-press", "quiet-possession", "chaotic")
@@ -14,10 +16,15 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
     if scenario not in SCENARIOS or not 1 <= minutes_per_half <= 45:
         raise ValueError("Select a known scenario and 1..45 minutes per half")
     rng = random.Random(seed)
-    match_id = f"synthetic-v1.3-{scenario}-{seed}-{minutes_per_half}"
-    roles = ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW", "FW"]
+    match_id = f"synthetic-v1.4-{scenario}-{seed}-{minutes_per_half}"
+    roles = ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW", "FW",
+             "GK", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW"]
+    groups = ["GK", "FB", "CB", "CB", "FB", "WM", "CM", "WM", "W", "ST", "W",
+              "GK", "FB", "CB", "FB", "CM", "CM", "WM", "W", "ST"]
     players = [{"player_id": f"{team}-{i:02}", "team_id": team,
                 "name": f"{label} Player {i:02}", "shirt_number": i, "role": role,
+                "is_starter": i <= 11, "formation_slot": i if i <= 11 else None,
+                "position_group": groups[i - 1],
                 "passing_skill": round(rng.uniform(0.65, 0.95), 3),
                 "shooting_skill": round(rng.uniform(0.55, 0.9), 3)}
                for team, label in (("home", "Northbridge"), ("away", "Southbank"))
@@ -27,7 +34,7 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
     progression = MatchProgression(seed, duration)
     start_window = min(600_000, duration // 3)
     end_window = min(start_window + 300_000, duration - 10_000)
-    metadata = {"schema_version": "1.3", "match_id": match_id, "source": "synthetic", "seed": seed,
+    metadata = {"schema_version": "1.4", "match_id": match_id, "source": "synthetic", "seed": seed,
                 "pitch": {"length_m": 105, "width_m": 68},
                 "coordinate_origin": "bottom-left; fixed pitch coordinates", "period_duration_ms": duration,
                 "home_attacks_positive_x": {"1": True, "2": False},
@@ -41,21 +48,65 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
                                      "shot_mean_speed_mps": "20 + 12*kick_effort + 2*shooting_skill",
                                      "shot_outcome": "goal-mouth test and goalkeeper reach",
                                      "scenario_policy": "changes tactics and action selection, not metric values"},
-                "limitations": ["Simplified 2D continuous-play model, no fouls/offside/stoppage time",
+                "substitution_policy": {"max_substitutions": 5, "max_in_play_windows": 3, "bench_per_team": 9,
+                                        "primary_window_minutes": [60, 70], "short_match_timing": "scaled proportionally",
+                                        "selection": "lowest currently rated eligible starter with same-position-group bench cover; keeper excluded",
+                                        "stoppage_model": "explicit synthetic substitution breaks, not a full restart/referee model"},
+                "limitations": ["Simplified 2D continuous-play model, no fouls/offside/added time",
                                 "Non-goal shots become recoveries; goal kicks/corners and rebounds are not modelled",
                                 "Players move between kicks; held fixed during ball flight except receiver/interceptor",
                                 "Snapshots are not a continuous player tracking feed",
                                 "Skills and action choices use seeded randomness; metrics are deterministic from evidence",
                                 "Difficulty and motion models are uncalibrated; no real identities or professional realism claim"]}
     events, truth, score, possession_counter = [], [], {"home": 0, "away": 0}, 0
+    live_players = PlayerStatistics(metadata)
+    manager = SubstitutionManager(seed, duration, roster)
+    active_slots = None
 
     def emit(period, t, kind, team=None, player=None, possession=None, **fields):
-        event = {"schema_version": "1.3", "match_id": match_id,
+        event = {"schema_version": "1.4", "match_id": match_id,
                  "event_id": f"evt-{len(events) + 1:06}", "sequence": len(events) + 1,
                  "period": period, "period_time_ms": t, "type": kind, "source": "synthetic",
                  "team_id": team, "player_id": player, "possession_id": possession, **fields}
         events.append(event)
+        live_players.update(event)
         return event
+
+    def make_substitutions(period, t, pitch, ball, owner=None, possessing_team=None, possession=None):
+        replacements = {}
+        for sub_team, plan in manager.due(period, t):
+            now = (period - 1) * duration + t
+            current = live_players.snapshot(now)
+            choices, candidate_ratings = manager.select(sub_team, pitch.positions, current, plan["count"])
+            if not choices:
+                continue
+            window_id = f"subs-{sub_team}-{manager.used[sub_team] + 1:02}"
+            emit(period, t, "stoppage", reason="substitution_break", window_id=window_id)
+            if not plan["halftime"]:
+                manager.windows[sub_team] += 1
+            for off, on in choices:
+                slot = pitch.slots[off]
+                pitch.substitute(off, on)
+                manager.used[sub_team] += 1
+                manager.used_players.add(on)
+                replacements[off] = on
+                if owner == off:
+                    owner = on
+                emit(period, t, "substitution", sub_team, player_off_id=off, player_on_id=on,
+                     window_id=window_id, halftime=plan["halftime"], formation_slot=slot,
+                     position_group=roster[off]["position_group"],
+                     positions_after={pid: p.copy() for pid, p in pitch.positions.items()},
+                     selection={"reason": "lowest_rated_eligible_outfield_starter",
+                                "rating_model": current[off]["rating"]["model"],
+                                "player_off_rating": current[off]["rating"]["value"],
+                                "eligible_candidate_ratings": candidate_ratings,
+                                "evidence_up_to_sequence": events[-1]["sequence"]})
+            # In-play breaks consume simulated clock time; half-time is outside that clock.
+            if not plan["halftime"]:
+                t += min(20_000, max(1000, duration // 135))
+            emit(period, t, "resume", possessing_team if owner else None, owner,
+                 possession if owner else None, reason="substitution_break_ended", start=ball.copy())
+        return t, owner, replacements
 
     def behaviour(period, time_ms, possessing_team):
         other = "away" if possessing_team == "home" else "home"
@@ -68,12 +119,14 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
                 scenario == "quiet-possession" and active, scenario == "chaotic" and active)
 
     for period in (1, 2):
-        pitch = PitchState(period)
+        pitch = PitchState(period, active_slots)
         t, team, ball, restart, recoverer = 0, "home" if period == 1 else "away", point(52.5, 34), True, None
         continuing = False
         emit(period, 0, "period_start")
         if scenario == "match":
             progression.states(period, 0)
+        if period == 2:
+            t, _, _ = make_substitutions(period, t, pitch, ball)
         while t < duration - 15_000:
             opponent = "away" if team == "home" else "home"
             if not continuing:
@@ -81,8 +134,8 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
                 possession = f"pos-{possession_counter:05}"
                 if restart:
                     # Legal simulation reset at kickoff; other changes use bounded movement.
-                    pitch = PitchState(period)
-                    owner = f"{team}-07"
+                    pitch = PitchState(period, pitch.slots)
+                    owner = next(pid for pid, slot in pitch.slots.items() if pid.startswith(team + "-") and slot == 7)
                     pitch.positions[owner] = ball.copy()
                 else:
                     owner = recoverer or pitch.nearest(team, ball)
@@ -94,6 +147,7 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
                 emit(period, t, "restart" if restart else "recovery", team, owner, possession,
                      start=ball.copy(), reason="kickoff" if restart else "opponent_turnover")
             restart, recoverer = False, None
+            t, owner, _ = make_substitutions(period, t, pitch, ball, owner, team, possession)
             press, quiet, chaotic = behaviour(period, t, team)
             chain = rng.randint(8, 12) if quiet else rng.randint(1, 3) if chaotic else rng.randint(3, 8)
             progress = ball["x_m"] if pitch.direction(team) == 1 else 105 - ball["x_m"]
@@ -169,7 +223,10 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
                         pitch.move(recoverer, ball, flight_s + 0.001)
                     emit(period, t, "turnover", team, owner, possession, start=ball.copy())
                     ended = True
+                    t, _, replaced = make_substitutions(period, t, pitch, ball)
+                    recoverer = replaced.get(recoverer, recoverer)
                     break
+                t, owner, _ = make_substitutions(period, t, pitch, ball, owner, team, possession)
             if t >= duration - 15_000:
                 break
             progress = ball["x_m"] if pitch.direction(team) == 1 else 105 - ball["x_m"]
@@ -219,6 +276,7 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
             team = opponent
             t += 1000
         emit(period, duration, "period_end", score=score.copy())
+        active_slots = pitch.slots.copy()
     metadata["final_score"] = score
     if scenario == "match":
         metadata["simulation_model"]["progression"] = {

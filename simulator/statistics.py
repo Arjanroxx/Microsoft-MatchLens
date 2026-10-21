@@ -22,7 +22,7 @@ class MatchStatistics:
             "passes": {"attempted": 0, "completed": 0, "incomplete": 0},
             "shots": {"total": 0, "on_target": 0, "off_target": 0},
             "saves": 0, "interceptions": 0, "recoveries": 0, "turnovers": 0,
-            "pressure_events": 0, "possessions": 0, "event_counts": {},
+            "pressure_events": 0, "possessions": 0, "substitutions": 0, "event_counts": {},
         } for team in ("home", "away")}
         self.values = {team: {metric: [] for metric in METRICS} for team in self.counts}
         self.player_statistics = PlayerStatistics(metadata)
@@ -56,8 +56,10 @@ class MatchStatistics:
             self._advance(kick)
             self.owner = None
         self._advance(when)
-        if kind in ("period_start", "period_end", "turnover", "goal"):
+        if kind in ("period_start", "period_end", "turnover", "goal", "stoppage"):
             self.owner = None
+        if kind == "resume":
+            self.owner = team if event.get("player_id") else None
         if kind in ("restart", "recovery"):
             self.owner = team
             pid = event.get("possession_id")
@@ -70,7 +72,8 @@ class MatchStatistics:
         stats, values = self.counts[team], self.values[team]
         stats["event_counts"][kind] = stats["event_counts"].get(kind, 0) + 1
         for event_type, counter in (("goal", "goals"), ("recovery", "recoveries"),
-                                    ("turnover", "turnovers"), ("pressure", "pressure_events")):
+                                    ("turnover", "turnovers"), ("pressure", "pressure_events"),
+                                    ("substitution", "substitutions")):
             if kind == event_type:
                 stats[counter] += 1
         if kind not in ("pass", "shot"):
@@ -110,7 +113,13 @@ class MatchStatistics:
             stats["possession"] = {"time_ms": times[team], "time_seconds": round(times[team] / 1000, 3),
                                    "percentage": shares[team],
                                    "elapsed_time_percentage": round(100 * times[team] / target, 2) if target else None}
-        return {"teams": teams, "players": self.player_statistics.snapshot(target),
+        lineups = {team: {
+            "on_pitch": sorted(pid for pid in self.player_statistics.active if self.roster[pid] == team),
+            "bench": sorted(pid for pid, s in self.player_statistics.stints.items() if self.roster[pid] == team and s["entered_at_ms"] is None),
+            "substituted_off": sorted(pid for pid, s in self.player_statistics.stints.items() if self.roster[pid] == team and s["left_at_ms"] is not None),
+        } for team in self.counts}
+        return {"teams": teams, "players": self.player_statistics.snapshot(target), "lineups": lineups,
+                "substitutions": copy.deepcopy(self.player_statistics.substitutions),
                 "player_rating_model": copy.deepcopy(RATING_MODEL), "possession": {
             "method": "team_phase_time_v1",
             "definition": "Restart/recovery to loss; pass flights belong to passing team; shot flights and loose-ball/restart gaps unassigned",

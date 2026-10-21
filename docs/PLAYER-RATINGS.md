@@ -17,7 +17,8 @@ py -3.13 -m simulator.statistics --input data/generated/evolving-match
 | Field below `players.<player_id>` | Definition |
 |---|---|
 | `name`, `team_id`, `shirt_number`, `role` | Roster identity |
-| `minutes_played`, `minutes_basis` | Elapsed playing time; assumes all 22 roster players start and there are no substitutions/dismissals |
+| `minutes_played`, `minutes_played_ms`, `minutes_basis` | Stint time from the starting lineup and substitution events; bench players have zero minutes until entry |
+| `squad_status`, `entered_at_ms`, `left_at_ms` | On-pitch/bench/substituted/full-time status and playing-clock participation endpoints |
 | `passes.attempted/completed/incomplete` | Actions attributed to this passer |
 | `passes.accuracy_percentage` | Completed / attempted; null with no attempts |
 | `passes.hard_completed` | Completed attempts with heuristic difficulty ≥65 |
@@ -72,7 +73,7 @@ The choices are deliberately inspectable and adjustable. In particular, a goalke
 
 - Require at least five unique attributable events, **or** a goal, assist, save, or keeper goal conceded.
 - Otherwise `rating.value` is null and status is `insufficient_evidence`; render **NR** rather than a fabricated 6.0.
-- `rating.provisional` is true until elapsed playing time reaches the match's defined duration. Even a final rating remains limited to the recorded event coverage.
+- `rating.provisional` is true while the player can still accumulate match actions. It becomes false at substitution off or full time; `rating.finalised_at_ms` gives the cutoff. Even a final rating remains limited to the recorded event coverage.
 - All roster players receive records, including quiet or unrated players.
 - Ordinary received passes, raw speed, pressure observations, and team wins do not directly add rating points. This avoids rewarding activity volume or fast kicks without outcomes.
 - Off-ball movement, running distance/speed, positioning, fouls, tackles, and errors leading to goals are not assessed because the present event model does not establish them sufficiently.
@@ -84,3 +85,5 @@ Read player rows/cards from `summary.players`; group by `team_id`. Sort rated pl
 The Python `MatchStatistics` reducer automatically includes `players` and `player_rating_model` in live snapshots. For preloaded replay, `calculate_statistics(metadata, events, as_of=(period, time_ms))` returns only evidence available by that time. Rebuild after seeking backwards or applying corrected events. Do not display final-summary ratings before those events occur.
 
 The existing frontend's JavaScript reducer does not yet implement player ratings. The frontend owner can port the published formula/definitions or consume shared Python snapshots from a backend. This change provides the data and integration contract; it does not change the teammate's board interface or the existing AI evidence whitelist.
+
+Schema 1.4 now includes 40 roster records (11 starters + 9 substitutes per team), with only 22 active at once. See [substitution lifecycle and UI contract](SUBSTITUTIONS.md). The original rating formula is unchanged: live event evidence evolves before a player leaves, the final appearance rating freezes at exit, and an incoming player starts with their own zero-minute, NR record. Legacy metadata without starter flags continues to treat its original roster as starters.
