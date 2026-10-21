@@ -65,7 +65,7 @@ For a shorter fixture, add `--minutes-per-half 5`. Default duration is two 45-mi
 |---|---|
 | `metadata.json` | Synthetic teams, 22 players, pitch dimensions, directions, seed, final score, limitations |
 | `events.jsonl` | One event per line; the future ingestion input |
-| `summary.json` | Validation result, event counts, final score, separate home/away metrics, time-based possession, pooled distributions for compatibility |
+| `summary.json` | Team/player metrics, event-based ratings, possession, final score, and pooled distributions for compatibility |
 | `evaluation-only.json` | Intended scenario window and scripted shot references; never provide this to insight detectors |
 
 Events include period boundaries, restarts, passes, pressure, turnovers, recoveries, shots, and goals. Not every profile or seed must produce every type. Tackles, fouls, substitutions, tracking, and corrections are not implemented yet.
@@ -170,6 +170,8 @@ py -3.13 -m unittest discover -s simulator -p "test_*.py" -v
 ```
 
 ### Validation coverage
+
+Player records are now included automatically for every roster ID in `summary.players`, with a versioned `summary.player_rating_model`. Goals, passes, receptions, shots, interceptions, recoveries, saves, pressure observations, and linked assists/key passes come from the event stream. Ratings use only those actions and role metadata, not latent player skill or unrelated random scores. See `docs/PLAYER-RATINGS.md` for the formula, eligibility, evidence, and UI fields. The existing statistics recalculation command adds these to older matches without changing events.
 
 The tests cover reproducible seeds, all four profiles across multiple seeds, event ordering, valid players/teams, bounds, pass continuity, score consistency, and rejection of selected corruptions. Metric tests check a known 30 m / 3 s trajectory (10 m/s; 36 km/h), direction-normalised difficulty, pressure/distance/congestion effects, zero-distance trajectories, invalid timestamps, initial versus average shot speed, and rejection of altered metric values. Pitch tests move defenders while holding the attempt fixed: context/difficulty must change, and a blocked pass becomes an interception while the open version succeeds. Movement is bounded, and doubled traversal speed produces doubled measured speed. This checks causality and engineering invariants, not realism against professional match distributions.
 

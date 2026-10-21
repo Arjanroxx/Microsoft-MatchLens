@@ -1,19 +1,9 @@
 """Event-derived, per-team statistics and explicitly defined possession time."""
 import copy
 
-
-METRICS = (
-    "pass_distance_m", "intended_pass_distance_m", "pass_difficulty_score",
-    "pass_average_ball_speed_kmh", "pass_peak_segment_ball_speed_kmh",
-    "shot_average_ball_speed_kmh", "shot_initial_segment_speed_kmh",
-    "shot_peak_segment_speed_kmh", "ball_average_speed_kmh",
-)
-
-
-def distribution(values):
-    return {"count": len(values), "min": round(min(values), 4),
-            "mean": round(sum(values) / len(values), 2), "max": round(max(values), 4)} if values else {
-                "count": 0, "min": None, "mean": None, "max": None}
+from simulator.aggregates import METRICS, distribution, record_action_metrics
+from simulator.player_statistics import PlayerStatistics
+from simulator.ratings import RATING_MODEL
 
 
 class MatchStatistics:
@@ -35,6 +25,7 @@ class MatchStatistics:
             "pressure_events": 0, "possessions": 0, "event_counts": {},
         } for team in ("home", "away")}
         self.values = {team: {metric: [] for metric in METRICS} for team in self.counts}
+        self.player_statistics = PlayerStatistics(metadata)
 
     def _time(self, period, period_time_ms):
         if period not in (1, 2) or not 0 <= period_time_ms <= self.duration:
@@ -73,6 +64,7 @@ class MatchStatistics:
             if pid and pid not in self.possessions:
                 self.possessions.add(pid)
                 self.counts[team]["possessions"] += 1
+        self.player_statistics.update(event)
         if team not in self.counts:
             return
         stats, values = self.counts[team], self.values[team]
@@ -83,21 +75,10 @@ class MatchStatistics:
                 stats[counter] += 1
         if kind not in ("pass", "shot"):
             return
-        speed = event.get("ball_speed", {})
-        if "average_kmh" in speed:
-            values["ball_average_speed_kmh"].append(speed["average_kmh"])
-            values[f'{kind}_average_ball_speed_kmh'].append(speed["average_kmh"])
-        if "peak_segment_mps" in speed:
-            key = "pass_peak_segment_ball_speed_kmh" if kind == "pass" else "shot_peak_segment_speed_kmh"
-            values[key].append(speed["peak_segment_mps"] * 3.6)
+        record_action_metrics(values, event)
         if kind == "pass":
             stats["passes"]["attempted"] += 1
             stats["passes"]["completed" if event["outcome"] == "complete" else "incomplete"] += 1
-            for field, metric in (("distance_m", "pass_distance_m"), ("intended_distance_m", "intended_pass_distance_m")):
-                if field in event:
-                    values[metric].append(event[field])
-            if "pass_difficulty" in event:
-                values["pass_difficulty_score"].append(event["pass_difficulty"]["score"])
             interceptor_team = self.roster.get(event.get("interceptor_id"))
             if interceptor_team:
                 self.counts[interceptor_team]["interceptions"] += 1
@@ -110,8 +91,6 @@ class MatchStatistics:
                 stats["shots"]["off_target"] += 1
             if reason == "saved":
                 self.counts["away" if team == "home" else "home"]["saves"] += 1
-            if "shot_speed" in event:
-                values["shot_initial_segment_speed_kmh"].append(event["shot_speed"]["kmh"])
 
     def snapshot(self, as_of=None):
         """Optionally extend the current state to a known playback time, without mutation."""
@@ -131,7 +110,8 @@ class MatchStatistics:
             stats["possession"] = {"time_ms": times[team], "time_seconds": round(times[team] / 1000, 3),
                                    "percentage": shares[team],
                                    "elapsed_time_percentage": round(100 * times[team] / target, 2) if target else None}
-        return {"teams": teams, "possession": {
+        return {"teams": teams, "players": self.player_statistics.snapshot(target),
+                "player_rating_model": copy.deepcopy(RATING_MODEL), "possession": {
             "method": "team_phase_time_v1",
             "definition": "Restart/recovery to loss; pass flights belong to passing team; shot flights and loose-ball/restart gaps unassigned",
             "percentage_denominator": "home_time_ms + away_time_ms (excludes unassigned time)",
@@ -157,7 +137,7 @@ def main():
     from pathlib import Path
     from simulator.generate import validate
 
-    parser = argparse.ArgumentParser(description="Recalculate team statistics for an existing match; events stay unchanged")
+    parser = argparse.ArgumentParser(description="Recalculate team/player statistics and ratings; events stay unchanged")
     parser.add_argument("--input", type=Path, required=True)
     args = parser.parse_args()
     for name in ("metadata.json", "events.jsonl"):
@@ -170,7 +150,8 @@ def main():
     summary = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {"match_id": metadata["match_id"]}
     summary.update(calculate_statistics(metadata, events))
     path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"updated": str(path), "teams": summary["teams"], "possession": summary["possession"]}, indent=2))
+    print(json.dumps({"updated": str(path), "teams": summary["teams"], "possession": summary["possession"],
+                      "player_count": len(summary["players"]), "rating_model": RATING_MODEL["version"]}, indent=2))
 
 
 if __name__ == "__main__":

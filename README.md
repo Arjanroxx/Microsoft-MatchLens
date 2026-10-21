@@ -10,6 +10,7 @@ Synthetic football match simulation and explainable match intelligence for the M
 - Pass difficulty derived from intended geometry and defender positions.
 - Ball and shot speeds calculated from timestamped simulated trajectories.
 - Side-by-side team statistics and time-based possession, derived from events.
+- Per-player statistics and explainable, role-aware 1–10 event ratings for every match.
 - Validation, replay to the terminal, and automated tests.
 
 This repository provides the **data-generation layer** and a buildless **Replay Studio frontend**. Run `python -m http.server 8080` from the repository root and open `http://localhost:8080/frontend/`. See [frontend/README.md](frontend/README.md) for controls, import and integration details. AI narratives, cloud backend integration, and video recognition are not implemented.
@@ -41,7 +42,7 @@ The same version, seed, profile, and duration reproduce the same match. Output f
 |---|---|
 | `metadata.json` | Rosters, pitch dimensions, direction, clock, model assumptions |
 | `events.jsonl` | Ordered match events, pitch snapshots, ball observations, calculated metrics |
-| `summary.json` | Score, counts, `teams.home` / `teams.away` statistics, possession, difficulty/speed summaries |
+| `summary.json` | Team statistics, possession, `players` records, `player_rating_model`, difficulty/speed summaries |
 | `evaluation-only.json` | Internal scenario/behaviour changes for debugging; exclude from narrative/detector input |
 
 ## Tests
@@ -56,6 +57,7 @@ Tests cover reproducibility, multiple seeds, event consistency, geometry-based o
 
 - [Generator instructions and metric definitions](simulator/README.md)
 - [UI and virtual board integration](docs/UI-INTEGRATION.md)
+- [Player statistics and rating definitions](docs/PLAYER-RATINGS.md)
 - [Hackathon approach and stack audit](MatchLens-Hackathon-Guide.md)
 
 The pipeline is **shared pitch state → action → resolved outcome → event evidence → metrics**. Randomness drives synthetic player skills and choices; reported metrics are calculated from the resulting evidence.
@@ -67,6 +69,8 @@ py -3.13 -m simulator.statistics --input data/generated/evolving-match
 ```
 
 Read `summary.teams.home` and `summary.teams.away` for comparable metrics. Possession percentages use each team's possession-phase time, exclude unassigned gaps, and sum to 100 when some possession has been observed. See the UI guide for exact definitions and live updates.
+
+`summary.players` contains every roster player's action statistics, speed/difficulty distributions, assists/key passes, and a rating breakdown. Scores use only recorded events, are position-aware heuristics, and remain NR when evidence is insufficient. The same statistics command upgrades existing match summaries with player records without regenerating their events. See [rating definitions](docs/PLAYER-RATINGS.md) for weights, evidence links, and limitations.
 
 ## Limitations
 

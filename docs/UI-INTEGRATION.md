@@ -1,5 +1,7 @@
 # Virtual board handoff
 
+Player data extension: `summary.players` now provides all 22 player records and role-aware heuristic ratings. See [PLAYER-RATINGS.md](PLAYER-RATINGS.md) for the exact contract, formula, and live-snapshot integration. The shared Python reducer includes these fields; the current frontend JavaScript reducer needs a deliberate port or backend connection before displaying live ratings.
+
 The frontend can be developed entirely from the generated data. No video detection or recognition is required to start.
 
 ## Inputs
