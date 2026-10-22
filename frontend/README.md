@@ -106,3 +106,19 @@ New modules: `decisions.mjs` resolves visible decision state; `decision-ui.mjs` 
 Validation: all 41 frontend tests pass, including timed automatic pauses, continue/rewind, foul counts, advantage, exact penalty setup, result withholding, source-frozen offside evidence and pitch geometry. Browser checks exercised the real offside popup, penalty setup and source-position markers. The Python simulator is unchanged.
 
 Run all frontend tests from the repository root: `node --test frontend/tests/*.test.mjs` (Bash). On PowerShell/Windows use `node --test` from inside `frontend/` for automatic test discovery.
+
+
+## Substitution and result moments
+
+The same notice panel now displays substitutions, goals and terminal penalty outcomes:
+
+- Substitutions show green **ON** and coral **OFF** rows with names, shirt numbers, recorded match time and position. Position labels expand the source `position_group` (for example ST → Striker, W → Winger), with roster role fallback when absent. Half-time changes are labelled. All changes at the same source stoppage/timestamp are grouped, in sequence order.
+- A lime/teal **GOALLLLLL** celebration names the scorer and uses the goal event's running score. The scoring shot and goal record do not trigger two celebrations.
+- A cyan **SAVED** banner names the recorded keeper and penalty taker, with hold/parry wording when available. The follow-up save event is not treated as a second result.
+- An amber **MISS** banner is restricted to valid penalty shots whose recorded `outcome_reason` is `off_target`. `no_goal` alone, invalid/offside attacks and ordinary non-penalty shots cannot trigger it.
+- Results are unavailable before the completion/goal timestamp. No penalty misses were added to the bundled examples: their absence in an example does not generate an artificial MISS.
+- **Pause on key moments** extends the existing pause control to substitutions, goal records and penalty save/miss completions. **Subs** and **Goal** jump buttons use real events. Continue and rewind behave as before.
+- When events coincide, goals take visual priority and retain substitution rows. Changes during a foul/offside stoppage are attached to that referee notice so neither explanation is lost.
+- Decorative goal streamers respect reduced-motion preferences. Long substitution batches scroll inside the panel while Continue replay remains visible.
+
+Validation for this addition: all 50 frontend tests pass, including grouped substitutions, source positions/minutes, goal/shot deduplication, saved/miss classification, coincident events, timed automatic pauses and rewind. Browser QA exercised the real substitution batch, GOALLLLLL celebration and recorded saved penalty. Simulator events, datasets, physics and statistics are unchanged.

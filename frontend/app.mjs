@@ -2,10 +2,12 @@ import {prepare,statistics,boardAt,mean,eventTitle,clockAt,actionTypes,disciplin
 import {decisionAt,nextDecision} from './decisions.mjs';
 import {decisionView,decisionGraphics,offsideReview} from './decision-ui.mjs';
 import {fieldMarkings} from './pitch.mjs';
+import {momentAt,nextMoment,nextPause,presentationAt} from './moments.mjs';
+import {momentView,substitutionRows} from './moment-ui.mjs';
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,n=0)=>v==null?'—':Number(v).toFixed(n), clock=t=>`${String(Math.floor(t/60000)).padStart(2,'0')}:${String(Math.floor(t/1000)%60).padStart(2,'0')}`;
 let match,time=0,playing=false,speed=4,tab='events',filter='all',selectedEvent=null,selectedPlayer=null,trails=true,names=false,smooth=!(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false),lastFrame=0,lastUI=0,lastPrefix=-1;
-let pauseDecisions=true,dismissedDecisionId=null,activeDecision=null,decisionKey='',sampleRequest=0;
+let pauseDecisions=true,dismissedDecisionId=null,activeDecision=null,activePresentation=null,decisionKey='',sampleRequest=0;
 const teamName=id=>match?.metadata.teams.find(t=>t.team_id===id)?.name||'', playerName=id=>match?.players[id]?.name||'Team event';
 const eventPlayer=e=>e.type==='substitution'?playerName(e.player_off_id)+' → '+playerName(e.player_on_id):playerName(e.player_id);
 const title=eventTitle;
@@ -81,7 +83,7 @@ const metric=(value,label)=>`<div class="metric-cell"><b>${value}</b><small>${la
 function renderEvidence(){if(selectedPlayer){const p=match.players[selectedPlayer],discipline=disciplineAt(match,time)[selectedPlayer],events=match.events.filter(e=>e.t<=time&&e.player_id===selectedPlayer),passes=events.filter(e=>e.type==='pass');$('evidence').innerHTML=`<div class="evidence-card"><div class="evidence-meta">PLAYER FOCUS · ${esc(p.team_id.toUpperCase())}</div><h4>#${p.shirt_number} · ${esc(discipline.role)}</h4><p>${esc(p.name)}<br>${esc(teamName(p.team_id))}</p><div id="player-state"><p>Live ratings available when running the local UI bridge.</p></div><div class="metric-grid">${metric(passes.length,'Pass attempts')}${metric(passes.filter(e=>e.outcome==='complete').length,'Pass completions')}${metric(events.filter(e=>e.type==='shot'&&e.valid_for_statistics!==false).length,'Shots')}${metric(events.filter(e=>e.type==='recovery').length,'Recoveries')}${metric(discipline.fouls,'Fouls committed')}${metric(match.events.filter(e=>e.t<=time&&e.type==='foul'&&e.victim_id===selectedPlayer).length,'Fouls won')}${metric(events.filter(e=>e.type==='offside').length,'Offsides')}</div><p>${discipline.sentOff?'Sent off · '+esc(discipline.dismissalReason):'Yellow cards: '+discipline.yellowCards}. Actions through ${displayClock(time)}. Smooth player movement illustrates source-state anchors; it is not measured tracking.</p></div><div class="player-events"><h4>RECENT ACTIONS</h4>${events.slice(-5).reverse().map(eventMarkup).join('')||'<p class="method-note">No completed actions from this player yet.</p>'}</div>`;loadPlayerState(selectedPlayer,time);return;}
   const e=selectedEvent;if(!e){$('evidence').innerHTML='<div class="empty-state"><span>⌘</span><h4>The proof is in the play.</h4><p>Select a completed event or a player to explore its evidence.</p></div>';return;}
   const action=actionTypes.includes(e.type),decision=['foul','offside'].includes(e.type)?decisionAt(match,e.t):null,offside=offsideAt(match,time,{eventId:e.event_id,lifetimeMs:Infinity}),raw={...e};delete raw.t;delete raw.kick;delete raw.ball_trajectory;delete raw.pitch_snapshot;
-  $('evidence').innerHTML=`<div class="evidence-card"><div class="evidence-meta">${esc(e.event_id)} · ${displayClock(e.t,e.period)} · HALF ${e.period}</div><h4>${esc(title(e))}</h4><p>${esc(playerName(e.player_id))}<br>${esc(teamName(e.team_id))}</p>${e.type==='offside'&&offside?offsideDiagram(offside):''}${e.type==='foul'&&decision?'<div class="evidence-decision">'+decisionView(match,{...decision,asOf:time},displayClock)+'</div>':''}${e.valid_for_statistics===false?'<p>Invalid attack: excluded from shot, save, goal, assist and rating credits.</p>':''}${action?`<div class="metric-grid">${metric(fmt(e.distance_m??e.ball_speed?.distance_m,1)+' m','Actual travel')}${metric(fmt(e.ball_speed?.average_kmh,1),'Mean flight · km/h')}${e.type==='pass'?metric(fmt(e.pass_difficulty?.score)+'/100','Difficulty heuristic')+metric(fmt(e.intended_distance_m,1)+' m','Intended travel'):e.type==='shot'?metric(fmt(e.shot_speed?.kmh,1),'Initial speed · km/h')+metric(fmt(e.shot_speed?.window_ms)+' ms','Initial sample window'):metric(fmt(e.ball_speed?.average_kmh,1),'Flight speed · km/h')}</div>`:''}${e.type==='pass'?`<p>Difficulty uses the intended path. Nearest defender: <strong>${fmt(e.difficulty_context?.nearest_defender_m,1)} m</strong>. Defenders in passing lane: <strong>${e.difficulty_context?.defenders_in_lane??'—'}</strong>. It is a heuristic, not a probability.</p>`:''}<details><summary>Inspect source fields ↗</summary><pre>${esc(JSON.stringify(raw,null,2))}</pre></details>${action?'<button class="button secondary" id="replay-action">↶ &nbsp; Replay this action</button>':''}</div>`;
+  $('evidence').innerHTML=`<div class="evidence-card"><div class="evidence-meta">${esc(e.event_id)} · ${displayClock(e.t,e.period)} · HALF ${e.period}</div><h4>${esc(title(e))}</h4><p>${esc(playerName(e.player_id))}<br>${esc(teamName(e.team_id))}</p>${e.type==='offside'&&offside?offsideDiagram(offside):''}${e.type==='substitution'?substitutionRows(match,[e],displayClock):''}${e.type==='foul'&&decision?'<div class="evidence-decision">'+decisionView(match,{...decision,asOf:time},displayClock)+'</div>':''}${e.valid_for_statistics===false?'<p>Invalid attack: excluded from shot, save, goal, assist and rating credits.</p>':''}${action?`<div class="metric-grid">${metric(fmt(e.distance_m??e.ball_speed?.distance_m,1)+' m','Actual travel')}${metric(fmt(e.ball_speed?.average_kmh,1),'Mean flight · km/h')}${e.type==='pass'?metric(fmt(e.pass_difficulty?.score)+'/100','Difficulty heuristic')+metric(fmt(e.intended_distance_m,1)+' m','Intended travel'):e.type==='shot'?metric(fmt(e.shot_speed?.kmh,1),'Initial speed · km/h')+metric(fmt(e.shot_speed?.window_ms)+' ms','Initial sample window'):metric(fmt(e.ball_speed?.average_kmh,1),'Flight speed · km/h')}</div>`:''}${e.type==='pass'?`<p>Difficulty uses the intended path. Nearest defender: <strong>${fmt(e.difficulty_context?.nearest_defender_m,1)} m</strong>. Defenders in passing lane: <strong>${e.difficulty_context?.defenders_in_lane??'—'}</strong>. It is a heuristic, not a probability.</p>`:''}<details><summary>Inspect source fields ↗</summary><pre>${esc(JSON.stringify(raw,null,2))}</pre></details>${action?'<button class="button secondary" id="replay-action">↶ &nbsp; Replay this action</button>':''}</div>`;
 }
 function update(force=false){if(!match)return;const past=match.events.filter(e=>e.t<=time),prefix=past.length;
   $('seek').value=time;$('clock').textContent=displayClock(time);$('transport-time').textContent=clock(time)+' / '+clock(match.duration);$('period-label').textContent=clockAt(match,time).abandoned?'ABANDONED':time>=match.duration?'FULL TIME':clockAt(match,time).period===2?'SECOND HALF':'FIRST HALF';$('direction').textContent=clockAt(match,time).period===1?'HOME ATTACKING →':'← HOME ATTACKING';$('play').textContent=playing?'Ⅱ':'▶';$('play').setAttribute('aria-label',playing?'Pause replay':'Play replay');
@@ -90,7 +92,7 @@ function update(force=false){if(!match)return;const past=match.events.filter(e=>
   renderPitch();
 }
 function frame(now){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;if(playing&&match){
-  const target=Math.min(match.duration,time+dt*speed),decision=pauseDecisions?nextDecision(match,time,target):null;
+  const target=Math.min(match.duration,time+dt*speed),decision=pauseDecisions?nextPause(match,time,target):null;
   time=decision?decision.t:target;if(decision){playing=false;dismissedDecisionId=null;}if(time===match.duration)playing=false;
   const pastCount=match.events.filter(e=>e.t<=time).length;if(now-lastUI>120||pastCount!==lastPrefix||time===match.duration||decision){update();lastUI=now;}else renderPitch();
 }requestAnimationFrame(frame);}
@@ -99,7 +101,7 @@ document.addEventListener('click',e=>{const event=e.target.closest('[data-event]
 $('players-layer').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();e.target.closest('[data-player]')?.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
 document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));lastPrefix=-1;update(true);}));
-$('play').onclick=()=>{if(!match)return;if(time>=match.duration)setTime(0);playing=!playing;if(playing&&activeDecision)dismissedDecisionId=activeDecision.event.event_id;update(true);};$('restart').onclick=()=>{playing=false;setTime(0);};$('back').onclick=()=>setTime(time-10000);$('forward').onclick=()=>setTime(time+10000);$('seek').oninput=e=>setTime(+e.target.value);$('speed').onchange=e=>{speed=+e.target.value;};$('next').onclick=()=>{const next=match?.events.find(e=>e.t>time&&['pass','shot','goal'].includes(e.type));if(next){playing=false;setTime(next.t);}else notify('No more actions in this replay.');};
+$('play').onclick=()=>{if(!match)return;if(time>=match.duration)setTime(0);playing=!playing;if(playing&&activePresentation)dismissedDecisionId=activePresentation.id;update(true);};$('restart').onclick=()=>{playing=false;setTime(0);};$('back').onclick=()=>setTime(time-10000);$('forward').onclick=()=>setTime(time+10000);$('seek').oninput=e=>setTime(+e.target.value);$('speed').onchange=e=>{speed=+e.target.value;};$('next').onclick=()=>{const next=match?.events.find(e=>e.t>time&&['pass','shot','goal'].includes(e.type));if(next){playing=false;setTime(next.t);}else notify('No more actions in this replay.');};
 $('smooth').onclick=()=>{smooth=!smooth;$('smooth').classList.toggle('active',smooth);$('smooth').setAttribute('aria-pressed',smooth);renderPitch();};
 $('trails').onclick=()=>{trails=!trails;$('trails').classList.toggle('active',trails);$('trails').setAttribute('aria-pressed',trails);renderPitch();};$('labels').onclick=()=>{names=!names;$('labels').classList.toggle('active',names);$('labels').setAttribute('aria-pressed',names);renderPitch();};
 $('catchup').onclick=()=>{if(!match)return;const past=match.events.filter(e=>e.t<=time&&e.t>=Math.max(0,time-60000)),s=statistics(match,time),goals=past.filter(e=>e.type==='goal');const rows=['home','away'].map(team=>{const ev=past.filter(e=>e.team_id===team),passes=ev.filter(e=>e.type==='pass');return `<li><strong>${esc(teamName(team))}</strong>: ${passes.filter(e=>e.outcome==='complete').length} of ${passes.length} passes completed, ${ev.filter(e=>e.type==='shot'&&e.valid_for_statistics!==false).length} shots and ${ev.filter(e=>e.type==='recovery').length} recoveries.</li>`;}).join('');showModal('Back in the game.',`<p>From <strong>${displayClock(Math.max(0,time-60000))}</strong> to <strong>${displayClock(time)}</strong>. Current score: ${s.teams.home.goals}–${s.teams.away.goals}.</p><ul>${rows}</ul><p>${goals.length?goals.map(g=>`Goal for ${esc(teamName(g.team_id))} at ${displayClock(g.t,g.period)} (${esc(g.event_id)}).`).join('<br>'):'No goals in this window.'}</p><details><summary>Source event IDs (${past.length})</summary><pre>${esc(past.map(e=>e.event_id).join(', '))}</pre></details><p>Calculated directly from completed events. This recap uses templates; no AI model is connected.</p>`,'CATCH ME UP · LAST 60 MATCH SECONDS');};
@@ -127,25 +129,30 @@ async function loadPlayerState(playerId,requestedTime){
 
 function renderDecision(board){
   activeDecision=decisionAt(match,time);
-  const state=activeDecision,notice=$('decision-notice');
-  const show=!!state&&dismissedDecisionId!==state.event.event_id;
+  activePresentation=presentationAt(match,time,activeDecision);
+  const state=activePresentation?.primary,notice=$('decision-notice');
+  const show=!!state&&dismissedDecisionId!==activePresentation.id;
   notice.hidden=!show;
   $('pitch').setAttribute('data-decision',state?.kind||'none');
-  $('decision-layer').innerHTML=decisionGraphics(match,state);
+  $('decision-layer').innerHTML=decisionGraphics(match,activeDecision);
+  $('penalty-setup').hidden=state?.kind!=='penalty'||!!state?.result;
   if(!show){decisionKey='';return;}
   const cards=match.events.filter(e=>e.t<=time&&e.foul_event_id===state.event.event_id&&['card','dismissal'].includes(e.type)).map(e=>e.event_id).join();
-  const key=state.event.event_id+':'+state.stage+':'+state.advantage?.outcome+':'+cards;
+  const key=activePresentation.id+':'+state.stage+':'+state.advantage?.outcome+':'+cards+':'+activePresentation.substitutions.map(e=>e.event_id).join();
   if(key!==decisionKey){
-    notice.setAttribute('data-kind',state.kind);notice.setAttribute('data-side',(state.location?.x_m??52.5)<52.5?'right':'left');
-    $('decision-content').innerHTML=decisionView(match,{...state,asOf:time},displayClock);
+    notice.setAttribute('data-kind',state.kind);
+    notice.setAttribute('data-side',(state.location?.x_m??52.5)<52.5?'right':'left');
+    const isMoment=['substitution','goal','saved','miss'].includes(state.kind);
+    let content=isMoment?momentView(match,state,displayClock):decisionView(match,{...state,asOf:time},displayClock);
+    if(!isMoment&&activePresentation.substitutions.length)content+='<div class="attached-subs"><h3>Changes during this stoppage</h3>'+substitutionRows(match,activePresentation.substitutions,displayClock,{compact:true})+'</div>';
+    $('decision-content').innerHTML=content;
     if(smooth)notice.animate?.([{opacity:0,translate:'0 8px'},{opacity:1,translate:'0 0'}],{duration:240,easing:'ease-out'});
     decisionKey=key;
   }
-  $('penalty-setup').hidden=state.kind!=='penalty'||!!state.result;
   $('continue-decision').textContent=playing?'Dismiss notice →':'Continue replay →';
 }
-$('continue-decision').onclick=()=>{if(!activeDecision)return;dismissedDecisionId=activeDecision.event.event_id;playing=true;update(true);};
-$('inspect-decision').onclick=()=>{if(activeDecision)inspectEvent(activeDecision.event.event_id);};
+$('continue-decision').onclick=()=>{if(!activePresentation)return;dismissedDecisionId=activePresentation.id;playing=true;update(true);};
+$('inspect-decision').onclick=()=>{if(activePresentation)inspectEvent(activePresentation.primary.event.event_id);};
 $('pause-decisions').onclick=()=>{pauseDecisions=!pauseDecisions;$('pause-decisions').classList.toggle('active',pauseDecisions);$('pause-decisions').setAttribute('aria-pressed',pauseDecisions);};
 for(const kind of ['foul','penalty','offside'])$('jump-'+kind).onclick=()=>{
   if(!match)return;const event=nextDecision(match,time,Infinity,kind)||nextDecision(match,-1,Infinity,kind);
@@ -160,4 +167,10 @@ $('penalty-setup').onclick=()=>{
   const action=restart&&match.actions.find(e=>e.restart_event_id===restart.event_id&&e.set_piece_type==='penalty');
   if(!action){notify('No recorded penalty kick follows this award.');return;}
   playing=false;dismissedDecisionId=null;setTime(action.kick);
+};
+
+for(const kind of ['substitution','goal'])$('jump-'+kind).onclick=()=>{
+  if(!match)return;const event=nextMoment(match,time,Infinity,kind)||nextMoment(match,-1,Infinity,kind);
+  if(!event){notify('This match has no recorded '+kind+' events. Choose a different example.');return;}
+  playing=false;dismissedDecisionId=null;setTime(event.t);
 };
