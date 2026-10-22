@@ -1,0 +1,572 @@
+{
+  "schema_version": "1.6",
+  "match_id": "synthetic-v1.6-match-6-45",
+  "source": "synthetic",
+  "seed": 6,
+  "rating_model_version": "matchlens-event-rating-v2",
+  "pitch": {
+    "length_m": 105,
+    "width_m": 68
+  },
+  "coordinate_origin": "bottom-left; fixed pitch coordinates",
+  "period_duration_ms": 2700000,
+  "home_attacks_positive_x": {
+    "1": true,
+    "2": false
+  },
+  "teams": [
+    {
+      "team_id": "home",
+      "name": "Northbridge FC"
+    },
+    {
+      "team_id": "away",
+      "name": "Southbank FC"
+    }
+  ],
+  "players": [
+    {
+      "player_id": "home-01",
+      "team_id": "home",
+      "name": "Northbridge Player 01",
+      "shirt_number": 1,
+      "role": "GK",
+      "is_starter": true,
+      "formation_slot": 1,
+      "position_group": "GK",
+      "passing_skill": 0.888,
+      "shooting_skill": 0.838
+    },
+    {
+      "player_id": "home-02",
+      "team_id": "home",
+      "name": "Northbridge Player 02",
+      "shirt_number": 2,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 2,
+      "position_group": "FB",
+      "passing_skill": 0.796,
+      "shooting_skill": 0.642
+    },
+    {
+      "player_id": "home-03",
+      "team_id": "home",
+      "name": "Northbridge Player 03",
+      "shirt_number": 3,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 3,
+      "position_group": "CB",
+      "passing_skill": 0.65,
+      "shooting_skill": 0.782
+    },
+    {
+      "player_id": "home-04",
+      "team_id": "home",
+      "name": "Northbridge Player 04",
+      "shirt_number": 4,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 4,
+      "position_group": "CB",
+      "passing_skill": 0.791,
+      "shooting_skill": 0.816
+    },
+    {
+      "player_id": "home-05",
+      "team_id": "home",
+      "name": "Northbridge Player 05",
+      "shirt_number": 5,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 5,
+      "position_group": "FB",
+      "passing_skill": 0.762,
+      "shooting_skill": 0.82
+    },
+    {
+      "player_id": "home-06",
+      "team_id": "home",
+      "name": "Northbridge Player 06",
+      "shirt_number": 6,
+      "role": "MF",
+      "is_starter": true,
+      "formation_slot": 6,
+      "position_group": "WM",
+      "passing_skill": 0.732,
+      "shooting_skill": 0.831
+    },
+    {
+      "player_id": "home-07",
+      "team_id": "home",
+      "name": "Northbridge Player 07",
+      "shirt_number": 7,
+      "role": "MF",
+      "is_starter": true,
+      "formation_slot": 7,
+      "position_group": "CM",
+      "passing_skill": 0.869,
+      "shooting_skill": 0.695
+    },
+    {
+      "player_id": "home-08",
+      "team_id": "home",
+      "name": "Northbridge Player 08",
+      "shirt_number": 8,
+      "role": "MF",
+      "is_starter": true,
+      "formation_slot": 8,
+      "position_group": "WM",
+      "passing_skill": 0.811,
+      "shooting_skill": 0.789
+    },
+    {
+      "player_id": "home-09",
+      "team_id": "home",
+      "name": "Northbridge Player 09",
+      "shirt_number": 9,
+      "role": "FW",
+      "is_starter": true,
+      "formation_slot": 9,
+      "position_group": "W",
+      "passing_skill": 0.708,
+      "shooting_skill": 0.744
+    },
+    {
+      "player_id": "home-10",
+      "team_id": "home",
+      "name": "Northbridge Player 10",
+      "shirt_number": 10,
+      "role": "FW",
+      "is_starter": true,
+      "formation_slot": 10,
+      "position_group": "ST",
+      "passing_skill": 0.892,
+      "shooting_skill": 0.643
+    },
+    {
+      "player_id": "home-11",
+      "team_id": "home",
+      "name": "Northbridge Player 11",
+      "shirt_number": 11,
+      "role": "FW",
+      "is_starter": true,
+      "formation_slot": 11,
+      "position_group": "W",
+      "passing_skill": 0.891,
+      "shooting_skill": 0.79
+    },
+    {
+      "player_id": "home-12",
+      "team_id": "home",
+      "name": "Northbridge Player 12",
+      "shirt_number": 12,
+      "role": "GK",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "GK",
+      "passing_skill": 0.903,
+      "shooting_skill": 0.667
+    },
+    {
+      "player_id": "home-13",
+      "team_id": "home",
+      "name": "Northbridge Player 13",
+      "shirt_number": 13,
+      "role": "DF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "FB",
+      "passing_skill": 0.678,
+      "shooting_skill": 0.83
+    },
+    {
+      "player_id": "home-14",
+      "team_id": "home",
+      "name": "Northbridge Player 14",
+      "shirt_number": 14,
+      "role": "DF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "CB",
+      "passing_skill": 0.891,
+      "shooting_skill": 0.706
+    },
+    {
+      "player_id": "home-15",
+      "team_id": "home",
+      "name": "Northbridge Player 15",
+      "shirt_number": 15,
+      "role": "DF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "FB",
+      "passing_skill": 0.678,
+      "shooting_skill": 0.619
+    },
+    {
+      "player_id": "home-16",
+      "team_id": "home",
+      "name": "Northbridge Player 16",
+      "shirt_number": 16,
+      "role": "MF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "CM",
+      "passing_skill": 0.84,
+      "shooting_skill": 0.652
+    },
+    {
+      "player_id": "home-17",
+      "team_id": "home",
+      "name": "Northbridge Player 17",
+      "shirt_number": 17,
+      "role": "MF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "CM",
+      "passing_skill": 0.935,
+      "shooting_skill": 0.756
+    },
+    {
+      "player_id": "home-18",
+      "team_id": "home",
+      "name": "Northbridge Player 18",
+      "shirt_number": 18,
+      "role": "MF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "WM",
+      "passing_skill": 0.71,
+      "shooting_skill": 0.779
+    },
+    {
+      "player_id": "home-19",
+      "team_id": "home",
+      "name": "Northbridge Player 19",
+      "shirt_number": 19,
+      "role": "FW",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "W",
+      "passing_skill": 0.758,
+      "shooting_skill": 0.876
+    },
+    {
+      "player_id": "home-20",
+      "team_id": "home",
+      "name": "Northbridge Player 20",
+      "shirt_number": 20,
+      "role": "FW",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "ST",
+      "passing_skill": 0.923,
+      "shooting_skill": 0.73
+    },
+    {
+      "player_id": "away-01",
+      "team_id": "away",
+      "name": "Southbank Player 01",
+      "shirt_number": 1,
+      "role": "GK",
+      "is_starter": true,
+      "formation_slot": 1,
+      "position_group": "GK",
+      "passing_skill": 0.843,
+      "shooting_skill": 0.794
+    },
+    {
+      "player_id": "away-02",
+      "team_id": "away",
+      "name": "Southbank Player 02",
+      "shirt_number": 2,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 2,
+      "position_group": "FB",
+      "passing_skill": 0.892,
+      "shooting_skill": 0.892
+    },
+    {
+      "player_id": "away-03",
+      "team_id": "away",
+      "name": "Southbank Player 03",
+      "shirt_number": 3,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 3,
+      "position_group": "CB",
+      "passing_skill": 0.659,
+      "shooting_skill": 0.676
+    },
+    {
+      "player_id": "away-04",
+      "team_id": "away",
+      "name": "Southbank Player 04",
+      "shirt_number": 4,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 4,
+      "position_group": "CB",
+      "passing_skill": 0.831,
+      "shooting_skill": 0.657
+    },
+    {
+      "player_id": "away-05",
+      "team_id": "away",
+      "name": "Southbank Player 05",
+      "shirt_number": 5,
+      "role": "DF",
+      "is_starter": true,
+      "formation_slot": 5,
+      "position_group": "FB",
+      "passing_skill": 0.827,
+      "shooting_skill": 0.581
+    },
+    {
+      "player_id": "away-06",
+      "team_id": "away",
+      "name": "Southbank Player 06",
+      "shirt_number": 6,
+      "role": "MF",
+      "is_starter": true,
+      "formation_slot": 6,
+      "position_group": "WM",
+      "passing_skill": 0.914,
+      "shooting_skill": 0.734
+    },
+    {
+      "player_id": "away-07",
+      "team_id": "away",
+      "name": "Southbank Player 07",
+      "shirt_number": 7,
+      "role": "MF",
+      "is_starter": true,
+      "formation_slot": 7,
+      "position_group": "CM",
+      "passing_skill": 0.685,
+      "shooting_skill": 0.782
+    },
+    {
+      "player_id": "away-08",
+      "team_id": "away",
+      "name": "Southbank Player 08",
+      "shirt_number": 8,
+      "role": "MF",
+      "is_starter": true,
+      "formation_slot": 8,
+      "position_group": "WM",
+      "passing_skill": 0.744,
+      "shooting_skill": 0.619
+    },
+    {
+      "player_id": "away-09",
+      "team_id": "away",
+      "name": "Southbank Player 09",
+      "shirt_number": 9,
+      "role": "FW",
+      "is_starter": true,
+      "formation_slot": 9,
+      "position_group": "W",
+      "passing_skill": 0.795,
+      "shooting_skill": 0.598
+    },
+    {
+      "player_id": "away-10",
+      "team_id": "away",
+      "name": "Southbank Player 10",
+      "shirt_number": 10,
+      "role": "FW",
+      "is_starter": true,
+      "formation_slot": 10,
+      "position_group": "ST",
+      "passing_skill": 0.713,
+      "shooting_skill": 0.853
+    },
+    {
+      "player_id": "away-11",
+      "team_id": "away",
+      "name": "Southbank Player 11",
+      "shirt_number": 11,
+      "role": "FW",
+      "is_starter": true,
+      "formation_slot": 11,
+      "position_group": "W",
+      "passing_skill": 0.859,
+      "shooting_skill": 0.554
+    },
+    {
+      "player_id": "away-12",
+      "team_id": "away",
+      "name": "Southbank Player 12",
+      "shirt_number": 12,
+      "role": "GK",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "GK",
+      "passing_skill": 0.883,
+      "shooting_skill": 0.556
+    },
+    {
+      "player_id": "away-13",
+      "team_id": "away",
+      "name": "Southbank Player 13",
+      "shirt_number": 13,
+      "role": "DF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "FB",
+      "passing_skill": 0.75,
+      "shooting_skill": 0.867
+    },
+    {
+      "player_id": "away-14",
+      "team_id": "away",
+      "name": "Southbank Player 14",
+      "shirt_number": 14,
+      "role": "DF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "CB",
+      "passing_skill": 0.836,
+      "shooting_skill": 0.657
+    },
+    {
+      "player_id": "away-15",
+      "team_id": "away",
+      "name": "Southbank Player 15",
+      "shirt_number": 15,
+      "role": "DF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "FB",
+      "passing_skill": 0.763,
+      "shooting_skill": 0.686
+    },
+    {
+      "player_id": "away-16",
+      "team_id": "away",
+      "name": "Southbank Player 16",
+      "shirt_number": 16,
+      "role": "MF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "CM",
+      "passing_skill": 0.688,
+      "shooting_skill": 0.9
+    },
+    {
+      "player_id": "away-17",
+      "team_id": "away",
+      "name": "Southbank Player 17",
+      "shirt_number": 17,
+      "role": "MF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "CM",
+      "passing_skill": 0.666,
+      "shooting_skill": 0.698
+    },
+    {
+      "player_id": "away-18",
+      "team_id": "away",
+      "name": "Southbank Player 18",
+      "shirt_number": 18,
+      "role": "MF",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "WM",
+      "passing_skill": 0.874,
+      "shooting_skill": 0.689
+    },
+    {
+      "player_id": "away-19",
+      "team_id": "away",
+      "name": "Southbank Player 19",
+      "shirt_number": 19,
+      "role": "FW",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "W",
+      "passing_skill": 0.944,
+      "shooting_skill": 0.636
+    },
+    {
+      "player_id": "away-20",
+      "team_id": "away",
+      "name": "Southbank Player 20",
+      "shirt_number": 20,
+      "role": "FW",
+      "is_starter": false,
+      "formation_slot": null,
+      "position_group": "ST",
+      "passing_skill": 0.944,
+      "shooting_skill": 0.862
+    }
+  ],
+  "event_time_semantics": "Ball actions emitted at arrival; snapshot/samples are period-local; match_time_ms is monotonic including added time",
+  "simulation_model": {
+    "player_movement_cap_mps": 4.5,
+    "ball_sample_interval_ms": 50,
+    "pass_context": "measured from persistent kick-time pitch state",
+    "pass_outcome": "defender reach/interception or receiver reach",
+    "pass_mean_speed_mps": "min(24, 8 + .28*intended_distance + 3*kick_effort)",
+    "shot_mean_speed_mps": "20 + 12*kick_effort + 2*shooting_skill",
+    "shot_outcome": "goal-mouth / keeper contact geometry",
+    "scenario_policy": "changes tactics and action selection, not metric values",
+    "ball_radius_m": 0.11,
+    "restart_model": "whole-ball first boundary and last touch; explicit dead-ball placement and delivery",
+    "added_time": "qualifying lost-time ledger, rounded-up scaled minute minimum; further losses extend it",
+    "progression": {
+      "interval_min_ms": 300000,
+      "interval_max_ms": 480000,
+      "after_conceding_press_duration_ms": 180000,
+      "application": "next action decision; monotonic match clock includes added time; goal reactions take priority"
+    }
+  },
+  "substitution_policy": {
+    "max_substitutions": 5,
+    "max_in_play_windows": 3,
+    "bench_per_team": 9,
+    "primary_window_minutes": [
+      60,
+      70
+    ],
+    "short_match_timing": "scaled proportionally",
+    "selection": "lowest currently rated eligible starter with same-position-group bench cover; keeper excluded",
+    "stoppage_model": "next natural ball-out, goal or foul stoppage; halftime separately"
+  },
+  "limitations": [
+    "Simplified 2D model; no offside, aerial play or referee countdown offences",
+    "Planar goalkeeper reach/hold/parry and restart placement are uncalibrated heuristics",
+    "Players move between kicks; held fixed during ball flight except receiver/interceptor",
+    "Snapshots are not a continuous player tracking feed",
+    "Skills and action choices use seeded randomness; metrics are deterministic from evidence",
+    "Difficulty and motion models are uncalibrated; no real identities or professional realism claim"
+  ],
+  "period_offsets_ms": {
+    "1": 0,
+    "2": 2963437
+  },
+  "period_actual_durations_ms": {
+    "1": 2963437,
+    "2": 3413806
+  },
+  "clock_model": "period_plus_added_time_v1",
+  "discipline_model": {
+    "version": "challenge-contact-v1",
+    "laws": "IFAB 2026/27 selected offences",
+    "challenge_probability_per_eligible_decision": 0.12,
+    "max_challenge_start_distance_m": 2.5,
+    "advantage": "one bounded carry evaluation; direct careless/reckless non-penalty offences only",
+    "goalkeeper_dismissal": "active outfielder becomes emergency keeper; no extra player enters"
+  },
+  "match_duration_ms": 6377243,
+  "final_score": {
+    "home": 0,
+    "away": 4
+  },
+  "match_status": "completed"
+}

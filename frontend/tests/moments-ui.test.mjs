@@ -1,0 +1,13 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+test('real entrypoint renders substitutions, auto-pauses goal/SAVED and clears banners on rewind',async()=>{
+ class Element{constructor(){this.innerHTML='';this.textContent='';this.value='0';this.style={};this.hidden=false;this.attrs={};this.lastElementChild={textContent:''};this.classList={add(){},remove(){},toggle(){}};this.open=false;}setAttribute(k,v){this.attrs[k]=v;}addEventListener(){}click(){this.onclick?.();}}
+ const els=new Map(),get=id=>{if(!els.has(id))els.set(id,new Element());return els.get(id);},listeners={};globalThis.document={getElementById:get,querySelector:get,querySelectorAll:()=>[],activeElement:{tagName:'BODY'},addEventListener:(k,fn)=>listeners[k]=fn};let frame;globalThis.requestAnimationFrame=fn=>frame=fn;
+ const base=new URL('../../data/examples/offside-match/',import.meta.url),meta=JSON.parse(readFileSync(new URL('metadata.json',base))),text=readFileSync(new URL('events.jsonl',base),'utf8'),events=text.trim().split('\n').map(JSON.parse);globalThis.fetch=async path=>path.startsWith('/api/')?{ok:false}:{ok:true,json:async()=>meta,text:async()=>text};
+ await import('../app.mjs');await new Promise(setImmediate);assert.equal(get('status').textContent,'');
+ get('jump-substitution').click();assert.equal(get('decision-notice').attrs['data-kind'],'substitution');assert.match(get('decision-content').innerHTML,/Northbridge #20/);assert.match(get('decision-content').innerHTML,/Northbridge #10/);assert.match(get('decision-content').innerHTML,/62:11/);assert.match(get('decision-content').innerHTML,/Striker/);assert.match(get('decision-content').innerHTML,/Winger/);
+ get('continue-decision').click();assert.equal(get('decision-notice').hidden,true);get('play').click();
+ const goal=events.find(e=>e.type==='goal');get('seek').oninput({target:{value:goal.match_time_ms-1}});get('play').click();frame(1000);frame(1010);assert.equal(get('seek').value,goal.match_time_ms);assert.equal(get('play').textContent,'▶');assert.match(get('decision-content').innerHTML,/GOALLLLLL/);assert.equal(get('decision-notice').attrs['data-kind'],'goal');
+ get('continue-decision').click();frame(1020);assert.equal(get('decision-notice').hidden,true);get('play').click();
+ get('jump-penalty').click();get('penalty-setup').click();get('continue-decision').click();frame(2000);assert.equal(get('decision-notice').attrs['data-kind'],'saved');assert.match(get('decision-content').innerHTML,/>SAVED</);assert.equal(get('play').textContent,'▶');
+ get('restart').click();assert.equal(get('decision-notice').hidden,true);assert.equal(Number(get('home-score').textContent),0);
+});

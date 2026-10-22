@@ -140,7 +140,8 @@ function visualFrames(match){
   }
   const order=(a,b)=>a.t-b.t||a.sequence-b.sequence;
   for(const event of match.events){
-    if(event.positions_after)frames.push({t:event.t,sequence:event.sequence,period:event.period,blend:false,positions:event.positions_after});
+    if(event.challenge_snapshot?.players)frames.push({t:event.t,sequence:event.sequence,period:event.period,blend:true,positions:event.challenge_snapshot.players});
+    if(event.positions_after)frames.push({t:event.t,sequence:event.sequence,period:event.period,blend:event.type==='restart'&&event.reason!=='kickoff',positions:event.positions_after});
   }
   frames.sort(order);
   // engine.py moves a recoverer to the stationary ball before emitting recovery.
@@ -183,7 +184,7 @@ export function boardAt(match,time,{smooth=true}={}){
     if(['period_start','period_end','goal','turnover','stoppage','ball_out','loose_ball','save','ball_release','match_abandoned','offside','opponent_touch','deflection'].includes(event.type)){
       carrierId=null;latestControl=event;
     }
-    if(['stoppage','ball_out','period_end'].includes(event.type))stopped=true;
+    if(['stoppage','ball_out','period_end','offside'].includes(event.type))stopped=true;
     if(event.type==='resume'||event.type==='recovery'||(event.type==='restart'&&event.ball_in_play!==false))stopped=false;
     if(['restart','recovery','resume'].includes(event.type)){
       carrierId=event.ball_in_play===false?null:event.player_id;latestControl=event;
@@ -194,7 +195,7 @@ export function boardAt(match,time,{smooth=true}={}){
     }
     if(['shot','parry','clearance','deflection','opponent_touch','offside'].includes(event.type)){carrierId=null;latestControl=event;}
     if(event.type==='restart_delivery'){carrierId=event.recipient_id;latestControl=event;}
-    if(['restart','recovery','turnover','resume'].includes(event.type)&&event.start)ball=event.start;
+    if(['restart','recovery','turnover','resume','stoppage'].includes(event.type)&&event.start)ball=event.start;
     if(event.type==='carry'||event.type==='movement'){carrierId=event.carrier_id||event.player_id;latestControl=event;}
     if(actionTypes.includes(event.type)||event.type==='ball_placement')ball=event.end;
   }
