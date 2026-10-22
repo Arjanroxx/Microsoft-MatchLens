@@ -86,3 +86,23 @@ Schema 1.4 compatibility: `model.mjs` now understands starting lineups, substitu
 Default replay speed is now 4×. The amber player highlight means established ball control; while the ball travels, no intended receiver is marked as the carrier. At a simulator kickoff, old phase trails are cleared and positions reset at the recorded restart timestamp. Goal and halftime resets are not blended early. The pitch glow follows the team in control or taking the current action.
 
 Validation for this update: 6,881 sample assertions covering snapshot anchors, ball samples, carrier timing, recoveries, goal timing and unchanged event order; startup/interaction smoke checks executed in an isolated JavaScript runtime. Browser visual QA and hosted preview publication were unavailable because the build environment was offline. The existing hosted preview remains on the prior version until a build environment can publish this branch.
+
+
+## Referee decision overlays
+
+The default bundled replay now copies `data/examples/offside-match/` (schema 1.7) without changing its metadata or events. The example selector also includes the committed discipline and original short matches. Only metadata/events are shipped to the viewer; summary and evaluation-only files are excluded.
+
+- Amber foul notices name the offender/victim, mark the location and describe the recorded restart. Advantage pending/played is displayed as continued play; the GUI does not invent a whistle.
+- Pink penalty notices follow an explicit penalty award, with a contrasting 11 m spot and goal corridor. **View penalty setup** seeks to the recorded kick timestamp: taker and keeper stand out while the other source-position markers are dimmed. Results remain hidden until shot completion.
+- Cyan offside notices name the attacker and show a separate contact-time replay. Coral shading/line shows the recorded offside limit, cyan identifies the second-last opponent and the margin is drawn from the frozen source evidence. No contact-time line is drawn against later live player positions.
+- **Pause on decisions** stops the viewer clock exactly at the next recorded foul/offside by default. **Continue replay** dismisses the notice and resumes the simulator's event timeline. Turn the option off for uninterrupted playback. These are replay controls, not additional simulated stoppages.
+- **Foul / Penalty / Offside** jump buttons seek to an actual source event (wrapping to the first if none remains). They do not create incidents.
+- Player evidence includes event-prefix fouls committed, fouls won and offsides, including static/file-import viewing without the ratings API.
+- Pitch lines are generated from the simulator's 105 x 68 m geometry: 16.5 x 40.32 m penalty areas, 5.5 x 18.32 m goal areas, 11 m spots, centred halfway line and 9.15 m circle/arcs. Arc intersections are calculated rather than rounded by eye.
+- Challenge snapshots anchor contact positions. Non-kickoff restart setups can interpolate toward their recorded state anchor; explicit kickoff/substitution/dismissal resets retain their original timing. Ball samples, event ordering, restarts, clock offsets and statistical reducers remain source-driven.
+
+New modules: `decisions.mjs` resolves visible decision state; `decision-ui.mjs` renders notices and frozen review diagrams; `pitch.mjs` shares metre-accurate field markings. Reduced-motion settings disable decorative line entry and player-opacity transitions.
+
+Validation: all 41 frontend tests pass, including timed automatic pauses, continue/rewind, foul counts, advantage, exact penalty setup, result withholding, source-frozen offside evidence and pitch geometry. Browser checks exercised the real offside popup, penalty setup and source-position markers. The Python simulator is unchanged.
+
+Run all frontend tests from the repository root: `node --test frontend/tests/*.test.mjs` (Bash). On PowerShell/Windows use `node --test` from inside `frontend/` for automatic test discovery.
