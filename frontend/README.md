@@ -1,5 +1,7 @@
 # MatchLens Replay Studio
 
+Current schema **1.7** includes Priority 3 offside and deflections. See [the complete UI handoff](../docs/UI-INTEGRATION.md) and [offside contract](../docs/OFFSIDE.md). `python -m simulator.ui_server --input data/examples/offside-match --port 8080` serves the selected match plus authoritative prefix ratings/stats at `http://127.0.0.1:8080/`. Existing static mode and legacy fixtures remain supported.
+
 An interactive, buildless HTML/CSS/JavaScript frontend for the MatchLens simulator. No npm install, framework, Azure account, or AI key is needed.
 
 ## Schema 1.6 and Priority 2
@@ -79,7 +81,7 @@ The functional application is implemented in HTML/CSS/JS. Canva is an editable v
 
 ## Smoother replay update
 
-Schema 1.4 compatibility: `model.mjs` now understands starting lineups, substitution anchors, formation-slot inheritance, stoppage/resume possession, and rewinds through lineup changes. Metadata can contain 40 players; only 22 active markers are rendered. `lineupsAt(match,time)` exposes bench and substituted-off IDs. See `docs/SUBSTITUTIONS.md` for the frontend handoff. The included original frontend fixture remains schema 1.3; load `data/examples/substitutions-match/metadata.json` and `events.jsonl` together to exercise the new flow. Dedicated bench/substitution panels and Python-equivalent live player ratings remain frontend integration work.
+Schema 1.4 compatibility: `model.mjs` now understands starting lineups, substitution anchors, formation-slot inheritance, stoppage/resume possession, and rewinds through lineup changes. Metadata can contain 40 players; only 22 active markers are rendered. `lineupsAt(match,time)` exposes bench and substituted-off IDs. See `docs/SUBSTITUTIONS.md` for the frontend handoff. The included original frontend fixture remains schema 1.3; load `data/examples/substitutions-match/metadata.json` and `events.jsonl` together to exercise the new flow. Dedicated bench/substitution panels remain frontend integration work. The player inspector now reads canonical live ratings from the optional local UI bridge; the JavaScript team reducer does not duplicate the rating formula.
 
 Default replay speed is now 4×. The amber player highlight means established ball control; while the ball travels, no intended receiver is marked as the carrier. At a simulator kickoff, old phase trails are cleared and positions reset at the recorded restart timestamp. Goal and halftime resets are not blended early. The pitch glow follows the team in control or taking the current action.
 

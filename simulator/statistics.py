@@ -29,14 +29,14 @@ class MatchStatistics:
             "tackles": {"attempted": 0, "won": 0, "foul": 0, "missed": 0},
             "fouls_committed": 0, "fouls_won": 0, "yellow_cards": 0, "red_cards": 0,
             "second_yellow_dismissals": 0, "free_kicks": 0, "direct_free_kicks": 0, "indirect_free_kicks": 0,
-            "penalties_won": 0, "penalties_conceded": 0, "penalties_taken": 0, "penalties_scored": 0, "penalties_missed": 0,
+            "penalties_won": 0, "penalties_conceded": 0, "penalties_taken": 0, "penalties_scored": 0, "penalties_missed": 0, "offsides": 0,
         } for team in ("home", "away")}
         self.values = {team: {metric: [] for metric in METRICS} for team in self.counts}
         self.player_statistics = PlayerStatistics(self.metadata)
 
     def _time(self, period, period_time_ms):
         limit = self.metadata.get("period_actual_durations_ms", {}).get(str(period),
-                    float("inf") if self.metadata.get("schema_version") in ("1.5", "1.6") else self.duration)
+                    float("inf") if self.metadata.get("schema_version") in ("1.5", "1.6", "1.7") else self.duration)
         if period not in (1, 2) or not 0 <= period_time_ms <= limit:
             raise ValueError("Invalid statistics clock")
         return elapsed(self.metadata, period, period_time_ms)
@@ -67,7 +67,7 @@ class MatchStatistics:
             self._advance(max(self.cursor, kick))
             self.owner = None
         self._advance(when)
-        if kind in ("period_start", "period_end", "turnover", "goal", "stoppage", "ball_out", "loose_ball", "save", "ball_release", "match_abandoned"):
+        if kind in ("period_start", "period_end", "turnover", "goal", "stoppage", "ball_out", "loose_ball", "save", "ball_release", "match_abandoned", "offside", "opponent_touch", "deflection"):
             self.owner = None
         if kind == "resume":
             self.owner = team if event.get("player_id") else None
@@ -84,7 +84,7 @@ class MatchStatistics:
         stats["event_counts"][kind] = stats["event_counts"].get(kind, 0) + 1
         for event_type, counter in (("goal", "goals"), ("recovery", "recoveries"),
                                     ("turnover", "turnovers"), ("pressure", "pressure_events"),
-                                    ("substitution", "substitutions"), ("clearance", "clearances")):
+                                    ("offside", "offsides"), ("substitution", "substitutions"), ("clearance", "clearances")):
             if kind == event_type:
                 stats[counter] += 1
         if kind == "restart":
@@ -114,6 +114,8 @@ class MatchStatistics:
             if defender_team:
                 self.counts[defender_team]["interceptions"] += 1
         if kind not in ("pass", "shot"):
+            return
+        if event.get("valid_for_statistics") is False:
             return
         record_action_metrics(values, event)
         if kind == "pass":

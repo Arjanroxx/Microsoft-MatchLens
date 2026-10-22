@@ -2,7 +2,7 @@
 
 This is a connected, simplified football simulation. Adding event labels alone does not make it a complete match engine. Each new feature must change the underlying state, restart, eligible actors, statistics, and UI consistently.
 
-Schema 1.6 implements substitutions and all of Priorities 1 and 2 (within the documented selected-offence model). Features below are **not implemented** unless checked. See [the implementation and UI handoff](RESTARTS-AND-CLOCK.md) for the exact scope and remaining 2D limitations. Priorities are engineering recommendations, not additional hackathon requirements.
+Schema 1.7 implements substitutions and all five items of Priority 3, alongside Priorities 1 and 2, within the documented selected 2D rule models. Features below are **not implemented** unless checked. See [the implementation and UI handoff](RESTARTS-AND-CLOCK.md) for the exact scope and remaining 2D limitations. Priorities are engineering recommendations, not additional hackathon requirements.
 
 ## Implemented foundations
 
@@ -40,17 +40,19 @@ Acceptance is tested: sent-off players cannot act or remain in later snapshots; 
 
 Rule grounding: [IFAB Law 12](https://theifab.com/laws/latest/fouls-and-misconduct/), with Laws 3/13/14 linked in the implementation guide.
 
-## Priority 3: offside
+## Priority 3: offside — implemented in 1.7
 
-- [ ] Evaluate attacking position at the teammate's relevant ball contact, using the ball and second-last opponent, not just the goalkeeper.
-- [ ] Separate an offside position from an offence involving active participation.
-- [ ] Handle restart exceptions and deliberate-play/deflection distinctions under the selected law version.
-- [ ] Cancel invalid attacking outcomes, produce the appropriate restart, and preserve decision evidence.
-- [ ] Show a replay line only from the source positions at the relevant contact time; label the limitations of our 2D point-player model.
+- [x] Evaluate attacking position at the teammate's relevant ball contact, using the ball and second-last opponent, not just the goalkeeper.
+- [x] Separate an offside position from an offence involving active participation.
+- [x] Handle restart exceptions and deliberate-play/deflection distinctions under the selected law version.
+- [x] Cancel invalid attacking outcomes, produce the appropriate restart, and preserve decision evidence.
+- [x] Show a replay line only from the source positions at the relevant contact time; label the limitations of our 2D point-player model.
 
 Reference: [IFAB Law 11](https://theifab.com/laws/latest/offside/). Our point-player simulation cannot claim body-part-accurate VAR decisions.
 
 Acceptance: an offside cannot be appended to a sequence while leaving the invalid goal/assist, possession, and rating credits intact.
+
+See [OFFSIDE.md](OFFSIDE.md) for the exact selected involvement/control proxies and limitations, and [UI-INTEGRATION.md](UI-INTEGRATION.md) for the complete P1-P3 teammate handoff and runnable live-rating API. Independent attempted challenges, gestures and body-part officiating are outside this point-player model.
 
 ## Priority 4: players, movement, and match rhythm
 
@@ -78,4 +80,4 @@ Acceptance: an offside cannot be appended to a sequence while leaving the invali
 - [ ] VAR/review corrections only with an explicit review/evidence model and state rollback.
 - [ ] Special concussion or temporary-absence protocols only after choosing applicable competition rules.
 
-Recommended next build: **offside → movement/calibration**, with source-grounded tests at each step. A connected smaller model is preferable to random cards, offsides, or penalties that do not affect the match.
+Recommended next build: **movement/calibration**, with source-grounded tests at each step. A connected smaller model is preferable to random cards, offsides, or penalties that do not affect the match.

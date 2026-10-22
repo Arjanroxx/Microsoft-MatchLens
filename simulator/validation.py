@@ -6,8 +6,9 @@ from simulator.metrics import ball_speed, make_trajectory, pass_difficulty
 from simulator.pitch import distance, pass_context, resolve_pass
 from simulator.restarts import award_restart, first_exit, resolve_shot, parry_target
 from simulator.discipline import resolve_challenge, foul_restart
+from simulator.offside import contact_for, interference, touch_control, deflection_target
 
-ACTIONS = {"pass", "shot", "clearance", "parry", "restart_delivery", "carry"}
+ACTIONS = {"pass", "shot", "clearance", "parry", "restart_delivery", "carry", "deflection"}
 
 
 def validate_stream(metadata, events):
@@ -22,6 +23,7 @@ def validate_stream(metadata, events):
     cautions, red_cards = {}, set()
     card_fouls, dismissed, abandoned = set(), set(), False
     foul_tackles, advantages = set(), {}
+    phase_source, offside_sources, offside_stops = None, set(), set()
     for index, e in enumerate(events, 1):
         def require(test, message):
             if not test:
@@ -46,13 +48,19 @@ def validate_stream(metadata, events):
                 require(1 in ends and ends[1] == e["match_time_ms"], "period overlap/gap")
             starts[period], ball, pending = e["match_time_ms"], None, None
         if kind == "stoppage":
-            require(e["reason"] in ("ball_out", "goal_celebration", "period_interval", "foul", "referee_whistle"), "unknown stoppage")
+            require(e["reason"] in ("ball_out", "goal_celebration", "period_interval", "foul", "referee_whistle", "offside"), "unknown stoppage")
+            if e["reason"] == "offside":
+                offence = by_id.get(e["source_event_id"], {})
+                require(offence.get("type") == "offside" and e["restart"] == offence["restart"], "offside stoppage without offence")
+                offside_stops.add(offence["event_id"])
+                pending = offence["restart"]
             if e["reason"] == "foul":
                 foul = by_id.get(e["source_event_id"], {})
                 require(foul.get("type") == "foul" and e["restart"] == foul["restart"], "foul stoppage without offence")
                 require(advantages.get(foul["event_id"]) != "played", "foul recalled after advantage already realised")
                 pending = foul["restart"]
             stopped = True
+            phase_source = None
         if kind == "ball_placement":
             require(stopped, "placement during open play")
             require(ball is None or e["start"] == ball, "placement starts away from ball")
@@ -67,7 +75,7 @@ def validate_stream(metadata, events):
             require(e["formation_slot"] == active[off], "formation slot changed")
             require(not e["halftime"] or (period == 2 and t == 0), "invalid halftime substitution")
             stop = by_id.get(e["stoppage_event_id"], {})
-            require(stop.get("type") == "stoppage" and stop.get("reason") in ("ball_out", "goal_celebration", "period_interval", "foul"), "missing natural opportunity")
+            require(stop.get("type") == "stoppage" and stop.get("reason") in ("ball_out", "goal_celebration", "period_interval", "foul", "offside"), "missing natural opportunity")
             active[on] = active.pop(off)
             ever.add(on)
             used[team] += 1
@@ -140,6 +148,46 @@ def validate_stream(metadata, events):
             stopped = False
         if kind == "recovery":
             require(not stopped and e["start"] == ball, "recovery teleported ball / occurred out of play")
+            if phase_source and metadata["schema_version"] == "1.7":
+                require(actor not in contact_for(phase_source, roster)["candidates"], "offside attacker granted control")
+            phase_source = None
+        if kind == "opponent_touch":
+            source = by_id.get(e["source_event_id"], {})
+            defender = source.get("interceptor_id") or source.get("deflector_id")
+            require(source.get("type") in ("pass", "restart_delivery") and actor == defender and e["start"] == ball, "unattributed opponent touch")
+            require(phase_source is not None and phase_source["event_id"] == source["event_id"] and e["match_time_ms"] == source["match_time_ms"], "stale opponent touch")
+            speed = source.get("kick", {}).get("commanded_mean_speed_mps", source.get("commanded_mean_speed_mps"))
+            expected = touch_control(source["start"], source["end"], source["pitch_snapshot"]["players"][actor], speed)
+            require(e["control"] == expected, "unsupported deliberate-play classification")
+            require(bool(source.get("deflector_id")) == (not expected["resets_offside"]), "incorrect interception credit")
+            phase_source = None if expected["resets_offside"] else source
+        if kind == "offside":
+            source = by_id.get(e["source_event_id"], {})
+            require(not stopped and source.get("type") in ("pass", "shot", "restart_delivery", "clearance"), "offside without live teammate contact")
+            require(source["event_id"] not in offside_sources and source["period"] == period, "duplicate/stale offside")
+            frame = contact_for(source, roster)
+            require(e["contact"] == frame and actor in frame["candidates"] and team == source["team_id"], "offside position not supported by original snapshot")
+            require(e["contact_period_time_ms"] == source["pitch_snapshot"]["period_time_ms"], "wrong offside contact clock")
+            require(phase_source is not None and phase_source["event_id"] == source["event_id"], "offside after phase reset")
+            involvement = e["involvement"]
+            if involvement == "touch":
+                require(source["type"] in ("pass", "restart_delivery") and distance(e["location"], ball) < .001, "touch without ball involvement")
+                require(source["outcome"] == "incomplete" and source["recipient_id"] is None, "offside receipt retains success credit")
+                require(distance(e["location"], source["end"]) < .112, "offside location disconnected")
+                require(actor == source["intended_recipient_id"] if source["outcome_reason"] == "offside" else
+                        actor == min(source["pitch_snapshot"]["players"], key=lambda p: distance(source["pitch_snapshot"]["players"][p], source["end"])), "offside player did not receive/reach ball")
+            elif involvement == "interfere_opponent":
+                require(source["type"] == "shot" and source.get("valid_for_statistics") is False, "invalid attack retains shot credit")
+                blocker = interference(frame, source["pitch_snapshot"]["players"], source["start"], source["goalkeeper_id"])
+                require(blocker == actor and e["location"] == source["pitch_snapshot"]["players"][actor], "unsupported active interference")
+            elif involvement in ("gain_advantage_save", "gain_advantage_deflection"):
+                via = by_id.get(e["via_event_id"], {})
+                require(via.get("type") == ("parry" if involvement.endswith("save") else "deflection") and via.get("shot_event_id", via.get("source_event_id")) == source["event_id"], "rebound offside lost original phase")
+                require(distance(e["location"], ball) < .001, "rebound offence away from ball")
+            else:
+                require(False, "unsupported offside involvement")
+            require(e["restart"] == {"type": "indirect_free_kick", "team_id": "away" if team == "home" else "home", "location": e["location"], "reason": "offside"}, "incorrect offside restart")
+            offside_sources.add(source["event_id"])
         if kind in ACTIONS:
             require(not stopped and e["start"] == ball, "open-play ball discontinuity")
             snapshot, samples = e["pitch_snapshot"], e["ball_trajectory"]
@@ -159,6 +207,8 @@ def validate_stream(metadata, events):
             speed = e.get("kick", {}).get("commanded_mean_speed_mps", e.get("commanded_mean_speed_mps"))
             require(samples == make_trajectory(e["start"], e["end"], snapshot["period_time_ms"], speed, kind == "shot"), "trajectory not supported by command")
             require(e["ball_speed"] == ball_speed(samples), "incorrect ball speed")
+            if kind in ("pass", "shot", "restart_delivery", "clearance"):
+                phase_source = e
             if kind == "pass":
                 target = e["intended_recipient_id"]
                 require(target in active and roster[target]["team_id"] == team and target != actor, "invalid recipient")
@@ -174,8 +224,9 @@ def validate_stream(metadata, events):
                 crossing = first_exit(e["start"], e["kick"]["aimed_end"]) if result["reason"] == "out_of_play" else None
                 if crossing:
                     result.update(end=crossing["location"], outcome="incomplete", reason="out_of_play", interceptor_id=None)
-                require(e["end"] == result["end"] and e["outcome"] == result["outcome"] and e["outcome_reason"] == result["reason"] and e["interceptor_id"] == result["interceptor_id"], "invalid pass resolution")
-                require(e["recipient_id"] == (target if result["outcome"] == "complete" else None), "wrong completed recipient")
+                flagged = result["outcome"] == "complete" and target in contact_for(e, roster)["candidates"] if metadata["schema_version"] == "1.7" else False
+                require(e["end"] == result["end"] and e["outcome"] == ("incomplete" if flagged else result["outcome"]) and e["outcome_reason"] == ("offside" if flagged else result["reason"]) and (e["interceptor_id"] or e.get("deflector_id")) == result["interceptor_id"], "invalid pass resolution")
+                require(e["recipient_id"] == (target if result["outcome"] == "complete" and not flagged else None), "wrong completed recipient")
                 require(e["distance_m"] == round(distance(e["start"], e["end"]), 2), "incorrect pass distance")
             if kind == "shot":
                 require(abs(speed-(20+12*e["kick"]["effort"]+2*e["kick"]["shooting_skill"])) < 1e-9, "incorrect shot command")
@@ -186,8 +237,11 @@ def validate_stream(metadata, events):
                     require(restart.get("reason") == e["set_piece_type"] and e["set_piece_type"] in ("penalty", "direct_free_kick") and restart.get("player_id") == actor, "illegal direct set-piece shot")
                     require(e["start"] == restart["start"], "set-piece shot moved from restart")
                 result = resolve_shot(e["start"], e["kick"]["aimed_end"], snapshot["players"][keeper], speed)
-                require(e["end"] == result["end"] and e["outcome_reason"] == result["outcome_reason"] and e["save_outcome"] == result["save_outcome"], "shot not supported by contact geometry")
-                require(e["outcome"] == ("goal" if result["outcome_reason"] == "goal" else "no_goal"), "invalid shot outcome")
+                blocker = interference(contact_for(e, roster), snapshot["players"], e["start"], keeper) if metadata["schema_version"] == "1.7" else None
+                require(e["end"] == result["end"] and e["outcome_reason"] == ("offside" if blocker else result["outcome_reason"]) and e["save_outcome"] == (None if blocker else result["save_outcome"]), "shot not supported by contact geometry")
+                require(e["outcome"] == ("goal" if not blocker and result["outcome_reason"] == "goal" else "no_goal"), "invalid shot outcome")
+                if metadata["schema_version"] == "1.7":
+                    require(e["valid_for_statistics"] == (not bool(blocker)) and e["offside_offender_id"] == blocker and e["observed_outcome_reason"] == result["outcome_reason"], "invalid shot adjudication")
                 metrics = e["ball_speed"]
                 require(e["shot_speed"] == {"source": "synthetic_trajectory", "method": "initial_segment_average", "mps": metrics["initial_segment_mps"], "kmh": metrics["initial_segment_kmh"], "window_ms": metrics["initial_segment_duration_ms"]}, "incorrect shot speed")
                 if e.get("is_rebound"):
@@ -213,6 +267,14 @@ def validate_stream(metadata, events):
                 target = parry_target(prior["start"], prior["end"], prior["pitch_snapshot"]["players"][actor], direction, command)
                 crossing = first_exit(e["start"], target)
                 require(e["end"] == (crossing["location"] if crossing else target) and speed == max(6, command*.35), "parry not supported by shot contact")
+            if kind == "deflection":
+                prior = by_id.get(e["source_event_id"], {})
+                touch = by_id.get(e["touch_event_id"], {})
+                require(touch.get("control", {}).get("classification") == "deflection" and touch.get("source_event_id") == prior.get("event_id") and actor == touch.get("player_id"), "deflection without uncontrolled touch")
+                command = prior.get("kick", {}).get("commanded_mean_speed_mps", prior.get("commanded_mean_speed_mps"))
+                target = deflection_target(prior["start"], prior["end"], prior["pitch_snapshot"]["players"][actor])
+                crossing = first_exit(e["start"], target)
+                require(e["end"] == (crossing["location"] if crossing else target) and speed == max(4, command*.3), "unsupported deflection geometry")
             if kind == "restart_delivery":
                 restart = by_id.get(e["restart_event_id"], {})
                 require(restart.get("type") == "restart" and restart.get("reason") == e["restart_type"] and restart.get("player_id") == actor, "delivery without restart")
@@ -221,8 +283,9 @@ def validate_stream(metadata, events):
                 require(e["intended_end"] == snapshot["players"][target], "restart target disagrees with snapshot")
                 defenders = {p: v for p, v in snapshot["players"].items() if roster[p]["team_id"] != team}
                 result = resolve_pass(e["start"], e["intended_end"], e["intended_end"], defenders, speed, stop_at_boundary=True)
-                require(e["end"] == result["end"] and e["outcome"] == result["outcome"] and e["interceptor_id"] == result["interceptor_id"], "restart delivery disagrees with geometry")
-                require(e["recipient_id"] == (target if result["outcome"] == "complete" else None), "incorrect restart receiver")
+                flagged = result["outcome"] == "complete" and target in contact_for(e, roster)["candidates"] if metadata["schema_version"] == "1.7" else False
+                require(e["end"] == result["end"] and e["outcome"] == ("incomplete" if flagged else result["outcome"]) and (e["interceptor_id"] or e.get("deflector_id")) == result["interceptor_id"], "restart delivery disagrees with geometry")
+                require(e["recipient_id"] == (target if result["outcome"] == "complete" and not flagged else None), "incorrect restart receiver")
             ball, last_touch = e["end"], (team, actor)
             if kind == "pass" and e.get("interceptor_id"):
                 last_touch = (roster[e["interceptor_id"]]["team_id"], e["interceptor_id"])
@@ -267,3 +330,8 @@ def validate_stream(metadata, events):
         raise ValueError("Incomplete match/final score mismatch")
     if ends[max(ends)] != metadata["match_duration_ms"]:
         raise ValueError("Incorrect match duration")
+    required = {e["event_id"] for e in events if e.get("outcome_reason") == "offside"}
+    if not required <= offside_sources:
+        raise ValueError("Invalidated attack lacks offside decision/restart")
+    if offside_stops != {e["event_id"] for e in events if e["type"] == "offside"}:
+        raise ValueError("Offside decision lacks its stoppage/restart award")

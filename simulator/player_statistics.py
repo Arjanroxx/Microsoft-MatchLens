@@ -11,7 +11,7 @@ class PlayerStatistics:
         self.metadata = metadata
         self.finished_at = None
         self.abandoned = False
-        self.rating_model = RATING_MODEL_V2 if metadata.get("rating_model_version") == RATING_MODEL_V2["version"] or metadata.get("schema_version") == "1.6" else RATING_MODEL
+        self.rating_model = RATING_MODEL_V2 if metadata.get("rating_model_version") == RATING_MODEL_V2["version"] or metadata.get("schema_version") in ("1.6", "1.7") else RATING_MODEL
         self.duration = metadata["period_duration_ms"]
         self.roster = {p["player_id"]: p for p in metadata["players"]}
         self.stints = {pid: {"entered_at_ms": 0 if p.get("is_starter", True) else None,
@@ -37,7 +37,7 @@ class PlayerStatistics:
             "second_yellow_dismissals": 0, "tackles": {"attempted": 0, "won": 0, "foul": 0, "missed": 0},
             "free_kicks": 0, "direct_free_kicks": 0, "indirect_free_kicks": 0,
             "penalties_won": 0, "penalties_conceded": 0, "penalties_taken": 0,
-            "penalties_scored": 0, "penalties_missed": 0,
+            "penalties_scored": 0, "penalties_missed": 0, "offsides": 0,
         } for pid, p in self.roster.items()}
         self.values = {pid: {key: [] for key in METRICS} for pid in self.roster}
         self.evidence = {pid: set() for pid in self.roster}
@@ -60,6 +60,9 @@ class PlayerStatistics:
             return
         self.seen.add(event["event_id"])
         kind, actor, team = event["type"], event.get("player_id"), event.get("team_id")
+        if event.get("valid_for_statistics") is False:
+            self.last_pass.clear()
+            return
         if kind == "dismissal":
             if actor not in self.active:
                 raise ValueError("Dismissal of inactive player")
@@ -108,14 +111,14 @@ class PlayerStatistics:
             return
         if kind == "period_end" and event["period"] == 2:
             self.finished_at = event_time(self.metadata, event)
-        if kind in ("period_start", "period_end", "stoppage", "ball_out", "loose_ball", "save"):
+        if kind in ("period_start", "period_end", "stoppage", "ball_out", "loose_ball", "save", "offside", "opponent_touch"):
             self.last_pass.clear()
         if actor in self.players:
             self.evidence[actor].add(event["event_id"])
             counts = self.players[actor]["event_counts"]
             counts[kind] = counts.get(kind, 0) + 1
             for event_type, field in (("goal", "goals"), ("recovery", "recoveries"),
-                                      ("turnover", "turnovers"), ("pressure", "pressure_events"), ("clearance", "clearances")):
+                                      ("turnover", "turnovers"), ("pressure", "pressure_events"), ("offside", "offsides"), ("clearance", "clearances")):
                 if kind == event_type:
                     self.players[actor][field] += 1
             if kind in ("pass", "shot"):
@@ -204,7 +207,7 @@ class PlayerStatistics:
             stats["minutes_played_ms"] = max(0, end - entered) if entered is not None else 0
             stats["entered_at_ms"], stats["left_at_ms"] = entered, left
             stats["minutes_basis"] = "starting_lineup_and_substitution_events" if any("is_starter" in p for p in self.roster.values()) else "legacy_all_roster_players_start"
-            finished = self.finished_at is not None or (self.metadata.get("schema_version") not in ("1.5", "1.6") and elapsed_ms >= total_duration(self.metadata))
+            finished = self.finished_at is not None or (self.metadata.get("schema_version") not in ("1.5", "1.6", "1.7") and elapsed_ms >= total_duration(self.metadata))
             stats["squad_status"] = ("sent_off" if pid in self.dismissed else "substituted_off" if left is not None else
                                       "on_bench" if entered is None and not finished else
                                       "unused_substitute" if entered is None else

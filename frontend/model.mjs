@@ -1,6 +1,6 @@
 // Pure simulator adapter. Rendering and future backend transports depend on this contract.
 export const elapsed = (e, duration) => e.match_time_ms ?? (e.period - 1) * duration + e.period_time_ms;
-export const actionTypes = ['pass','shot','clearance','parry','restart_delivery','carry'];
+export const actionTypes = ['pass','shot','clearance','parry','restart_delivery','carry','deflection'];
 export const periodOffset = (metadata,period) => metadata.period_offsets_ms?.[String(period)] ?? (period-1)*metadata.period_duration_ms;
 export function clockAt(match,time,periodOverride){
   const latest=match.events.filter(e=>e.t<=time).at(-1),period=periodOverride??latest?.period??1;
@@ -18,7 +18,7 @@ export function prepare(metadata, rawEvents) {
   for (const e of rawEvents) {
     if (e.match_id!==metadata.match_id || !e.event_id || ![1,2].includes(e.period) || !Number.isFinite(e.period_time_ms) || e.period_time_ms<0 || e.period_time_ms>(metadata.period_actual_durations_ms?.[String(e.period)]??metadata.period_duration_ms) || !Number.isFinite(e.sequence)) throw Error('Invalid event identity or clock.');
     if(e.player_id && !roster.has(e.player_id)) throw Error('An event references an unknown player.');
-    if(['1.5','1.6'].includes(metadata.schema_version)&&(!Number.isFinite(e.match_time_ms)||e.match_time_ms!==periodOffset(metadata,e.period)+e.period_time_ms))throw Error('Invalid match/period clock mapping.');
+    if(['1.5','1.6','1.7'].includes(metadata.schema_version)&&(!Number.isFinite(e.match_time_ms)||e.match_time_ms!==periodOffset(metadata,e.period)+e.period_time_ms))throw Error('Invalid match/period clock mapping.');
     const key=e.match_id+':'+e.event_id; if(seen.has(key))continue;seen.add(key);
     if(actionTypes.includes(e.type)) {
       if(!e.pitch_snapshot?.players || !e.start || !e.end || !e.ball_trajectory?.length)throw Error('An action is missing its snapshot or trajectory.');
@@ -34,17 +34,19 @@ export function prepare(metadata, rawEvents) {
   return match;
 }
 export function statistics(match, time) {
-  const counts=Object.fromEntries(['home','away'].map(t=>[t,{goals:0,attempted:0,completed:0,shots:0,onTarget:0,recoveries:0,turnovers:0,pressure:0,interceptions:0,saves:0,throwIns:0,goalKicks:0,corners:0,clearances:0,savesHeld:0,savesParried:0,reboundShots:0,tackles:0,tacklesWon:0,tacklesFoul:0,tacklesMissed:0,fouls:0,foulsWon:0,yellowCards:0,redCards:0,secondYellowDismissals:0,freeKicks:0,directFreeKicks:0,indirectFreeKicks:0,penaltiesWon:0,penaltiesConceded:0,penaltiesTaken:0,penaltiesScored:0,penaltiesMissed:0,distance:[],difficulty:[],speed:[],shotSpeed:[]} ]));
+  const counts=Object.fromEntries(['home','away'].map(t=>[t,{goals:0,attempted:0,completed:0,shots:0,onTarget:0,recoveries:0,turnovers:0,pressure:0,interceptions:0,saves:0,throwIns:0,goalKicks:0,corners:0,clearances:0,savesHeld:0,savesParried:0,reboundShots:0,tackles:0,tacklesWon:0,tacklesFoul:0,tacklesMissed:0,fouls:0,foulsWon:0,yellowCards:0,redCards:0,secondYellowDismissals:0,freeKicks:0,directFreeKicks:0,indirectFreeKicks:0,penaltiesWon:0,penaltiesConceded:0,penaltiesTaken:0,penaltiesScored:0,penaltiesMissed:0,offsides:0,distance:[],difficulty:[],speed:[],shotSpeed:[]} ]));
   let cursor=0,owner=null; const times={home:0,away:0,unassigned:0};
   const advance=t=>{times[owner||'unassigned']+=Math.max(0,t-cursor);cursor=t;};
   for(const e of match.events){
     if(e.t>time)break;
     if(['shot','parry','clearance'].includes(e.type)){advance(Math.max(cursor,periodOffset(match.metadata,e.period)+e.ball_trajectory[0].period_time_ms));owner=null;}
     advance(e.t);
-    if(['period_start','period_end','turnover','goal','stoppage','ball_out','loose_ball','save','ball_release','match_abandoned'].includes(e.type))owner=null;
+    if(['period_start','period_end','turnover','goal','stoppage','ball_out','loose_ball','save','ball_release','match_abandoned','offside','opponent_touch','deflection'].includes(e.type))owner=null;
     if(e.type==='resume')owner=e.player_id?e.team_id:null;
     if(['restart','recovery'].includes(e.type))owner=e.ball_in_play===false?null:e.team_id;
     const s=counts[e.team_id];if(!s)continue;
+    if(e.type==='offside')s.offsides++;
+    if(e.valid_for_statistics===false)continue;
     if(e.type==='goal')s.goals++;
     if(e.type==='clearance')s.clearances++;
     if(e.type==='tackle'){s.tackles++;if(e.outcome==='won')s.tacklesWon++;if(e.outcome==='foul')s.tacklesFoul++;if(e.outcome==='missed')s.tacklesMissed++;}
@@ -103,7 +105,7 @@ export function disciplineAt(match,time){
   return players;
 }
 function kickoffPositions(match, period, owner, ball, time=0) {
-  if (!['1.3','1.4','1.5','1.6'].includes(match.metadata.schema_version)) return null;
+  if (!['1.3','1.4','1.5','1.6','1.7'].includes(match.metadata.schema_version)) return null;
   const formation=[[5,34],[25,8],[25,25],[25,43],[25,60],[48,15],[50,34],[48,53],[72,14],[76,34],[72,54]];
   const positions={};
   const slots=lineupsAt(match,time).slots;
@@ -121,7 +123,7 @@ function visualFrames(match){
   for(const action of match.actions){
     frames.push({t:action.kick,sequence:action.sequence,period:action.period,blend:true,positions:action.pitch_snapshot.players});
     const positions=structuredClone(action.pitch_snapshot.players);
-    const recipient=(action.type==='carry'?action.player_id:null)||action.recipient_id||action.interceptor_id||
+    const recipient=(action.type==='carry'?action.player_id:null)||action.recipient_id||action.interceptor_id||action.deflector_id||
       (action.type==='shot'&&action.outcome_reason==='saved'?action.goalkeeper_id||
         match.metadata.players.find(p=>p.team_id!==action.team_id&&p.role==='GK')?.player_id:null);
     if(recipient)positions[recipient]={...action.end};
@@ -174,7 +176,7 @@ export function boardAt(match,time,{smooth=true}={}){
   for(const event of match.events){
     if(event.t>time)break;lastEvent=event;
     if(!['ball_release','time_lost','ball_placement'].includes(event.type))lastVisibleEvent=event;
-    if(['period_start','period_end','goal','turnover','stoppage','ball_out','loose_ball','save','ball_release','match_abandoned'].includes(event.type)){
+    if(['period_start','period_end','goal','turnover','stoppage','ball_out','loose_ball','save','ball_release','match_abandoned','offside','opponent_touch','deflection'].includes(event.type)){
       carrierId=null;latestControl=event;
     }
     if(['stoppage','ball_out','period_end'].includes(event.type))stopped=true;
@@ -186,7 +188,7 @@ export function boardAt(match,time,{smooth=true}={}){
       carrierId=event.outcome==='complete'?event.recipient_id:null;
       latestControl=event;
     }
-    if(['shot','parry','clearance'].includes(event.type)){carrierId=null;latestControl=event;}
+    if(['shot','parry','clearance','deflection','opponent_touch','offside'].includes(event.type)){carrierId=null;latestControl=event;}
     if(event.type==='restart_delivery'){carrierId=event.recipient_id;latestControl=event;}
     if(['restart','recovery','turnover','resume'].includes(event.type)&&event.start)ball=event.start;
     if(event.type==='carry'){carrierId=event.player_id;latestControl=event;}
@@ -212,6 +214,10 @@ export function boardAt(match,time,{smooth=true}={}){
 
 // Event labels must also handle boundaries/restarts, which have no outcome field.
 export function eventTitle(event) {
+  if(event.type==='offside')return 'Offside · '+event.involvement.replaceAll('_',' ');
+  if(event.type==='opponent_touch')return event.control.classification==='deflection'?'Uncontrolled deflection':'Deliberate opponent play';
+  if(event.type==='deflection')return 'Deflected ball';
+  if(event.outcome_reason==='offside')return event.type==='shot'?'Attack invalid · offside':'Pass stopped · offside';
   if (event.type === 'pass') return event.outcome === 'complete' ? 'Pass completed' : event.outcome_reason==='out_of_play'?'Pass out of play':event.outcome_reason==='missed_target'?'Pass missed target':'Pass intercepted';
   if (event.type === 'shot') return 'Shot · ' + String(event.save_outcome?`saved (${event.save_outcome})`:event.outcome_reason || event.outcome || 'resolved').replaceAll('_', ' ');
   if(event.type==='restart'&&event.reason!=='kickoff'&&event.reason)return String(event.reason).replaceAll('_',' ');
@@ -222,4 +228,21 @@ export function eventTitle(event) {
   return {tackle:'Tackle',foul:'Foul committed',goalkeeper_change:'Emergency goalkeeper',match_abandoned:'Match abandoned',carry:'Advantage carry',ball_out:'Ball out of play',ball_placement:'Ball placed for restart',save:'Goalkeeper save',parry:'Keeper parry',loose_ball:'Rebound loose',clearance:'Defender clearance',restart_delivery:'Restart delivery',ball_release:'Ball released',time_lost:'Time allowance recorded',goal:'Goal!', recovery:'Possession recovered', turnover:'Possession lost',
     pressure:'Pressure applied', restart:'Play restarts', period_start:'Half begins',
     period_end:'Half ends',substitution:'Substitution',stoppage:'Play stopped',resume:'Play resumes'}[event.type] || event.type;
+}
+
+// Decision evidence is intentionally unavailable before the whistle timestamp.
+// Always render these frozen positions in a separate replay diagram, not as a
+// line against the current (possibly much later) live player positions.
+export function offsideAt(match,time,{eventId=null,lifetimeMs=8000}={}){
+  const decision=match.events.filter(e=>e.type==='offside'&&e.t<=time&&(!eventId||e.event_id===eventId)).at(-1);
+  if(!decision||time-decision.t>lifetimeMs)return null;
+  const source=match.events.find(e=>e.event_id===decision.source_event_id);
+  if(!source?.pitch_snapshot?.players)return null;
+  return {decision,sourceEventId:source.event_id,contactTimeMs:source.kick,
+    period:source.period,positions:structuredClone(source.pitch_snapshot.players),
+    ball:{...source.start},lineX:decision.contact.line_x_m,
+    secondLastOpponentX:decision.contact.second_last_opponent_x_m,
+    secondLastOpponentId:decision.contact.second_last_opponent_id,
+    offenderId:decision.player_id,marginM:decision.contact.candidates[decision.player_id].margin_m,
+    label:'Contact-time replay · 2D point-player model, not VAR'};
 }

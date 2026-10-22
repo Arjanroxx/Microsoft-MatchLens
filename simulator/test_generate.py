@@ -33,7 +33,7 @@ class GeneratorTests(unittest.TestCase):
                             if ball is not None:
                                 self.assertEqual(e["start"], ball)
                             ball = e["start"]
-                        elif e["type"] in ("pass", "shot", "restart_delivery", "clearance", "parry", "carry"):
+                        elif e["type"] in ("pass", "shot", "restart_delivery", "clearance", "parry", "carry", "deflection"):
                             self.assertEqual(e["start"], ball)
                             ball = e["end"]
                         if e["type"] == "pass":

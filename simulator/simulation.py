@@ -1,4 +1,4 @@
-"""Connected ball/control/restart state machine for schema 1.6."""
+"""Connected ball/control/restart state machine for schema 1.7."""
 import math
 import random
 
@@ -9,6 +9,7 @@ from simulator.player_statistics import PlayerStatistics
 from simulator.restarts import award_restart, first_exit, other, parry_target, raw_point, resolve_shot
 from simulator.substitutions import SubstitutionManager
 from simulator.discipline import resolve_challenge, foul_restart, separation_target, in_penalty_area
+from simulator.offside import contact_frame, contact_for, interference, touch_control, deflection_target
 
 
 class Simulation:
@@ -24,6 +25,7 @@ class Simulation:
         self.offset = 0
         self.pending_cards = []
         self.abandoned = False
+        self.offside_phase = None
         self.contact_rng = random.Random(f"{metadata['seed']}-challenges-v1")
         metadata.update(period_offsets_ms={"1": 0}, period_actual_durations_ms={},
                         clock_model="period_plus_added_time_v1")
@@ -34,10 +36,17 @@ class Simulation:
             "challenge_probability_per_eligible_decision": .12, "max_challenge_start_distance_m": 2.5,
             "advantage": "one bounded carry evaluation; direct careless/reckless non-penalty offences only",
             "goalkeeper_dismissal": "active outfielder becomes emergency keeper; no extra player enters"}
+        metadata["offside_model"] = {"version": "law11-point-player-v1", "law": "IFAB Law 11, selected 2D involvement",
+            "contact": "first teammate kick/touch; all active opponents including emergency keepers",
+            "involvement": ["touch", "interfere_opponent", "gain_advantage_save", "gain_advantage_deflection"],
+            "interference_proxy": "candidate between ball and keeper, within 0.35m sight corridor and 3m of keeper",
+            "opponent_control": "planar-controllability-v1: >=0.5s flight, <=18m/s, >=0.2s spare running reach",
+            "exempt_direct_restarts": ["throw_in", "goal_kick", "corner_kick"],
+            "limitations": "point players, no body parts, aerial/visual tracking, VAR reviews, off-field defenders or goalkeeper throws"}
 
     def emit(self, kind, team=None, player=None, possession=None, at=None, **fields):
         stamp = self.t if at is None else at
-        event = {"schema_version": "1.6", "match_id": self.metadata["match_id"],
+        event = {"schema_version": self.metadata["schema_version"], "match_id": self.metadata["match_id"],
                  "event_id": f"evt-{len(self.events) + 1:06}", "sequence": len(self.events) + 1,
                  "period": self.period, "period_time_ms": stamp, "match_time_ms": self.offset + stamp,
                  "type": kind, "source": "synthetic", "team_id": team, "player_id": player,
@@ -45,6 +54,62 @@ class Simulation:
         self.events.append(event)
         self.players.update(event)
         return event
+
+    def offside_frame(self, restart_type=None):
+        return contact_frame(self.positions(), self.ball, self.team, self.owner,
+                             self.period, self.roster, restart_type)
+
+    def whistle_offside(self, source, offender, involvement, location=None, via=None):
+        """Adjudicate before recovery, shot credit or goal can be committed."""
+        location = (location or self.ball).copy()
+        # IFK is at involvement, including when a flagged attacker returns to
+        # their own half. Point-player pitch locations are bounded.
+        location = point(location["x_m"], location["y_m"])
+        frame = contact_for(source, self.roster)
+        if offender not in frame["candidates"]:
+            raise ValueError("Offside offence without a source-position candidate")
+        award = {"type": "indirect_free_kick", "team_id": other(source["team_id"]),
+                 "location": location, "reason": "offside"}
+        event = self.emit("offside", source["team_id"], offender,
+                          source_event_id=source["event_id"], involvement=involvement,
+                          location=location, via_event_id=via, contact=frame,
+                          positions_after=self.positions(),
+                          contact_period_time_ms=source["pitch_snapshot"]["period_time_ms"],
+                          restart=award)
+        self.pending_rebound = self.pending_clearance = False
+        return self.dead_ball(award, event["event_id"])
+
+    def opponent_contact(self, action, defender):
+        """Deliberate play resets the phase; deflection preserves its source."""
+        speed = action.get("kick", {}).get("commanded_mean_speed_mps", action.get("commanded_mean_speed_mps"))
+        original = action["pitch_snapshot"]["players"][defender]
+        evidence = touch_control(action["start"], self.ball, original, speed)
+        self.pitch.move(defender, self.ball, action["ball_speed"]["duration_ms"]/1000+.001)
+        touch = self.emit("opponent_touch", self.roster[defender]["team_id"], defender,
+                          start=self.ball.copy(), source_event_id=action["event_id"], control=evidence,
+                          positions_after=self.positions())
+        if evidence["resets_offside"]:
+            self.offside_phase = None
+            self.recover(defender, "deliberate_play")
+            return True
+        self.offside_phase = action
+        target = deflection_target(action["start"], self.ball, original)
+        crossing = first_exit(self.ball, target)
+        self.team, self.owner, self.possession_id = self.roster[defender]["team_id"], defender, None
+        rebound = self.flight("deflection", crossing["location"] if crossing else target, max(4, speed*.3),
+                              source_event_id=action["event_id"], touch_event_id=touch["event_id"],
+                              commanded_mean_speed_mps=max(4, speed*.3))
+        if crossing:
+            return self.ball_out(crossing, self.team, defender, rebound["event_id"])
+        winner = min(self.pitch.positions, key=lambda p: distance(self.pitch.positions[p], self.ball))
+        if winner in contact_for(action, self.roster)["candidates"]:
+            travel = distance(self.pitch.positions[winner], self.ball)/4.5
+            self.pitch.move(winner, self.ball, travel+.001)
+            self.tick(math.ceil(travel*1000))
+            return self.whistle_offside(action, winner, "gain_advantage_deflection", via=rebound["event_id"])
+        self.recover(winner, "deflection_loose_ball")
+        self.offside_phase = None
+        return True
 
     def tick(self, milliseconds):
         """Announce at regulation exactly, even if it falls inside a gap/flight."""
@@ -240,8 +305,9 @@ class Simulation:
         return self.dead_ball(award, foul["event_id"])
 
     def dead_ball(self, award, source, goal=False, initial=False):
+        self.offside_phase = None
         is_foul = award["type"] in ("direct_free_kick", "indirect_free_kick", "penalty")
-        stop = self.emit("stoppage", reason="goal_celebration" if goal else "period_interval" if initial else "foul" if is_foul else "ball_out",
+        stop = self.emit("stoppage", reason="offside" if award.get("reason") == "offside" else "goal_celebration" if goal else "period_interval" if initial else "foul" if is_foul else "ball_out",
                          source_event_id=source, restart=award, start=self.ball.copy())
         self.flush_cards(stop["event_id"])
         if self.abandoned:
@@ -380,18 +446,23 @@ class Simulation:
         speed = 10 if kind == "throw_in" else 17
         self.emit("resume", self.team, self.owner, self.possession_id, reason=kind, start=self.ball.copy())
         result = resolve_pass(self.ball, end, end, self.pitch.team_positions(other(self.team)), speed, stop_at_boundary=True)
+        frame = self.offside_frame(kind)
+        flagged = result["outcome"] == "complete" and recipient in frame["candidates"]
+        deflector = result["interceptor_id"] if result["interceptor_id"] and not touch_control(self.ball, result["end"], self.pitch.positions[result["interceptor_id"]], speed)["resets_offside"] else None
         delivery = self.flight("restart_delivery", result["end"], speed, restart_type=kind, restart_event_id=restart_id,
-                    recipient_id=recipient if result["outcome"] == "complete" else None,
-                    intended_recipient_id=recipient, intended_end=end, interceptor_id=result["interceptor_id"],
-                    outcome=result["outcome"], outcome_reason=result["reason"], commanded_mean_speed_mps=speed)
+                    recipient_id=recipient if result["outcome"] == "complete" and not flagged else None,
+                    intended_recipient_id=recipient, intended_end=end, interceptor_id=None if deflector else result["interceptor_id"], deflector_id=deflector,
+                    outcome="incomplete" if flagged else result["outcome"],
+                    outcome_reason="offside" if flagged else result["reason"], commanded_mean_speed_mps=speed)
+        if flagged:
+            self.pitch.positions[recipient] = point(self.ball["x_m"], self.ball["y_m"])
+            return self.whistle_offside(delivery, recipient, "touch")
         if result["outcome"] == "complete":
             self.owner = recipient
             self.pitch.positions[recipient] = end.copy()
         else:
             self.emit("turnover", self.team, self.owner, self.possession_id, start=self.ball.copy(), reason="restart_intercepted")
-            flight_s = delivery["ball_speed"]["duration_ms"]/1000
-            self.pitch.move(result["interceptor_id"], self.ball, flight_s+.001)
-            self.recover(result["interceptor_id"], "restart_interception")
+            return self.opponent_contact(delivery, result["interceptor_id"])
         return True
 
     def pass_ball(self):
@@ -403,12 +474,14 @@ class Simulation:
             return
         defenders = self.pitch.team_positions(opponent)
         direction = self.pitch.direction(self.team)
+        offside_candidates = self.offside_frame()["candidates"]
         weights = []
-        for _, target in mates:
+        for pid, target in mates:
             progress = direction * (target["x_m"] - self.ball["x_m"])
             openness = min(distance(target, v) for v in defenders.values())
             weights.append(max(.1, (2 + openness / 5) / (1 + distance(self.ball, target) / 30)
-                               * (.4 if quiet and progress > 8 else 1 + max(progress, 0) / 12)))
+                               * (.4 if quiet and progress > 8 else 1 + max(progress, 0) / 12))
+                           * (.04 if pid in offside_candidates else 1))
         recipient, intended = self.rng.choices(mates, weights=weights)[0]
         context = pass_context(self.ball, intended, defenders)
         if context["under_pressure"]:
@@ -424,17 +497,23 @@ class Simulation:
         crossing = first_exit(self.ball, aimed) if resolved["reason"] == "out_of_play" else None
         if crossing:
             resolved.update(end=crossing["location"], outcome="incomplete", reason="out_of_play", interceptor_id=None)
+        frame = self.offside_frame()
+        flagged = resolved["outcome"] == "complete" and recipient in frame["candidates"]
+        deflector = resolved["interceptor_id"] if resolved["interceptor_id"] and not touch_control(self.ball, resolved["end"], self.pitch.positions[resolved["interceptor_id"]], speed)["resets_offside"] else None
         # If the ball misses an in-field target it continues on the same ray
         # until a player can arrive, rather than granting the opposition control.
         action = self.flight("pass", resolved["end"], speed,
-            recipient_id=recipient if resolved["outcome"] == "complete" else None, intended_recipient_id=recipient,
-            intended_end=intended.copy(), outcome=resolved["outcome"], outcome_reason=resolved["reason"],
-            interceptor_id=resolved["interceptor_id"],
+            recipient_id=recipient if resolved["outcome"] == "complete" and not flagged else None, intended_recipient_id=recipient,
+            intended_end=intended.copy(), outcome="incomplete" if flagged else resolved["outcome"], outcome_reason="offside" if flagged else resolved["reason"],
+            interceptor_id=None if deflector else resolved["interceptor_id"], deflector_id=deflector,
             kick={"effort": effort, "passing_skill": skill, "aimed_end": aimed, "commanded_mean_speed_mps": speed},
             distance_m=round(distance(self.ball, resolved["end"]), 2), intended_distance_m=round(distance(self.ball, intended), 2),
             pressure={k: context[k] for k in ("under_pressure", "nearest_defender_m", "nearest_defender_id")},
             difficulty_context=context, pass_difficulty=pass_difficulty(self.ball, intended, direction,
                 context["nearest_defender_m"], context["defenders_in_lane"]))
+        if flagged:
+            self.pitch.positions[recipient] = point(self.ball["x_m"], self.ball["y_m"])
+            return self.whistle_offside(action, recipient, "touch")
         if resolved["outcome"] == "complete":
             self.owner = recipient
             self.pitch.positions[recipient] = point(self.ball["x_m"], self.ball["y_m"])
@@ -444,7 +523,12 @@ class Simulation:
                 return self.ball_out(crossing, self.team, self.owner, action["event_id"])
             recoverer = resolved["interceptor_id"] or min(self.pitch.positions, key=lambda p: distance(self.pitch.positions[p], self.ball))
             if resolved["interceptor_id"]:
-                self.pitch.move(recoverer, self.ball, action["ball_speed"]["duration_ms"]/1000+.001)
+                return self.opponent_contact(action, recoverer)
+            if recoverer in frame["candidates"]:
+                travel = distance(self.pitch.positions[recoverer], self.ball)/4.5
+                self.pitch.move(recoverer, self.ball, travel+.001)
+                self.tick(math.ceil(travel*1000))
+                return self.whistle_offside(action, recoverer, "touch")
             self.recover(recoverer, "interception" if resolved["interceptor_id"] else "loose_pass")
         return True
 
@@ -479,14 +563,24 @@ class Simulation:
         result = resolve_shot(self.ball, aimed, self.pitch.positions[keeper], speed)
         trajectory = make_trajectory(self.ball, result["end"], self.t, speed, decelerate=True)
         metrics = ball_speed(trajectory)
-        shot = self.flight("shot", result["end"], speed, outcome="goal" if result["outcome_reason"] == "goal" else "no_goal",
-            **{k: result[k] for k in ("outcome_reason", "save_outcome")}, goalkeeper_id=keeper,
+        frame = self.offside_frame()
+        blocker = interference(frame, self.positions(), self.ball, keeper)
+        shot = self.flight("shot", result["end"], speed,
+            outcome="no_goal" if blocker else "goal" if result["outcome_reason"] == "goal" else "no_goal",
+            outcome_reason="offside" if blocker else result["outcome_reason"],
+            save_outcome=None if blocker else result["save_outcome"],
+            valid_for_statistics=not bool(blocker), observed_outcome_reason=result["outcome_reason"],
+            offside_offender_id=blocker, goalkeeper_id=keeper,
             set_piece_type=set_piece_type, restart_event_id=restart_event_id,
             is_rebound=rebound, rebound_of_shot_event_id=self.rebound_source if rebound else None,
             kick={"effort": effort, "shooting_skill": skill, "aimed_end": aimed, "commanded_mean_speed_mps": speed},
             shot_speed={"source": "synthetic_trajectory", "method": "initial_segment_average",
                         "mps": metrics["initial_segment_mps"], "kmh": metrics["initial_segment_kmh"],
                         "window_ms": metrics["initial_segment_duration_ms"]})
+        # At source time the blocker interferes with the keeper; observation
+        # is delivered at action completion. Never emit a goal/save afterwards.
+        if blocker:
+            return self.whistle_offside(shot, blocker, "interfere_opponent", location=shot["pitch_snapshot"]["players"][blocker])
         if result["outcome_reason"] == "goal":
             self.score[self.team] += 1
             goal = self.emit("goal", self.team, self.owner, self.possession_id, score=self.score.copy(), shot_event_id=shot["event_id"])
@@ -523,6 +617,11 @@ class Simulation:
         self.emit("loose_ball", start=self.ball.copy(), reason="keeper_parry", shot_event_id=shot["event_id"])
         eligible = [p for p in self.pitch.positions if p != keeper]
         winner = min(eligible, key=lambda p: distance(self.pitch.positions[p], self.ball))
+        if winner in contact_for(shot, self.roster)["candidates"]:
+            travel = distance(self.pitch.positions[winner], self.ball)/4.5
+            self.pitch.move(winner, self.ball, travel+.001)
+            self.tick(math.ceil(travel*1000))
+            return self.whistle_offside(shot, winner, "gain_advantage_save", via=parry["event_id"])
         self.recover(winner, "rebound")
         self.rebound_source = shot["event_id"]
         self.pending_rebound = self.team != opponent

@@ -17,9 +17,13 @@ Synthetic football match simulation and explainable match intelligence for the M
 - Natural substitution stoppages, logged lost time and added-time clocks.
 - Evidence-backed tackles/fouls, direct/indirect free kicks, advantage and penalties.
 - Cautions, second-yellow/straight-red dismissals, emergency keepers and rating model v2.
+- Contact-time point-player offside, restart exceptions, save/deflection phases and IFK decisions.
+- Frozen offside evidence replay and local API for authoritative live player ratings.
 - Validation, replay to the terminal, and automated tests.
 
 This repository provides the **data-generation layer** and a buildless **Replay Studio frontend**. Run `python -m http.server 8080` from the repository root and open `http://localhost:8080/frontend/`. See [frontend/README.md](frontend/README.md) for controls, import and integration details. AI narratives, cloud backend integration, and video recognition are not implemented.
+
+For all P1-P3 features and live player ratings, run `python -m simulator.ui_server --input data/examples/offside-match --port 8080` and open `http://127.0.0.1:8080/`. The complete teammate handoff, field mappings and copyable Sol task are in [docs/UI-INTEGRATION.md](docs/UI-INTEGRATION.md).
 
 ## Quick start
 
@@ -40,7 +44,7 @@ For ten regulation minutes plus added time (two five-minute halves):
 py -3.13 -m simulator.generate --seed 51 --minutes-per-half 5 --output data/generated/priority-one-demo
 ```
 
-The same version, seed, profile, and duration reproduce the same match. Output folders are overwritten when reused. Generated matches under `data/generated/` are ignored by Git. The current showcase is `data/examples/restarts-match/`; legacy fixtures remain available.
+The same version, seed, profile, and duration reproduce the same match. Output folders are overwritten when reused. Generated matches under `data/generated/` are ignored by Git. The current showcase is `data/examples/offside-match/`; legacy fixtures remain available.
 
 ## Output
 
@@ -65,6 +69,7 @@ Tests cover reproducibility, multiple seeds, event consistency, geometry-based o
 - [UI and virtual board integration](docs/UI-INTEGRATION.md)
 - [Player statistics and rating definitions](docs/PLAYER-RATINGS.md)
 - [Substitutions and frontend integration](docs/SUBSTITUTIONS.md)
+- [Priority 3 offside and evidence contract](docs/OFFSIDE.md)
 - [Priority 2 fouls, cards, set pieces and UI contract](docs/DISCIPLINE-AND-SET-PIECES.md)
 - [Priority 1 implementation, clock migration and UI contract](docs/RESTARTS-AND-CLOCK.md)
 - [Match-realism checklist and priorities](docs/MATCH-REALISM-CHECKLIST.md)

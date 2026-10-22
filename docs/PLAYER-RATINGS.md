@@ -1,6 +1,8 @@
 # Player statistics and match ratings
 
-**Current schema 1.6 uses rating v2.** The original v1 formula below remains the baseline and is preserved for legacy files. See [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md) for the added tackle/foul/card/penalty components, dismissal lifecycle and UI integration.
+**Current schema 1.7 uses rating v2.** The original v1 formula below remains the baseline and is preserved for legacy files. See [DISCIPLINE-AND-SET-PIECES.md](DISCIPLINE-AND-SET-PIECES.md) for the added tackle/foul/card/penalty components, dismissal lifecycle and UI integration.
+
+Use the authoritative `/api/state?time_ms=...` from `simulator.ui_server` for live player cards; see [UI-INTEGRATION.md](UI-INTEGRATION.md). Offside counts are descriptive; invalid attacks receive no scoring/shot/creation credits.
 
 Every generated `summary.json` now includes **all roster players**, keyed by player ID in `players`, plus a versioned `player_rating_model` specification. Team fields remain compatible. Neither counters nor ratings are independent random outputs.
 

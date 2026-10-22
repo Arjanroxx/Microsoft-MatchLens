@@ -23,7 +23,7 @@ class SubstitutionTests(unittest.TestCase):
             subs = [e for e in self.subs if e["team_id"] == team]
             self.assertTrue(1 <= len(subs) <= 5)
             self.assertLessEqual(len({e["window_id"] for e in subs if not e["halftime"]}), 3)
-            self.assertEqual(len(self.result["lineups"][team]["on_pitch"]), 11)
+            self.assertEqual(len(self.result["lineups"][team]["on_pitch"]), 11 - len(self.result["lineups"][team]["sent_off"]))
         for event in self.subs:
             self.assertNotEqual(roster[event["player_off_id"]]["role"], "GK")
             self.assertEqual(roster[event["player_off_id"]]["position_group"], roster[event["player_on_id"]]["position_group"])
@@ -64,7 +64,8 @@ class SubstitutionTests(unittest.TestCase):
     def test_evolving_ratings_and_team_minutes_reconcile(self):
         for team in ("home", "away"):
             players = [p for p in self.result["players"].values() if p["team_id"] == team]
-            self.assertEqual(sum(p["minutes_played_ms"] for p in players), 11 * self.metadata["match_duration_ms"])
+            deficit = sum(self.metadata["match_duration_ms"] - e["match_time_ms"] for e in self.events if e["type"] == "dismissal" and e["team_id"] == team)
+            self.assertEqual(sum(p["minutes_played_ms"] for p in players), 11 * self.metadata["match_duration_ms"] - deficit)
             for p in players:
                 if p["squad_status"] == "unused_substitute":
                     self.assertEqual(p["minutes_played_ms"], 0)

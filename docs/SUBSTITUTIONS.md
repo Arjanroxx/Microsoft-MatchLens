@@ -1,6 +1,8 @@
 # Substitutions, participation, and evolving ratings
 
-Schema **1.4** introduced a matchday squad and automatic substitutions to the existing connected simulation. It does not add a tactical configuration system. Offside and the remaining gaps are on the [realism checklist](MATCH-REALISM-CHECKLIST.md). Bookings and dismissals are now implemented in schema 1.6.
+The complete current handoff and authoritative live rating API are in [UI-INTEGRATION.md](UI-INTEGRATION.md); schema 1.7 also permits changes at natural offside stoppages.
+
+Schema **1.4** introduced a matchday squad and automatic substitutions to the existing connected simulation. It does not add a tactical configuration system. Offside is implemented in schema 1.7; remaining gaps are on the [realism checklist](MATCH-REALISM-CHECKLIST.md). Bookings and dismissals are now implemented in schema 1.6.
 
 Schema **1.5** now uses natural ball-out/goal stoppages and includes added time. The former synthetic-break description below is retained only as a legacy-format note. See [RESTARTS-AND-CLOCK.md](RESTARTS-AND-CLOCK.md) for current execution, event fields and clock semantics.
 

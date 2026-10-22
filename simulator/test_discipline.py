@@ -174,7 +174,7 @@ class DisciplineLifecycleTests(unittest.TestCase):
 class ConnectedDisciplineTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.matches = [generate(seed)[:2] for seed in (0, 6, 54, 55)]
+        cls.matches = [generate(seed)[:2] for seed in (0, 6, 32, 54, 55)]
 
     def test_natural_seeds_cover_selected_fouls_restart_and_dismissal_paths(self):
         kinds, restarts, dismissals, advantages = set(), set(), set(), set()

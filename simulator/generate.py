@@ -14,7 +14,7 @@ from simulator.statistics import calculate_statistics
 
 def validate(metadata, events):
     """Validate core stream invariants; raise ValueError on the first violation."""
-    if metadata.get("schema_version") in ("1.5", "1.6"):
+    if metadata.get("schema_version") in ("1.5", "1.6", "1.7"):
         from simulator.validation import validate_stream
         return validate_stream(metadata, events)
     roster = {p["player_id"]: p["team_id"] for p in metadata["players"]}
@@ -179,7 +179,7 @@ def main():
     summary["synthetic_metrics"] = {
         "pass_difficulty_score": distribution([e["pass_difficulty"]["score"] for e in events if e["type"] == "pass"]),
         "pass_average_ball_speed_kmh": distribution([e["ball_speed"]["average_kmh"] for e in events if e["type"] == "pass"]),
-        "shot_initial_segment_speed_kmh": distribution([e["shot_speed"]["kmh"] for e in events if e["type"] == "shot"]),
+        "shot_initial_segment_speed_kmh": distribution([e["shot_speed"]["kmh"] for e in events if e["type"] == "shot" and e.get("valid_for_statistics") is not False]),
     }
     summary["pass_accuracy"] = {}
     for team in ("home", "away"):
