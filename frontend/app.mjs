@@ -5,7 +5,7 @@ let match,time=0,playing=false,speed=4,tab='events',filter='all',selectedEvent=n
 const teamName=id=>match?.metadata.teams.find(t=>t.team_id===id)?.name||'', playerName=id=>match?.players[id]?.name||'Team event';
 const eventPlayer=e=>e.type==='substitution'?playerName(e.player_off_id)+' → '+playerName(e.player_on_id):playerName(e.player_id);
 const title=eventTitle;
-const displayClock=(t,period)=>['1.5','1.6','1.7'].includes(match?.metadata.schema_version)?clockAt(match,t,period).display:clock(t);
+const displayClock=(t,period)=>['1.5','1.6','1.7','1.8'].includes(match?.metadata.schema_version)?clockAt(match,t,period).display:clock(t);
 const symbol=e=>({pass:'↗',shot:'◎',goal:'⚽',recovery:'↶',turnover:'⇄',pressure:'⌁',restart:'▶',period_start:'◷',period_end:'◷',substitution:'⇆',stoppage:'Ⅱ',resume:'▶'}[e.type]||'·');
 function notify(msg){$('status').textContent=msg;$('status').classList.add('show');clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('status').classList.remove('show'),5500);}
 function showModal(titleText,html,label='MATCHLENS STUDIO'){$('modal-label').textContent=label;$('modal-body').innerHTML=`<h2>${esc(titleText)}</h2>${html}`;$('modal').showModal();}
@@ -22,7 +22,7 @@ function install(metadata,events){const next=prepare(metadata,events);match=next
 function point(p){return `${p.x_m/match.metadata.pitch.length_m*105},${68-p.y_m/match.metadata.pitch.width_m*68}`;}
 function xy(p){return {x:p.x_m/match.metadata.pitch.length_m*105,y:68-p.y_m/match.metadata.pitch.width_m*68};}
 function renderPitch(){if(!match)return;const board=boardAt(match,time,{smooth}),a=board.action;
-  $('position-note').textContent=smooth?'Smoothed snapshots · illustrative movement':'Exact state anchors · no player smoothing';
+  $('position-note').textContent=match.metadata.schema_version==='1.8'?'Generated movement samples · synthetic, not camera tracking':smooth?'Smoothed snapshots · illustrative movement':'Exact state anchors · no player smoothing';
   const possessionTeam=board.carrierId?match.players[board.carrierId]?.team_id:board.active?a.team_id:null;
   $('pitch').setAttribute('data-possession',possessionTeam||'neutral');
   $('pitch').setAttribute('data-phase',board.phase);
@@ -36,6 +36,7 @@ function renderPitch(){if(!match)return;const board=boardAt(match,time,{smooth})
   }).join('');
   let lines='';
   if(trails){for(const e of match.actions){
+    if(['movement','reposition'].includes(e.type))continue;
     if(e.t>time)break;
     if(time-e.t>12000||e.period!==board.period)continue;
     // Do not carry a previous phase's trails across a simulator kickoff reset.
@@ -52,7 +53,8 @@ function renderPitch(){if(!match)return;const board=boardAt(match,time,{smooth})
   $('trail-layer').innerHTML=lines;
   if(board.ball){const {x,y}=xy(board.ball);$('ball-layer').innerHTML='<circle cx="'+x+'" cy="'+y+'" r="2" fill="url(#carrier-halo)" opacity=".85"/><circle cx="'+x+'" cy="'+y+'" r=".7" fill="#fffbe8" stroke="#6b512f" stroke-width=".15"/>';}else $('ball-layer').innerHTML='';
   let message='Waiting for the first player snapshot';
-  if(board.active)message=playerName(a.player_id).replace(' Player ',' #')+(a.type==='carry'?' · Carrying the ball':' · Ball in flight');
+  if(board.active&&a.type==='reposition')message='Players repositioning · '+a.reason.replaceAll('_',' ');
+  else if(board.active)message=playerName(a.carrier_id||a.player_id).replace(' Player ',' #')+(['carry','movement'].includes(a.type)?' · Carrying the ball':' · Ball in flight');
   else if(board.carrierId)message=playerName(board.carrierId).replace(' Player ',' #')+' · In possession';
   else if(board.lastVisibleEvent)message=title(board.lastVisibleEvent);
   const toast=$('action-toast');
@@ -62,7 +64,7 @@ function renderPitch(){if(!match)return;const board=boardAt(match,time,{smooth})
   }
 }
 function eventMarkup(e){return `<button class="event ${selectedEvent?.event_id===e.event_id?'selected':''}" data-event="${esc(e.event_id)}"><span class="event-icon ${e.team_id==='away'?'away':''}">${symbol(e)}</span><span class="event-info"><span class="event-title"><span>${esc(title(e))}</span><time>${displayClock(e.t,e.period)}</time></span><p>${esc(eventPlayer(e).replace(' Player ',' #'))}</p>${e.type==='pass'?`<small>${fmt(e.distance_m,1)} m <span>·</span> ${esc(e.pass_difficulty?.rating||'')} difficulty</small>`:e.type==='shot'?`<small>${fmt(e.shot_speed?.kmh,1)} km/h initial speed</small>`:''}</span></button>`;}
-function renderFeed(past){const visible=past.filter(e=>!['ball_release','time_lost','ball_placement'].includes(e.type)).filter(e=>filter==='all'||(filter==='pass'?e.type==='pass':['shot','goal','recovery','turnover','save','parry','clearance','ball_out','restart','substitution','added_time','tackle','foul','card','dismissal','advantage','goalkeeper_change','match_abandoned','offside','deflection','opponent_touch'].includes(e.type))).slice(-80).reverse();$('feed').innerHTML=visible.length?visible.map(eventMarkup).join(''):'<div class="empty-state"><span>◷</span><h4>The story is about to start.</h4><p>Press play to follow the match.<br>Events appear only after they happen.</p></div>';$('event-count').textContent=past.length;}
+function renderFeed(past){const visible=past.filter(e=>!['ball_release','time_lost','ball_placement','movement','reposition'].includes(e.type)).filter(e=>filter==='all'||(filter==='pass'?e.type==='pass':['shot','goal','recovery','turnover','save','parry','clearance','ball_out','restart','substitution','added_time','tackle','foul','card','dismissal','advantage','goalkeeper_change','match_abandoned','offside','deflection','opponent_touch'].includes(e.type))).slice(-80).reverse();$('feed').innerHTML=visible.length?visible.map(eventMarkup).join(''):'<div class="empty-state"><span>◷</span><h4>The story is about to start.</h4><p>Press play to follow the match.<br>Events appear only after they happen.</p></div>';$('event-count').textContent=past.length;}
 function renderStats(s){const h=s.teams.home,a=s.teams.away;
   const tiles=[['Pass accuracy',fmt(h.accuracy)+'%',fmt(a.accuracy)+'%','completed / attempted'],['Shots',h.shots,a.shots,'completed shot actions'],['Recoveries',h.recoveries,a.recoveries,'possession won'],['Pass speed',fmt(mean(h.speed),1),fmt(mean(a.speed),1),'mean flight speed · km/h']];
   $('stat-tiles').innerHTML=tiles.map(([name,v1,v2,note])=>`<div class="stat-tile"><span>${name}</span><div class="stat-values"><span class="home-value">${v1==='—%'?'—':v1}</span><em>/</em><span class="away-value">${v2==='—%'?'—':v2}</span></div><small>${note}</small></div>`).join('');

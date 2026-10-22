@@ -1,6 +1,6 @@
 # MatchLens Replay Studio
 
-Current schema **1.7** includes Priority 3 offside and deflections. See [the complete UI handoff](../docs/UI-INTEGRATION.md) and [offside contract](../docs/OFFSIDE.md). `python -m simulator.ui_server --input data/examples/offside-match --port 8080` serves the selected match plus authoritative prefix ratings/stats at `http://127.0.0.1:8080/`. Existing static mode and legacy fixtures remain supported.
+Current schema **1.8** adds generated support movement, carrying, receiving runs and lane-aware lead passing. Priorities 1-3 remain supported. See [movement details](../docs/REALISM-AND-MOVEMENT.md). See [the complete UI handoff](../docs/UI-INTEGRATION.md) and [offside contract](../docs/OFFSIDE.md). `python -m simulator.ui_server --input data/examples/movement-match --port 8080` serves the selected match plus authoritative prefix ratings/stats at `http://127.0.0.1:8080/`. Existing static mode and legacy fixtures remain supported.
 
 An interactive, buildless HTML/CSS/JavaScript frontend for the MatchLens simulator. No npm install, framework, Azure account, or AI key is needed.
 

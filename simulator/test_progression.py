@@ -28,7 +28,7 @@ class ProgressionTests(unittest.TestCase):
         self.assertEqual(model.states(2, 0)["home"], "higher-press")
 
     def test_default_match_has_changes_and_goal_reactions(self):
-        metadata, events, audit = generate(42)
+        metadata, events, audit = generate(0)
         validate(metadata, events)
         self.assertIn("progression", metadata["simulation_model"])
         for team in ("home", "away"):

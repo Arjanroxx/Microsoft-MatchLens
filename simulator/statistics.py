@@ -36,7 +36,7 @@ class MatchStatistics:
 
     def _time(self, period, period_time_ms):
         limit = self.metadata.get("period_actual_durations_ms", {}).get(str(period),
-                    float("inf") if self.metadata.get("schema_version") in ("1.5", "1.6", "1.7") else self.duration)
+                    float("inf") if self.metadata.get("schema_version") in ("1.5", "1.6", "1.7", "1.8") else self.duration)
         if period not in (1, 2) or not 0 <= period_time_ms <= limit:
             raise ValueError("Invalid statistics clock")
         return elapsed(self.metadata, period, period_time_ms)

@@ -1,4 +1,4 @@
-"""Connected ball/control/restart state machine for schema 1.7."""
+"""Connected ball/control/restart state machine for schema 1.8."""
 import math
 import random
 
@@ -10,6 +10,7 @@ from simulator.restarts import award_restart, first_exit, other, parry_target, r
 from simulator.substitutions import SubstitutionManager
 from simulator.discipline import resolve_challenge, foul_restart, separation_target, in_penalty_area
 from simulator.offside import contact_frame, contact_for, interference, touch_control, deflection_target
+from simulator.movement import advance as advance_movement, passing_options
 
 
 class Simulation:
@@ -26,6 +27,12 @@ class Simulation:
         self.pending_cards = []
         self.abandoned = False
         self.offside_phase = None
+        self.previous_passer = None
+        metadata["movement_model"] = {"version":"support-steering-v1", "integration_step_ms":200,
+            "sample_interval_ms":500, "outfield_speed_cap_mps":4.5, "steering_acceleration_mps2":2.5,
+            "carrier_speed_cap_mps":2.4, "passing":"lane-aware lead targets; 250ms defender reaction",
+            "limitations":"original uncalibrated heuristics; planned contact runs and restart movement remain simplified"}
+        self.modern_motion = metadata["schema_version"] == "1.8"
         self.contact_rng = random.Random(f"{metadata['seed']}-challenges-v1")
         metadata.update(period_offsets_ms={"1": 0}, period_actual_durations_ms={},
                         clock_model="period_plus_added_time_v1")
@@ -103,9 +110,11 @@ class Simulation:
             return self.ball_out(crossing, self.team, defender, rebound["event_id"])
         winner = min(self.pitch.positions, key=lambda p: distance(self.pitch.positions[p], self.ball))
         if winner in contact_for(action, self.roster)["candidates"]:
+            before_recovery = self.snapshot()
             travel = distance(self.pitch.positions[winner], self.ball)/4.5
             self.pitch.move(winner, self.ball, travel+.001)
             self.tick(math.ceil(travel*1000))
+            self.record_reposition(before_recovery,"loose_ball_recovery")
             return self.whistle_offside(action, winner, "gain_advantage_deflection", via=rebound["event_id"])
         self.recover(winner, "deflection_loose_ball")
         self.offside_phase = None
@@ -178,17 +187,63 @@ class Simulation:
         if kind in ("shot", "clearance", "parry"):
             self.emit("ball_release", self.team, self.owner, action_type=kind, start=start.copy())
         trajectory = make_trajectory(start, end, self.t, speed, decelerate=kind == "shot")
+        motion = None
+        if self.modern_motion:
+            contact = fields.get("recipient_id") or fields.get("interceptor_id") or fields.get("deflector_id")
+            if fields.get("outcome_reason") == "offside" and kind in ("pass", "restart_delivery"):
+                contact = fields.get("intended_recipient_id")
+            if kind == "shot" and fields.get("outcome_reason") == "saved":
+                contact = fields["goalkeeper_id"]
+            if kind == "carry":
+                contact = self.owner
+            motion, _ = advance_movement(self.pitch, trajectory[-1]["period_time_ms"]-self.t,
+                                          self.team, None, self.ball, self.t,
+                                          contacts={contact:end} if contact else None, ball_path=(start,end))
+            # The ball's authoritative observations are ball_trajectory. Do
+            # not export the steering planner's approximate ball references.
+            motion = [{"period_time_ms":s["period_time_ms"], "players":s["players"]} for s in motion]
         self.tick(trajectory[-1]["period_time_ms"] - self.t)
         event = self.emit(kind, self.team, self.owner, self.possession_id, start=start, end=end,
-                          pitch_snapshot=snapshot, ball_trajectory=trajectory, ball_speed=ball_speed(trajectory), **fields)
+                          pitch_snapshot=snapshot, ball_trajectory=trajectory, ball_speed=ball_speed(trajectory),
+                          **({"player_motion": motion, "positions_after": self.positions()} if motion else {}), **fields)
         self.ball = end.copy()
         return event
 
+    def advance_play(self, milliseconds, press=False):
+        start, snapshot = self.ball.copy(), self.snapshot()
+        motion, end = advance_movement(self.pitch, milliseconds, self.team, self.owner,
+                                      self.ball, self.t, press=press, carry=True)
+        self.tick(milliseconds)
+        self.ball = end
+        self.emit("movement", self.team, possession=self.possession_id, carrier_id=self.owner,
+                  start=start, end=end.copy(), pitch_snapshot=snapshot, player_motion=motion,
+                  positions_after=self.positions(),
+                  ball_trajectory=[{"period_time_ms":s["period_time_ms"], **s["ball"]} for s in motion],
+                  motion_model="support-steering-v1")
+
+    def record_reposition(self, before, reason):
+        """Expose existing bounded recovery/setup runs instead of drawing jumps."""
+        if not self.modern_motion or self.t <= before["period_time_ms"]:
+            return
+        duration = self.t-before["period_time_ms"]
+        samples = []
+        for elapsed in list(range(0,duration,500))+[duration]:
+            u = elapsed/duration
+            samples.append({"period_time_ms":before["period_time_ms"]+elapsed,
+                "players":{p:point(q["x_m"]+(self.pitch.positions[p]["x_m"]-q["x_m"])*u,
+                                    q["y_m"]+(self.pitch.positions[p]["y_m"]-q["y_m"])*u)
+                           for p,q in before["players"].items()}})
+        self.emit("reposition", start=self.ball.copy(), end=self.ball.copy(), reason=reason,
+                  pitch_snapshot=before, player_motion=samples, positions_after=self.positions(),
+                  ball_trajectory=[{"period_time_ms":s["period_time_ms"],**self.ball} for s in samples])
+
     def recover(self, pid, reason):
         """Loose balls stay at their endpoint while the nearest eligible actor runs."""
+        before = self.snapshot()
         seconds = distance(self.pitch.positions[pid], self.ball) / self.pitch.RUN_SPEED_MPS
         self.pitch.move(pid, self.ball, seconds + .001)
         self.tick(math.ceil(seconds * 1000))
+        self.record_reposition(before,"loose_ball_recovery")
         self.team, self.owner = self.roster[pid]["team_id"], pid
         self.possession()
         self.emit("recovery", self.team, pid, self.possession_id, start=self.ball.copy(), reason=reason,
@@ -314,6 +369,7 @@ class Simulation:
             return False
         self.substitutions(stop["event_id"], halftime=initial and self.period == 2)
         start = self.t
+        preparation_before = self.snapshot()
         ranges = {"throw_in": (8000, 16000), "goal_kick": (12000, 20000), "corner_kick": (15000, 24000),
                   "direct_free_kick": (16000, 26000), "indirect_free_kick": (10000, 18000), "penalty": (35000, 50000),
                   "kickoff": (35000, 55000) if goal else (0, 0)}
@@ -333,10 +389,22 @@ class Simulation:
         self.team = award["team_id"]
         location = award["location"]
         if award["type"] == "kickoff":
+            before = preparation_before if goal else self.snapshot()
             self.pitch = PitchState(self.period, self.pitch.slots)
             for pid, pos in self.pitch.positions.items():
                 direction = self.pitch.direction(self.roster[pid]["team_id"])
                 pos["x_m"] = min(pos["x_m"], 51) if direction == 1 else max(pos["x_m"], 54)
+            if self.modern_motion and not initial:
+                travel = max(distance(before["players"][p],q) for p,q in self.pitch.positions.items())/4.5
+                # Returning to shape takes place during the celebration/prep
+                # already on the clock. Extend only a compressed demo whose
+                # preparation was shorter than the physically needed journey.
+                extra = max(0, math.ceil(travel*1000)-(self.t-before["period_time_ms"]))
+                extra_start = self.t
+                self.tick(extra)
+                self.record_reposition(before,"return_for_kickoff")
+                if extra:
+                    self.lost(extra_start,self.t,"restart_repositioning",stop["event_id"])
             taker = next((p for p, s in self.pitch.slots.items() if self.roster[p]["team_id"] == self.team and s == 7),
                          next(p for p in self.pitch.team_positions(self.team) if self.pitch.slots[p] != 1))
         elif award["type"] == "goal_kick":
@@ -350,11 +418,13 @@ class Simulation:
         self.emit("ball_placement", start=self.ball.copy(), end=location.copy(), reason=award["type"],
                   stoppage_event_id=stop["event_id"], restart_team_id=self.team)
         self.ball = location.copy()
+        taker_before = self.snapshot()
         travel = distance(self.pitch.positions[taker], location) / self.pitch.RUN_SPEED_MPS
         self.pitch.move(taker, location, travel + .001)
         if award["type"] != "kickoff":
             before = self.t
             self.tick(math.ceil(travel * 1000))
+            self.record_reposition(taker_before,"restart_taker")
             # Set-up movement can exceed the normal allowance; account for it.
             if travel:
                 self.lost(before, self.t, "restart_repositioning", stop["event_id"])
@@ -396,11 +466,13 @@ class Simulation:
             recipient = min(mates, key=lambda p: distance(self.pitch.positions[p], target))
             targets[recipient] = target
         setup_seconds = max((distance(self.pitch.positions[p], target)/4.5 for p, target in targets.items()), default=0)
+        before_setup = self.snapshot()
         for pid, target in targets.items():
             self.pitch.move(pid, target, setup_seconds+.001)
         if setup_seconds:
             before = self.t
             self.tick(math.ceil(setup_seconds*1000))
+            self.record_reposition(before_setup,"restart_setup")
             if award["type"] != "kickoff":
                 self.lost(before, self.t, "restart_repositioning", stop["event_id"])
         if not initial and award["type"] != "penalty" and self.clock.announced is not None and self.t >= self.clock.end:
@@ -445,7 +517,8 @@ class Simulation:
             self.tick(1000)
         speed = 10 if kind == "throw_in" else 17
         self.emit("resume", self.team, self.owner, self.possession_id, reason=kind, start=self.ball.copy())
-        result = resolve_pass(self.ball, end, end, self.pitch.team_positions(other(self.team)), speed, stop_at_boundary=True)
+        result = resolve_pass(self.ball, end, end, self.pitch.team_positions(other(self.team)), speed, stop_at_boundary=True,
+                              reaction_s=.25 if self.modern_motion else 0)
         frame = self.offside_frame(kind)
         flagged = result["outcome"] == "complete" and recipient in frame["candidates"]
         deflector = result["interceptor_id"] if result["interceptor_id"] and not touch_control(self.ball, result["end"], self.pitch.positions[result["interceptor_id"]], speed)["resets_offside"] else None
@@ -483,6 +556,13 @@ class Simulation:
                                * (.4 if quiet and progress > 8 else 1 + max(progress, 0) / 12))
                            * (.04 if pid in offside_candidates else 1))
         recipient, intended = self.rng.choices(mates, weights=weights)[0]
+        options = None
+        if self.modern_motion:
+            options = passing_options(self.pitch,self.owner,self.ball,quiet,self.previous_passer)
+            if options:
+                recipient, intended = self.rng.choices(
+                    [(o["player_id"],o["target"]) for o in options],
+                    weights=[o["score"]*(.04 if o["player_id"] in offside_candidates else 1) for o in options])[0]
         context = pass_context(self.ball, intended, defenders)
         if context["under_pressure"]:
             self.emit("pressure", opponent, context["nearest_defender_id"], self.possession_id,
@@ -490,10 +570,13 @@ class Simulation:
         skill, effort = self.roster[self.owner]["passing_skill"], round(self.rng.uniform(.2, 1), 4)
         # Directional kick error is applied before boundary testing, never clamped.
         error = (1-skill) * (1 + distance(self.ball, intended)/12) * (2 if context["under_pressure"] else 1)
+        error *= 1.45 if self.modern_motion else 1
         aimed = raw_point(intended["x_m"] + self.rng.uniform(-1, 1)*error,
                           intended["y_m"] + self.rng.uniform(-1, 1)*error)
         speed = min(24, 8 + .28*distance(self.ball, intended) + 3*effort)
-        resolved = resolve_pass(self.ball, aimed, intended, defenders, speed, stop_at_boundary=True)
+        resolved = resolve_pass(self.ball, aimed, intended, defenders, speed, stop_at_boundary=True,
+                                 reaction_s=.25 if self.modern_motion else 0,
+                                 receiver_start=self.pitch.positions[recipient] if self.modern_motion else None)
         crossing = first_exit(self.ball, aimed) if resolved["reason"] == "out_of_play" else None
         if crossing:
             resolved.update(end=crossing["location"], outcome="incomplete", reason="out_of_play", interceptor_id=None)
@@ -506,6 +589,9 @@ class Simulation:
             recipient_id=recipient if resolved["outcome"] == "complete" and not flagged else None, intended_recipient_id=recipient,
             intended_end=intended.copy(), outcome="incomplete" if flagged else resolved["outcome"], outcome_reason="offside" if flagged else resolved["reason"],
             interceptor_id=None if deflector else resolved["interceptor_id"], deflector_id=deflector,
+            **({"receiver_start":self.pitch.positions[recipient].copy(), "passing_options":options,
+                "receiver_velocity_mps":list(getattr(self.pitch,"velocities",{}).get(recipient,(0,0))),
+                "decision_model":"lane-aware-lead-pass-v1", "defender_reaction_ms":250} if self.modern_motion else {}),
             kick={"effort": effort, "passing_skill": skill, "aimed_end": aimed, "commanded_mean_speed_mps": speed},
             distance_m=round(distance(self.ball, resolved["end"]), 2), intended_distance_m=round(distance(self.ball, intended), 2),
             pressure={k: context[k] for k in ("under_pressure", "nearest_defender_m", "nearest_defender_id")},
@@ -515,6 +601,7 @@ class Simulation:
             self.pitch.positions[recipient] = point(self.ball["x_m"], self.ball["y_m"])
             return self.whistle_offside(action, recipient, "touch")
         if resolved["outcome"] == "complete":
+            self.previous_passer = self.owner
             self.owner = recipient
             self.pitch.positions[recipient] = point(self.ball["x_m"], self.ball["y_m"])
         else:
@@ -525,9 +612,11 @@ class Simulation:
             if resolved["interceptor_id"]:
                 return self.opponent_contact(action, recoverer)
             if recoverer in frame["candidates"]:
+                before_recovery = self.snapshot()
                 travel = distance(self.pitch.positions[recoverer], self.ball)/4.5
                 self.pitch.move(recoverer, self.ball, travel+.001)
                 self.tick(math.ceil(travel*1000))
+                self.record_reposition(before_recovery,"loose_ball_recovery")
                 return self.whistle_offside(action, recoverer, "touch")
             self.recover(recoverer, "interception" if resolved["interceptor_id"] else "loose_pass")
         return True
@@ -618,9 +707,11 @@ class Simulation:
         eligible = [p for p in self.pitch.positions if p != keeper]
         winner = min(eligible, key=lambda p: distance(self.pitch.positions[p], self.ball))
         if winner in contact_for(shot, self.roster)["candidates"]:
+            before_recovery = self.snapshot()
             travel = distance(self.pitch.positions[winner], self.ball)/4.5
             self.pitch.move(winner, self.ball, travel+.001)
             self.tick(math.ceil(travel*1000))
+            self.record_reposition(before_recovery,"loose_ball_recovery")
             return self.whistle_offside(shot, winner, "gain_advantage_save", via=parry["event_id"])
         self.recover(winner, "rebound")
         self.rebound_source = shot["event_id"]
@@ -642,14 +733,17 @@ class Simulation:
                            start["event_id"], initial=True)
             while self.clock.announced is None or self.t < self.clock.end:
                 press, quiet, chaotic = self.behaviour()
-                hold = self.rng.uniform(2, 4) if chaotic else self.rng.uniform(3, 7)
+                hold = (self.rng.uniform(.7, 1.6) if press or chaotic else self.rng.uniform(1.7, 3.4) if quiet else self.rng.uniform(1.2, 2.6)) if self.modern_motion else self.rng.uniform(2, 4) if chaotic else self.rng.uniform(3, 7)
                 if self.pending_rebound:
                     hold = .4
                 if self.clock.announced is not None and self.t + round(hold*1000) >= self.clock.end:
                     self.tick(self.clock.end-self.t)
                     break
-                self.pitch.advance(hold, self.team, self.owner, self.ball, press=press, quiet=quiet)
-                self.tick(round(hold*1000))
+                if self.modern_motion:
+                    self.advance_play(round(hold*1000),press)
+                else:
+                    self.pitch.advance(hold, self.team, self.owner, self.ball, press=press, quiet=quiet)
+                    self.tick(round(hold*1000))
                 if self.clock.announced is not None and self.t >= self.clock.end:
                     break
                 challenge = self.challenge()
@@ -658,11 +752,15 @@ class Simulation:
                         break
                     continue
                 progress = self.ball["x_m"] if self.pitch.direction(self.team) == 1 else 105-self.ball["x_m"]
-                attacking = progress > 78 and abs(self.ball["y_m"]-34) < 22
+                goal_distance = distance(self.ball,point(105 if self.pitch.direction(self.team) == 1 else 0,34))
+                attacking = progress > (73 if self.modern_motion else 78) and abs(self.ball["y_m"]-34) < (19 if self.modern_motion else 22)
+                if self.modern_motion:
+                    attacking = attacking and goal_distance < 27
+                shot_choice = (.45 if goal_distance < 12 else .28 if goal_distance < 20 else .16) if self.modern_motion else .2
                 rebound, clearing = self.pending_rebound, self.pending_clearance
                 self.pending_rebound = self.pending_clearance = False
                 context = pass_context(self.ball, point(52.5, 34), self.pitch.team_positions(other(self.team)))
-                if attacking and not quiet and (rebound or self.rng.random() < .2):
+                if attacking and not quiet and (rebound or self.rng.random() < shot_choice):
                     keep_playing = self.shoot(rebound)
                 elif clearing or (progress < 32 and self.roster[self.owner]["role"] != "GK"
                                   and context["nearest_defender_m"] < 6 and self.rng.random() < .28):

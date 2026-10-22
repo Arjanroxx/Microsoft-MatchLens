@@ -31,7 +31,7 @@ def pass_context(start, intended_end, defenders, corridor_m=2):
             "corridor_half_width_m": corridor_m}
 
 
-def resolve_pass(start, aimed_end, intended_end, defenders, speed_mps, stop_at_boundary=False):
+def resolve_pass(start, aimed_end, intended_end, defenders, speed_mps, stop_at_boundary=False, reaction_s=0, receiver_start=None):
     """Intercept using kick-time geometry and bounded straight-line defender reach."""
     length = distance(start, aimed_end)
     candidates = []
@@ -51,7 +51,7 @@ def resolve_pass(start, aimed_end, intended_end, defenders, speed_mps, stop_at_b
             y = start["y_m"] + u * (aimed_end["y_m"] - start["y_m"])
             crossing = {"x_m": round(x, 4), "y_m": round(y, 4)} if stop_at_boundary else point(x, y)
             arrival_s = distance(start, crossing) / speed_mps
-            if distance(pos, crossing) <= 4.5 * arrival_s:
+            if distance(pos, crossing) <= 4.5 * max(0, arrival_s-reaction_s):
                 candidates.append((arrival_s, pid, crossing))
     if candidates:
         _, interceptor, end = min(candidates)
@@ -59,7 +59,7 @@ def resolve_pass(start, aimed_end, intended_end, defenders, speed_mps, stop_at_b
     if boundary:
         return {"outcome": "incomplete", "reason": "out_of_play", "end": boundary["location"], "interceptor_id": None}
     flight_s = length / speed_mps
-    if distance(aimed_end, intended_end) <= min(2.5, 4.5 * flight_s):
+    if distance(aimed_end, receiver_start or intended_end) <= min(2.5, 4.5 * flight_s):
         return {"outcome": "complete", "reason": "received", "end": aimed_end, "interceptor_id": None}
     return {"outcome": "incomplete", "reason": "missed_target", "end": aimed_end, "interceptor_id": None}
 
@@ -101,6 +101,8 @@ class PitchState:
         return min(self.team_positions(team), key=lambda pid: distance(self.positions[pid], ball))
 
     def move(self, pid, target, seconds):
+        if hasattr(self,"velocities"):
+            self.velocities[pid] = (0.,0.)
         current = self.positions[pid]
         d = distance(current, target)
         fraction = min(1, self.RUN_SPEED_MPS * seconds / d) if d else 1

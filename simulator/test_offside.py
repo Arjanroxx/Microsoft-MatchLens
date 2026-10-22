@@ -1,4 +1,6 @@
 import copy
+import json
+from pathlib import Path
 import unittest
 
 from simulator.engine import generate
@@ -165,7 +167,9 @@ class ConnectedOffsideTests(unittest.TestCase):
         self.assertEqual(offence["contact"], source_frame)
 
     def test_stream_rejects_changed_line_source_restart_and_missing_decision(self):
-        metadata, events, _ = generate(42, minutes_per_half=5)
+        base = Path(__file__).resolve().parents[1]/"data/examples/offside-match"
+        metadata = json.loads((base/"metadata.json").read_text(encoding="utf-8"))
+        events = [json.loads(line) for line in (base/"events.jsonl").read_text(encoding="utf-8").splitlines()]
         validate(metadata, events)
         self.assertTrue(any(e["type"] == "offside" for e in events))
         for field in ("line", "source", "restart", "involvement"):

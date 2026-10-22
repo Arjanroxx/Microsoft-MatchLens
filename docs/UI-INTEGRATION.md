@@ -1,14 +1,14 @@
 # MatchLens UI integration: complete Priorities 1, 2 and 3
 
-Current generator/event schema: **1.7**. Ratings remain **matchlens-event-rating-v2**. This is the main handoff for the frontend teammate and their coding assistant. Everything below has a concrete implementation in this repository; extra competition features and production streaming remain separate work.
+Current generator/event schema: **1.8**. Ratings remain **matchlens-event-rating-v2**. This is the main handoff for the frontend teammate and their coding assistant. Everything below has a concrete implementation in this repository; extra competition features and production streaming remain separate work.
 
 ## 1. Run the complete development experience
 
 Install Python 3.10+ (the project uses 3.13). There are no pip dependencies. Install Node 18+ only to run frontend tests. From the repository root in PowerShell:
 
 ```powershell
-# Existing checked-in full match, including Priority 3:
-py -3.13 -m simulator.ui_server --input data/examples/offside-match --port 8080
+# Current checked-in full match, including generated movement and Priorities 1-3:
+py -3.13 -m simulator.ui_server --input data/examples/movement-match --port 8080
 ```
 
 Open **http://127.0.0.1:8080/**. This serves Replay Studio and the authoritative statistics API from the same origin. Ctrl+C stops it. To create another match, use a second terminal:
@@ -21,6 +21,16 @@ py -3.13 -m simulator.ui_server --input data/generated/match-123 --port 8081
 Output directories are overwritten when reused; use a different directory for each match you want to retain. Omit `--minutes-per-half` for normal 45-minute halves; `--minutes-per-half 5` makes a short demo with proportionally scaled substitution windows and lost-time allowances.
 
 The original static mode still works: `py -3.13 -m http.server 8080` at repository root, then open `/frontend/` and import metadata.json plus events.jsonl. Static mode has team statistics, lineups, cards and offside evidence, but no authoritative live player-rating API. The static bundled sample is deliberately still a legacy fixture. The bridge uses the match passed to `--input` instead.
+
+## Movement upgrade in schema 1.8
+
+Read [REALISM-AND-MOVEMENT.md](REALISM-AND-MOVEMENT.md). New matches have `movement` events for controlled carrying and `reposition` events for loose-ball/restart runs. Passes, shots and other ball actions also have `player_motion`: 500ms samples of every active player's generated positions. Player state advances during flight. `movement.ball_trajectory` follows the carrier; `reposition.ball_trajectory` holds the stationary ball. Normal ball actions retain their existing authoritative `ball_trajectory`.
+
+Reuse the updated `model.mjs`: it expands `player_motion` into visual frames automatically. Do not overwrite those positions with invented formation interpolation or keep everyone frozen until ball arrival. `boardAt` exposes controlled movement, flight and repositioning phases. Both movement types are hidden from the primary event feed and earn no pass/shot/received/rating action credit. Repositioning does not create possession. Keep the sampled ball/player clock synchronized and use the existing control-boundary rules.
+
+Passes can now lead a receiver: `receiver_start` is their contact-time position, `receiver_velocity_mps` is the synthetic planning velocity and `intended_end` is a reachable lead target. These need not be identical. `defender_reaction_ms` is 250; the selected resolver accounts for this before granting an interception. `passing_options` contains candidate targets/scores/predicted interceptors used for weighted decision-making. Predictions are planning evidence, not actual outcomes or probabilities. Offside still uses the receiver's original teammate-contact position, never the lead destination or arrival position.
+
+Only the new `movement-match` fixture demonstrates this upgrade; old generated matches cannot acquire movement by recalculating summary.json. Generate again. Legacy examples and all Priority 1-3 rules remain supported. Generated motion is synthetic, with simplified planned contact/restart runs; it is not measured broadcast tracking or a calibrated football game engine. The default Smooth mode interpolates between these generated anchors; disabling it deliberately holds the 500ms samples.
 
 ## 2. Inputs and the source of truth
 
@@ -186,7 +196,7 @@ The existing event evidence panel now includes a frozen SVG replay diagram and r
 
 ## 10. Acceptance checklist for the finished frontend
 
-- [ ] Load legacy 1.3/1.4, P1 1.5, P2 1.6 and P3 1.7 matches without breaking clocks or identity.
+- [ ] Load legacy 1.3/1.4, P1 1.5, P2 1.6, P3 1.7 and movement 1.8 matches without breaking clocks or identity.
 - [ ] A receiver has no possession halo before receipt. No pass completion or goal appears early.
 - [ ] Ball paths remain connected across saves, parries, deflections and boundary exits; placement is explicitly dead-ball relocation.
 - [ ] Throw-in/corner/goal-kick award agrees with last touch and attacked/defended end.
@@ -211,14 +221,14 @@ py -3.13 -m unittest discover -s backend/tests -p "test_*.py" -v
 node --test frontend/tests/*.test.mjs
 ```
 
-Fixtures: offside-match (P3/current); discipline-match (P2 bookings/dismissal/advantage/penalty); restarts-match (P1 corners, goal kicks, parries/rebounds); substitutions-match and short-match (legacy). Focused controlled tests cover rare branches that a normal seed need not contain. Do not force a goal/card/offside into every generated match just to fill a panel.
+Fixtures: movement-match (1.8/current movement); offside-match (P3); discipline-match (P2 bookings/dismissal/advantage/penalty); restarts-match (P1 corners, goal kicks, parries/rebounds); substitutions-match and short-match (legacy). Focused controlled tests cover rare branches that a normal seed need not contain. Do not force a goal/card/offside into every generated match just to fill a panel.
 
 ## 11. Copy this task to your teammate's Sol chat
 
 ```text
 Build the frontend integration for all three implemented realism priorities in this repository. Read docs/UI-INTEGRATION.md first, then docs/RESTARTS-AND-CLOCK.md, docs/DISCIPLINE-AND-SET-PIECES.md, docs/OFFSIDE.md, docs/SUBSTITUTIONS.md and docs/PLAYER-RATINGS.md. Inspect frontend/model.mjs, frontend/app.mjs, simulator/ui_server.py and their tests before editing.
 
-Use the actual schema 1.7 events and pure adapter functions. Run python -m simulator.ui_server --input data/examples/offside-match --port 8080 for a same-origin replay plus /api/state?time_ms=... for authoritative team/player stats, live ratings, stints and lineups. Keep one playback clock and reject stale API responses. Preserve legacy matches. Do not use final summary values or evaluation-only.json for live panels and do not invent an HTTP contract or rating formula.
+Use the actual schema 1.8 events, including recorded player_motion, controlled movement, repositioning and lead-pass targets and pure adapter functions. Run python -m simulator.ui_server --input data/examples/movement-match --port 8080 for a same-origin replay plus /api/state?time_ms=... for authoritative team/player stats, live ratings, stints and lineups. Keep one playback clock and reject stale API responses. Preserve legacy matches. Do not use final summary values or evaluation-only.json for live panels and do not invent an HTTP contract or rating formula.
 
 Implement every row of the priority feature matrix and acceptance checklist, including all P1 restarts/rebounds/added time/substitutions; all P2 fouls/advantage/free kicks/penalties/cards/dismissals/emergency keeper; and all P3 source-contact offside, involvement, exceptions, deliberate-play versus deflection/save, invalid attack credit handling, IFK and a separately labelled frozen evidence board. Reuse existing implementations and tests, adapting layout to our UI. Keep point-player/illustrative-motion limitations visible. Run simulator, backend and frontend tests and report which UI acceptance checks you exercised. Complete the work rather than only returning a design plan.
 ```

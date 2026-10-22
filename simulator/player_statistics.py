@@ -11,7 +11,7 @@ class PlayerStatistics:
         self.metadata = metadata
         self.finished_at = None
         self.abandoned = False
-        self.rating_model = RATING_MODEL_V2 if metadata.get("rating_model_version") == RATING_MODEL_V2["version"] or metadata.get("schema_version") in ("1.6", "1.7") else RATING_MODEL
+        self.rating_model = RATING_MODEL_V2 if metadata.get("rating_model_version") == RATING_MODEL_V2["version"] or metadata.get("schema_version") in ("1.6", "1.7", "1.8") else RATING_MODEL
         self.duration = metadata["period_duration_ms"]
         self.roster = {p["player_id"]: p for p in metadata["players"]}
         self.stints = {pid: {"entered_at_ms": 0 if p.get("is_starter", True) else None,
@@ -62,6 +62,8 @@ class PlayerStatistics:
         kind, actor, team = event["type"], event.get("player_id"), event.get("team_id")
         if event.get("valid_for_statistics") is False:
             self.last_pass.clear()
+            return
+        if kind == "movement":
             return
         if kind == "dismissal":
             if actor not in self.active:
@@ -207,7 +209,7 @@ class PlayerStatistics:
             stats["minutes_played_ms"] = max(0, end - entered) if entered is not None else 0
             stats["entered_at_ms"], stats["left_at_ms"] = entered, left
             stats["minutes_basis"] = "starting_lineup_and_substitution_events" if any("is_starter" in p for p in self.roster.values()) else "legacy_all_roster_players_start"
-            finished = self.finished_at is not None or (self.metadata.get("schema_version") not in ("1.5", "1.6", "1.7") and elapsed_ms >= total_duration(self.metadata))
+            finished = self.finished_at is not None or (self.metadata.get("schema_version") not in ("1.5", "1.6", "1.7", "1.8") and elapsed_ms >= total_duration(self.metadata))
             stats["squad_status"] = ("sent_off" if pid in self.dismissed else "substituted_off" if left is not None else
                                       "on_bench" if entered is None and not finished else
                                       "unused_substitute" if entered is None else

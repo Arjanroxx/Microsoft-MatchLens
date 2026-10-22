@@ -1,6 +1,6 @@
 // Pure simulator adapter. Rendering and future backend transports depend on this contract.
 export const elapsed = (e, duration) => e.match_time_ms ?? (e.period - 1) * duration + e.period_time_ms;
-export const actionTypes = ['pass','shot','clearance','parry','restart_delivery','carry','deflection'];
+export const actionTypes = ['pass','shot','clearance','parry','restart_delivery','carry','deflection','movement','reposition'];
 export const periodOffset = (metadata,period) => metadata.period_offsets_ms?.[String(period)] ?? (period-1)*metadata.period_duration_ms;
 export function clockAt(match,time,periodOverride){
   const latest=match.events.filter(e=>e.t<=time).at(-1),period=periodOverride??latest?.period??1;
@@ -18,7 +18,7 @@ export function prepare(metadata, rawEvents) {
   for (const e of rawEvents) {
     if (e.match_id!==metadata.match_id || !e.event_id || ![1,2].includes(e.period) || !Number.isFinite(e.period_time_ms) || e.period_time_ms<0 || e.period_time_ms>(metadata.period_actual_durations_ms?.[String(e.period)]??metadata.period_duration_ms) || !Number.isFinite(e.sequence)) throw Error('Invalid event identity or clock.');
     if(e.player_id && !roster.has(e.player_id)) throw Error('An event references an unknown player.');
-    if(['1.5','1.6','1.7'].includes(metadata.schema_version)&&(!Number.isFinite(e.match_time_ms)||e.match_time_ms!==periodOffset(metadata,e.period)+e.period_time_ms))throw Error('Invalid match/period clock mapping.');
+    if(['1.5','1.6','1.7','1.8'].includes(metadata.schema_version)&&(!Number.isFinite(e.match_time_ms)||e.match_time_ms!==periodOffset(metadata,e.period)+e.period_time_ms))throw Error('Invalid match/period clock mapping.');
     const key=e.match_id+':'+e.event_id; if(seen.has(key))continue;seen.add(key);
     if(actionTypes.includes(e.type)) {
       if(!e.pitch_snapshot?.players || !e.start || !e.end || !e.ball_trajectory?.length)throw Error('An action is missing its snapshot or trajectory.');
@@ -105,7 +105,7 @@ export function disciplineAt(match,time){
   return players;
 }
 function kickoffPositions(match, period, owner, ball, time=0) {
-  if (!['1.3','1.4','1.5','1.6','1.7'].includes(match.metadata.schema_version)) return null;
+  if (!['1.3','1.4','1.5','1.6','1.7','1.8'].includes(match.metadata.schema_version)) return null;
   const formation=[[5,34],[25,8],[25,25],[25,43],[25,60],[48,15],[50,34],[48,53],[72,14],[76,34],[72,54]];
   const positions={};
   const slots=lineupsAt(match,time).slots;
@@ -121,6 +121,10 @@ function kickoffPositions(match, period, owner, ball, time=0) {
 function visualFrames(match){
   const frames=[];
   for(const action of match.actions){
+    if(action.player_motion){
+      for(const sample of action.player_motion)frames.push({t:periodOffset(match.metadata,action.period)+sample.period_time_ms,sequence:action.sequence,period:action.period,blend:true,positions:sample.players});
+      continue;
+    }
     frames.push({t:action.kick,sequence:action.sequence,period:action.period,blend:true,positions:action.pitch_snapshot.players});
     const positions=structuredClone(action.pitch_snapshot.players);
     const recipient=(action.type==='carry'?action.player_id:null)||action.recipient_id||action.interceptor_id||action.deflector_id||
@@ -191,12 +195,12 @@ export function boardAt(match,time,{smooth=true}={}){
     if(['shot','parry','clearance','deflection','opponent_touch','offside'].includes(event.type)){carrierId=null;latestControl=event;}
     if(event.type==='restart_delivery'){carrierId=event.recipient_id;latestControl=event;}
     if(['restart','recovery','turnover','resume'].includes(event.type)&&event.start)ball=event.start;
-    if(event.type==='carry'){carrierId=event.player_id;latestControl=event;}
+    if(event.type==='carry'||event.type==='movement'){carrierId=event.carrier_id||event.player_id;latestControl=event;}
     if(actionTypes.includes(event.type)||event.type==='ball_placement')ball=event.end;
   }
   const active=!!action&&time<action.t;
   if(active){
-    carrierId=action.type==='carry'?action.player_id:null; // Flight is not possession by the intended receiver.
+    carrierId=action.type==='movement'?action.carrier_id:action.type==='carry'?action.player_id:null; // Flight is not possession by the intended receiver.
     const local=time-periodOffset(match.metadata,action.period);
     const samples=action.ball_trajectory;ball=samples[0];
     for(let i=1;i<samples.length;i++){
@@ -208,12 +212,14 @@ export function boardAt(match,time,{smooth=true}={}){
   // The engine keeps the carrier at the ball throughout the decision interval.
   if(carrierId&&ball&&positions[carrierId])positions[carrierId]={x_m:ball.x_m,y_m:ball.y_m};
   const period=clockAt(match,time).period;
-  const phase=active?(action.type==='carry'?'controlled':'flight'):carrierId?'controlled':lastEvent?.type==='period_end'?'interval':stopped?'stoppage':lastEvent?.type==='goal'?'goal':'loose';
+  const phase=active?(action.type==='reposition'?'repositioning':['carry','movement'].includes(action.type)?'controlled':'flight'):carrierId?'controlled':lastEvent?.type==='period_end'?'interval':stopped?'stoppage':lastEvent?.type==='goal'?'goal':'loose';
   return {positions,ball,action,active,carrierId,phase,period,clock:clockAt(match,time),lastEvent,lastVisibleEvent,latestControl,lineups:lineupsAt(match,time),discipline:disciplineAt(match,time)};
 }
 
 // Event labels must also handle boundaries/restarts, which have no outcome field.
 export function eventTitle(event) {
+  if(event.type==='reposition')return 'Players reposition';
+  if(event.type==='movement')return 'Controlled movement';
   if(event.type==='offside')return 'Offside · '+event.involvement.replaceAll('_',' ');
   if(event.type==='opponent_touch')return event.control.classification==='deflection'?'Uncontrolled deflection':'Deliberate opponent play';
   if(event.type==='deflection')return 'Deflected ball';

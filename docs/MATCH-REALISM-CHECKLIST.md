@@ -2,7 +2,7 @@
 
 This is a connected, simplified football simulation. Adding event labels alone does not make it a complete match engine. Each new feature must change the underlying state, restart, eligible actors, statistics, and UI consistently.
 
-Schema 1.7 implements substitutions and all five items of Priority 3, alongside Priorities 1 and 2, within the documented selected 2D rule models. Features below are **not implemented** unless checked. See [the implementation and UI handoff](RESTARTS-AND-CLOCK.md) for the exact scope and remaining 2D limitations. Priorities are engineering recommendations, not additional hackathon requirements.
+Schema 1.8 adds generated movement/carrying/lead passing; schema 1.7 implemented substitutions and all five items of Priority 3, alongside Priorities 1 and 2, within the documented selected 2D rule models. Features below are **not implemented** unless checked. See [the implementation and UI handoff](RESTARTS-AND-CLOCK.md) for the exact scope and remaining 2D limitations. Priorities are engineering recommendations, not additional hackathon requirements.
 
 ## Implemented foundations
 
@@ -58,8 +58,8 @@ See [OFFSIDE.md](OFFSIDE.md) for the exact selected involvement/control proxies 
 
 - [ ] Fatigue and stamina that evolve with actual time/activity; fresh substitutes should affect movement through explicit state, not an automatic performance bonus.
 - [ ] Injury/medical absences and injury substitutions, with suitable limits and replacement eligibility.
-- [ ] Continuous player tracking samples before claiming running speed, distance, sprints, or work rate.
-- [ ] Better receiving movement, carries, dribbles, aerial balls, and headers; current players are mostly held fixed during ball flight.
+- [ ] Measured player tracking before claiming real running speed, distance, sprints or work rate. Schema 1.8 supplies synthetic 500ms movement samples, not camera observations.
+- [ ] Better receiving movement, carries, dribbles, aerial balls, and headers; schema 1.8 now records support movement, carries, lead targets, flight runs and recovery/setup paths; aerial play and fully resolved dribble duels remain future work.
 - [ ] Distinguish clearances, blocked shots, duels, deflections, and loose balls.
 - [ ] More realistic keeper positioning, catches/parries, reaction and reach rather than a simple distance test.
 - [x] Emergency keeper role reassignment after goalkeeper dismissal (captain and injury-related role changes remain future work).
