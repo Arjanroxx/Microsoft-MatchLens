@@ -10,7 +10,7 @@ test('app startup draws 22 players; Names, playback, seek and player inspection 
   const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
   const listeners={};globalThis.document={getElementById:get,querySelector:get,querySelectorAll:()=>[],activeElement:{tagName:'BODY'},addEventListener:(name,fn)=>listeners[name]=fn};
   globalThis.requestAnimationFrame=()=>{};
-  globalThis.fetch=async path=>{const data=readFileSync(new URL('../'+path.replace(/^\.\//,''),import.meta.url),'utf8');return {ok:true,json:async()=>JSON.parse(data),text:async()=>data};};
+  globalThis.fetch=async path=>{const data=readFileSync(new URL('../../data/examples/short-match/'+(path.endsWith('metadata.json')?'metadata.json':'events.jsonl'),import.meta.url),'utf8');return {ok:true,json:async()=>JSON.parse(data),text:async()=>data};};
   const nativeTimeout=globalThis.setTimeout;globalThis.setTimeout=()=>0;
   try {
     await import('../app.mjs');await new Promise(setImmediate);
