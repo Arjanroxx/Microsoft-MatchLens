@@ -11,6 +11,7 @@ from simulator.substitutions import SubstitutionManager
 from simulator.discipline import resolve_challenge, foul_restart, separation_target, in_penalty_area
 from simulator.offside import contact_frame, contact_for, interference, touch_control, deflection_target
 from simulator.movement import advance as advance_movement, passing_options
+from simulator.xg import MODEL as XG_MODEL, shot_xg
 
 
 class Simulation:
@@ -27,12 +28,13 @@ class Simulation:
         self.pending_cards = []
         self.abandoned = False
         self.offside_phase = None
+        metadata["expected_goals_model"] = XG_MODEL.copy()
         self.previous_passer = None
         metadata["movement_model"] = {"version":"support-steering-v1", "integration_step_ms":200,
             "sample_interval_ms":500, "outfield_speed_cap_mps":4.5, "steering_acceleration_mps2":2.5,
             "carrier_speed_cap_mps":2.4, "passing":"lane-aware lead targets; 250ms defender reaction",
             "limitations":"original uncalibrated heuristics; planned contact runs and restart movement remain simplified"}
-        self.modern_motion = metadata["schema_version"] == "1.8"
+        self.modern_motion = metadata["schema_version"] in ("1.8","1.9")
         self.contact_rng = random.Random(f"{metadata['seed']}-challenges-v1")
         metadata.update(period_offsets_ms={"1": 0}, period_actual_durations_ms={},
                         clock_model="period_plus_added_time_v1")
@@ -184,6 +186,9 @@ class Simulation:
 
     def flight(self, kind, end, speed, **fields):
         start, snapshot = self.ball.copy(), self.snapshot()
+        if kind == "shot":
+            fields["xg"] = shot_xg({"type":"shot","start":start,"pitch_snapshot":snapshot,
+                                    "team_id":self.team,"period":self.period,**fields},self.roster)
         if kind in ("shot", "clearance", "parry"):
             self.emit("ball_release", self.team, self.owner, action_type=kind, start=start.copy())
         trajectory = make_trajectory(start, end, self.t, speed, decelerate=kind == "shot")

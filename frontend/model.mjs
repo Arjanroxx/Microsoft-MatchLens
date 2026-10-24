@@ -1,3 +1,4 @@
+import {expectedGoalsAt} from './xg.mjs';
 // Pure simulator adapter. Rendering and future backend transports depend on this contract.
 export const elapsed = (e, duration) => e.match_time_ms ?? (e.period - 1) * duration + e.period_time_ms;
 export const actionTypes = ['pass','shot','clearance','parry','restart_delivery','carry','deflection','movement','reposition'];
@@ -18,7 +19,7 @@ export function prepare(metadata, rawEvents) {
   for (const e of rawEvents) {
     if (e.match_id!==metadata.match_id || !e.event_id || ![1,2].includes(e.period) || !Number.isFinite(e.period_time_ms) || e.period_time_ms<0 || e.period_time_ms>(metadata.period_actual_durations_ms?.[String(e.period)]??metadata.period_duration_ms) || !Number.isFinite(e.sequence)) throw Error('Invalid event identity or clock.');
     if(e.player_id && !roster.has(e.player_id)) throw Error('An event references an unknown player.');
-    if(['1.5','1.6','1.7','1.8'].includes(metadata.schema_version)&&(!Number.isFinite(e.match_time_ms)||e.match_time_ms!==periodOffset(metadata,e.period)+e.period_time_ms))throw Error('Invalid match/period clock mapping.');
+    if(['1.5','1.6','1.7','1.8','1.9'].includes(metadata.schema_version)&&(!Number.isFinite(e.match_time_ms)||e.match_time_ms!==periodOffset(metadata,e.period)+e.period_time_ms))throw Error('Invalid match/period clock mapping.');
     const key=e.match_id+':'+e.event_id; if(seen.has(key))continue;seen.add(key);
     if(actionTypes.includes(e.type)) {
       if(!e.pitch_snapshot?.players || !e.start || !e.end || !e.ball_trajectory?.length)throw Error('An action is missing its snapshot or trajectory.');
@@ -73,6 +74,8 @@ export function statistics(match, time) {
   }
   advance(time); const total=times.home+times.away;
   for(const team of ['home','away']){const s=counts[team];s.accuracy=s.attempted?100*s.completed/s.attempted:null;s.possession=total?100*times[team]/total:null;s.time=times[team];}
+  const expected=expectedGoalsAt(match,time);
+  for(const team of ['home','away'])Object.assign(counts[team],expected.teams[team]);
   return {teams:counts,times};
 }
 
@@ -105,7 +108,7 @@ export function disciplineAt(match,time){
   return players;
 }
 function kickoffPositions(match, period, owner, ball, time=0) {
-  if (!['1.3','1.4','1.5','1.6','1.7','1.8'].includes(match.metadata.schema_version)) return null;
+  if (!['1.3','1.4','1.5','1.6','1.7','1.8','1.9'].includes(match.metadata.schema_version)) return null;
   const formation=[[5,34],[25,8],[25,25],[25,43],[25,60],[48,15],[50,34],[48,53],[72,14],[76,34],[72,54]];
   const positions={};
   const slots=lineupsAt(match,time).slots;

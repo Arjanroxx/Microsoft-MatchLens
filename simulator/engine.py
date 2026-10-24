@@ -11,7 +11,7 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
     if scenario not in SCENARIOS or not 1 <= minutes_per_half <= 45:
         raise ValueError("Select a known scenario and 1..45 minutes per half")
     rng = random.Random(seed)
-    match_id = f"synthetic-v1.8-{scenario}-{seed}-{minutes_per_half}"
+    match_id = f"synthetic-v1.9-{scenario}-{seed}-{minutes_per_half}"
     roles = ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW", "FW",
              "GK", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW"]
     groups = ["GK", "FB", "CB", "CB", "FB", "WM", "CM", "WM", "W", "ST", "W",
@@ -28,7 +28,7 @@ def generate(seed=42, scenario="match", minutes_per_half=45):
     progression = MatchProgression(seed, duration)
     start_window = min(600_000, duration // 3)
     end_window = min(start_window + 300_000, duration - 10_000)
-    metadata = {"schema_version": "1.8", "match_id": match_id, "source": "synthetic", "seed": seed,
+    metadata = {"schema_version": "1.9", "match_id": match_id, "source": "synthetic", "seed": seed,
                 "rating_model_version": "matchlens-event-rating-v2",
                 "pitch": {"length_m": 105, "width_m": 68},
                 "coordinate_origin": "bottom-left; fixed pitch coordinates", "period_duration_ms": duration,

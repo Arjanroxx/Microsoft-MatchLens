@@ -26,5 +26,15 @@ test('app startup draws 22 players; Names, playback, seek and player inspection 
     get('next').click();assert.ok(get('players-layer').innerHTML.includes('home-07'));
     listeners.click({target:{closest:selector=>selector==='[data-player]'?{dataset:{player:'home-07'}}:null}});
     assert.ok(get('evidence').innerHTML.includes('Northbridge Player 07'));
+    assert.ok(get('evidence').innerHTML.includes('xG estimate · uncalibrated'));
+    assert.ok(get('evidence').innerHTML.includes('xG assisted'));
+    get('seek').oninput({target:{value:600000}});
+    const source=readFileSync(new URL('../../data/examples/short-match/events.jsonl',import.meta.url),'utf8').trim().split('\n').map(JSON.parse);
+    const shot=source.find(e=>e.type==='shot');
+    listeners.click({target:{closest:selector=>selector==='[data-event]'?{dataset:{event:shot.event_id}}:null}});
+    assert.ok(get('evidence').innerHTML.includes('Inspect xG calculation'));
+    assert.ok(get('evidence').innerHTML.includes('Distance to goal centre'));
+    assert.ok(get('stat-tiles').innerHTML.includes('xG estimate'));
+    assert.ok(get('comparison').innerHTML.includes('Goals minus xG'));
   }finally{globalThis.setTimeout=nativeTimeout;}
 });

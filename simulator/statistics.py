@@ -5,6 +5,7 @@ from simulator.aggregates import METRICS, distribution, record_action_metrics
 from simulator.player_statistics import PlayerStatistics
 from simulator.ratings import RATING_MODEL
 from simulator.clock import elapsed, event_time
+from simulator.xg import MODEL as XG_MODEL, XGAccumulator
 
 
 class MatchStatistics:
@@ -31,12 +32,13 @@ class MatchStatistics:
             "second_yellow_dismissals": 0, "free_kicks": 0, "direct_free_kicks": 0, "indirect_free_kicks": 0,
             "penalties_won": 0, "penalties_conceded": 0, "penalties_taken": 0, "penalties_scored": 0, "penalties_missed": 0, "offsides": 0,
         } for team in ("home", "away")}
+        self.xg = {team:XGAccumulator() for team in self.counts}
         self.values = {team: {metric: [] for metric in METRICS} for team in self.counts}
         self.player_statistics = PlayerStatistics(self.metadata)
 
     def _time(self, period, period_time_ms):
         limit = self.metadata.get("period_actual_durations_ms", {}).get(str(period),
-                    float("inf") if self.metadata.get("schema_version") in ("1.5", "1.6", "1.7", "1.8") else self.duration)
+                    float("inf") if self.metadata.get("schema_version") in ("1.5", "1.6", "1.7", "1.8", "1.9") else self.duration)
         if period not in (1, 2) or not 0 <= period_time_ms <= limit:
             raise ValueError("Invalid statistics clock")
         return elapsed(self.metadata, period, period_time_ms)
@@ -125,6 +127,7 @@ class MatchStatistics:
             if interceptor_team:
                 self.counts[interceptor_team]["interceptions"] += 1
         else:
+            self.xg[team].add(event,self.roster,self.player_statistics._keeper("away" if team == "home" else "home"))
             if event.get("set_piece_type") == "penalty":
                 stats["penalties_taken"] += 1
                 stats["penalties_scored" if event["outcome"] == "goal" else "penalties_missed"] += 1
@@ -152,8 +155,12 @@ class MatchStatistics:
         controlled = times["home"] + times["away"]
         home_share = round(100 * times["home"] / controlled, 2) if controlled else None
         shares = {"home": home_share, "away": round(100 - home_share, 2) if home_share is not None else None}
+        players = self.player_statistics.snapshot(target)
         teams = copy.deepcopy(self.counts)
         for team, stats in teams.items():
+            stats.update(self.xg[team].summary(stats["goals"],stats["shots"]["on_target"]))
+            assists = [p["xg_assisted"] for p in players.values() if p["team_id"] == team]
+            stats["xg_assisted"] = round(sum(assists),6) if all(a is not None for a in assists) else None
             passes = stats["passes"]
             passes["accuracy_percentage"] = round(100 * passes["completed"] / passes["attempted"], 2) if passes["attempted"] else None
             stats["metrics"] = {name: distribution(values) for name, values in self.values[team].items()}
@@ -167,7 +174,7 @@ class MatchStatistics:
             "sent_off": sorted(pid for pid in self.player_statistics.dismissed if self.roster[pid] == team),
             "goalkeeper_id": self.player_statistics._keeper(team),
         } for team in self.counts}
-        return {"teams": teams, "players": self.player_statistics.snapshot(target), "lineups": lineups,
+        return {"teams": teams, "players": players, "expected_goals_model":copy.deepcopy(XG_MODEL), "lineups": lineups,
                 "substitutions": copy.deepcopy(self.player_statistics.substitutions),
                 "player_rating_model": copy.deepcopy(self.player_statistics.rating_model), "possession": {
             "method": "team_phase_time_v1",

@@ -81,3 +81,8 @@ See [OFFSIDE.md](OFFSIDE.md) for the exact selected involvement/control proxies 
 - [ ] Special concussion or temporary-absence protocols only after choosing applicable competition rules.
 
 Recommended next build: **movement/calibration**, with source-grounded tests at each step. A connected smaller model is preferable to random cards, offsides, or penalties that do not affect the match.
+
+## Expected goals update (schema 1.9)
+
+- [x] Deterministic, explainable pre-shot xG heuristic, with per-shot evidence and team/player totals, npxG and strict key-pass xG assisted. [Contract and UI guide](EXPECTED-GOALS.md).
+- [ ] Train and calibrate xG against a suitable real dataset, including held-out evaluation and richer aerial/body-part context. Current estimates remain explicitly uncalibrated.

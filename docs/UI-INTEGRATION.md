@@ -1,6 +1,6 @@
 # MatchLens UI integration: complete Priorities 1, 2 and 3
 
-Current generator/event schema: **1.8**. Ratings remain **matchlens-event-rating-v2**. This is the main handoff for the frontend teammate and their coding assistant. Everything below has a concrete implementation in this repository; extra competition features and production streaming remain separate work.
+Current generator/event schema: **1.9**. Ratings remain **matchlens-event-rating-v2**. This is the main handoff for the frontend teammate and their coding assistant. Everything below has a concrete implementation in this repository; extra competition features and production streaming remain separate work.
 
 ## 1. Run the complete development experience
 
@@ -21,6 +21,10 @@ py -3.13 -m simulator.ui_server --input data/generated/match-123 --port 8081
 Output directories are overwritten when reused; use a different directory for each match you want to retain. Omit `--minutes-per-half` for normal 45-minute halves; `--minutes-per-half 5` makes a short demo with proportionally scaled substitution windows and lost-time allowances.
 
 The original static mode still works: `py -3.13 -m http.server 8080` at repository root, then open `/frontend/` and import metadata.json plus events.jsonl. Static mode has team statistics, lineups, cards and offside evidence, but no authoritative live player-rating API. The static bundled sample is deliberately still a legacy fixture. The bridge uses the match passed to `--input` instead.
+
+## Expected goals in schema 1.9
+
+Read [EXPECTED-GOALS.md](EXPECTED-GOALS.md) for the complete shot/team/player contract, model assumptions, legacy coverage rules, preview commands and frontend assistant instructions. Every new shot has evidence-derived `xg`; team/player stats add `xg`, `non_penalty_xg`, `xg_per_shot`, `goals_minus_xg`, `xg_assisted`, shot conversion/accuracy and coverage. Display the uncalibrated qualification. The current UI already renders team comparisons, player metrics and shot calculation evidence. Ratings remain v2.
 
 ## Movement upgrade in schema 1.8
 
@@ -196,7 +200,7 @@ The existing event evidence panel now includes a frozen SVG replay diagram and r
 
 ## 10. Acceptance checklist for the finished frontend
 
-- [ ] Load legacy 1.3/1.4, P1 1.5, P2 1.6, P3 1.7 and movement 1.8 matches without breaking clocks or identity.
+- [ ] Load legacy 1.3/1.4, P1 1.5, P2 1.6, P3 1.7 and movement 1.8 and xG 1.9 matches without breaking clocks or identity.
 - [ ] A receiver has no possession halo before receipt. No pass completion or goal appears early.
 - [ ] Ball paths remain connected across saves, parries, deflections and boundary exits; placement is explicitly dead-ball relocation.
 - [ ] Throw-in/corner/goal-kick award agrees with last touch and attacked/defended end.
@@ -228,7 +232,7 @@ Fixtures: movement-match (1.8/current movement); offside-match (P3); discipline-
 ```text
 Build the frontend integration for all three implemented realism priorities in this repository. Read docs/UI-INTEGRATION.md first, then docs/RESTARTS-AND-CLOCK.md, docs/DISCIPLINE-AND-SET-PIECES.md, docs/OFFSIDE.md, docs/SUBSTITUTIONS.md and docs/PLAYER-RATINGS.md. Inspect frontend/model.mjs, frontend/app.mjs, simulator/ui_server.py and their tests before editing.
 
-Use the actual schema 1.8 events, including recorded player_motion, controlled movement, repositioning and lead-pass targets and pure adapter functions. Run python -m simulator.ui_server --input data/examples/movement-match --port 8080 for a same-origin replay plus /api/state?time_ms=... for authoritative team/player stats, live ratings, stints and lineups. Keep one playback clock and reject stale API responses. Preserve legacy matches. Do not use final summary values or evaluation-only.json for live panels and do not invent an HTTP contract or rating formula.
+Use the actual schema 1.9 events (retaining legacy 1.8 support), including recorded player_motion, controlled movement, repositioning and lead-pass targets and pure adapter functions. Run python -m simulator.ui_server --input data/examples/movement-match --port 8080 for a same-origin replay plus /api/state?time_ms=... for authoritative team/player stats, live ratings, stints and lineups. Keep one playback clock and reject stale API responses. Preserve legacy matches. Do not use final summary values or evaluation-only.json for live panels and do not invent an HTTP contract or rating formula.
 
 Implement every row of the priority feature matrix and acceptance checklist, including all P1 restarts/rebounds/added time/substitutions; all P2 fouls/advantage/free kicks/penalties/cards/dismissals/emergency keeper; and all P3 source-contact offside, involvement, exceptions, deliberate-play versus deflection/save, invalid attack credit handling, IFK and a separately labelled frozen evidence board. Reuse existing implementations and tests, adapting layout to our UI. Keep point-player/illustrative-motion limitations visible. Run simulator, backend and frontend tests and report which UI acceptance checks you exercised. Complete the work rather than only returning a design plan.
 ```

@@ -97,3 +97,7 @@ New schema 1.6 matches include 11 starters and nine bench players per team, main
 
 
 Priority 2 showcase: `py -3.13 -m simulator.generate --seed 6 --output data/generated/priority-two-demo`. Load its metadata/events into Replay Studio, or use `data/examples/discipline-match/`. The UI adapter handles reduced lineups, shown-card badges, advantage carries, current keeper assignments and new side-by-side counters. Read the Priority 2 guide before assuming 22 active markers or using original keeper IDs.
+
+### Expected goals (schema 1.9)
+
+Every new shot has an explainable, uncalibrated pre-shot xG estimate based on its original geometry. Team and player statistics now include xG, non-penalty xG, xG per shot, goals minus xG, xG assisted, shot conversion/accuracy and coverage. The replay shows team comparisons, player metrics and shot evidence. Existing fixtures derive xG from their recorded frames. See [the model and UI integration guide](docs/EXPECTED-GOALS.md) and the small `data/examples/xg-match` fixture.

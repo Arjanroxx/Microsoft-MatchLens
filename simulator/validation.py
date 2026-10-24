@@ -148,7 +148,7 @@ def validate_stream(metadata, events):
             stopped = False
         if kind == "recovery":
             require(not stopped and e["start"] == ball, "recovery teleported ball / occurred out of play")
-            if phase_source and metadata["schema_version"] in ("1.7", "1.8"):
+            if phase_source and metadata["schema_version"] in ("1.7", "1.8", "1.9"):
                 require(actor not in contact_for(phase_source, roster)["candidates"], "offside attacker granted control")
             phase_source = None
         if kind == "opponent_touch":
@@ -231,7 +231,7 @@ def validate_stream(metadata, events):
             if kind == "pass":
                 target = e["intended_recipient_id"]
                 require(target in active and roster[target]["team_id"] == team and target != actor, "invalid recipient")
-                if metadata["schema_version"] == "1.8":
+                if metadata["schema_version"] in ("1.8", "1.9"):
                     from simulator.pitch import point
                     receiver = snapshot["players"][target]
                     vx,vy = e["receiver_velocity_mps"]
@@ -246,16 +246,19 @@ def validate_stream(metadata, events):
                 direction = 1 if (team == "home") == (period == 1) else -1
                 require(e["pass_difficulty"] == pass_difficulty(e["start"], e["intended_end"], direction, context["nearest_defender_m"], context["defenders_in_lane"]), "incorrect difficulty")
                 require(abs(speed - min(24, 8 + .28*distance(e["start"], e["intended_end"]) + 3*e["kick"]["effort"])) < 1e-9, "incorrect pass command")
-                result = resolve_pass(e["start"], e["kick"]["aimed_end"], e["intended_end"], defenders, speed, stop_at_boundary=True, reaction_s=.25 if metadata["schema_version"] == "1.8" else 0,
+                result = resolve_pass(e["start"], e["kick"]["aimed_end"], e["intended_end"], defenders, speed, stop_at_boundary=True, reaction_s=.25 if metadata["schema_version"] in ("1.8", "1.9") else 0,
                                       receiver_start=e.get("receiver_start"))
                 crossing = first_exit(e["start"], e["kick"]["aimed_end"]) if result["reason"] == "out_of_play" else None
                 if crossing:
                     result.update(end=crossing["location"], outcome="incomplete", reason="out_of_play", interceptor_id=None)
-                flagged = result["outcome"] == "complete" and target in contact_for(e, roster)["candidates"] if metadata["schema_version"] in ("1.7", "1.8") else False
+                flagged = result["outcome"] == "complete" and target in contact_for(e, roster)["candidates"] if metadata["schema_version"] in ("1.7", "1.8", "1.9") else False
                 require(e["end"] == result["end"] and e["outcome"] == ("incomplete" if flagged else result["outcome"]) and e["outcome_reason"] == ("offside" if flagged else result["reason"]) and (e["interceptor_id"] or e.get("deflector_id")) == result["interceptor_id"], "invalid pass resolution")
                 require(e["recipient_id"] == (target if result["outcome"] == "complete" and not flagged else None), "wrong completed recipient")
                 require(e["distance_m"] == round(distance(e["start"], e["end"]), 2), "incorrect pass distance")
             if kind == "shot":
+                if metadata["schema_version"] == "1.9":
+                    from simulator.xg import shot_xg
+                    require(e.get("xg") == shot_xg(e,roster), "xG not supported by pre-shot evidence")
                 require(abs(speed-(20+12*e["kick"]["effort"]+2*e["kick"]["shooting_skill"])) < 1e-9, "incorrect shot command")
                 keeper = e["goalkeeper_id"]
                 require(keeper in active and roster[keeper]["team_id"] != team and active[keeper] == 1, "invalid keeper")
@@ -264,10 +267,10 @@ def validate_stream(metadata, events):
                     require(restart.get("reason") == e["set_piece_type"] and e["set_piece_type"] in ("penalty", "direct_free_kick") and restart.get("player_id") == actor, "illegal direct set-piece shot")
                     require(e["start"] == restart["start"], "set-piece shot moved from restart")
                 result = resolve_shot(e["start"], e["kick"]["aimed_end"], snapshot["players"][keeper], speed)
-                blocker = interference(contact_for(e, roster), snapshot["players"], e["start"], keeper) if metadata["schema_version"] in ("1.7", "1.8") else None
+                blocker = interference(contact_for(e, roster), snapshot["players"], e["start"], keeper) if metadata["schema_version"] in ("1.7", "1.8", "1.9") else None
                 require(e["end"] == result["end"] and e["outcome_reason"] == ("offside" if blocker else result["outcome_reason"]) and e["save_outcome"] == (None if blocker else result["save_outcome"]), "shot not supported by contact geometry")
                 require(e["outcome"] == ("goal" if not blocker and result["outcome_reason"] == "goal" else "no_goal"), "invalid shot outcome")
-                if metadata["schema_version"] in ("1.7", "1.8"):
+                if metadata["schema_version"] in ("1.7", "1.8", "1.9"):
                     require(e["valid_for_statistics"] == (not bool(blocker)) and e["offside_offender_id"] == blocker and e["observed_outcome_reason"] == result["outcome_reason"], "invalid shot adjudication")
                 metrics = e["ball_speed"]
                 require(e["shot_speed"] == {"source": "synthetic_trajectory", "method": "initial_segment_average", "mps": metrics["initial_segment_mps"], "kmh": metrics["initial_segment_kmh"], "window_ms": metrics["initial_segment_duration_ms"]}, "incorrect shot speed")
@@ -309,8 +312,8 @@ def validate_stream(metadata, events):
                 require(target in active and roster[target]["team_id"] == team and target != actor, "invalid restart recipient")
                 require(e["intended_end"] == snapshot["players"][target], "restart target disagrees with snapshot")
                 defenders = {p: v for p, v in snapshot["players"].items() if roster[p]["team_id"] != team}
-                result = resolve_pass(e["start"], e["intended_end"], e["intended_end"], defenders, speed, stop_at_boundary=True, reaction_s=.25 if metadata["schema_version"] == "1.8" else 0)
-                flagged = result["outcome"] == "complete" and target in contact_for(e, roster)["candidates"] if metadata["schema_version"] in ("1.7", "1.8") else False
+                result = resolve_pass(e["start"], e["intended_end"], e["intended_end"], defenders, speed, stop_at_boundary=True, reaction_s=.25 if metadata["schema_version"] in ("1.8", "1.9") else 0)
+                flagged = result["outcome"] == "complete" and target in contact_for(e, roster)["candidates"] if metadata["schema_version"] in ("1.7", "1.8", "1.9") else False
                 require(e["end"] == result["end"] and e["outcome"] == ("incomplete" if flagged else result["outcome"]) and (e["interceptor_id"] or e.get("deflector_id")) == result["interceptor_id"], "restart delivery disagrees with geometry")
                 require(e["recipient_id"] == (target if result["outcome"] == "complete" and not flagged else None), "incorrect restart receiver")
             ball, last_touch = e["end"], (team, actor)
