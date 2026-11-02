@@ -1,5 +1,7 @@
 # MatchLens UI integration: complete Priorities 1, 2 and 3
 
+For the new local Ollama multi-agent panel, use [AI-UI-INTEGRATION.md](AI-UI-INTEGRATION.md) alongside this simulator field map. The complete application now starts with `python -m backend.app.server --provider ollama --port 8082`; its setup uses Python 3.12+ and `requirements-ai.txt`. The dependency-free commands below remain valid for simulator-only work.
+
 Current generator/event schema: **1.9**. Ratings remain **matchlens-event-rating-v2**. This is the main handoff for the frontend teammate and their coding assistant. Everything below has a concrete implementation in this repository; extra competition features and production streaming remain separate work.
 
 ## 1. Run the complete development experience

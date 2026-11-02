@@ -36,7 +36,10 @@ class MatchView:
                 "period": period, "period_time_ms": local, **statistics}
 
 
-class Handler(SimpleHTTPRequestHandler):
+from simulator.http_security import LocalHTTPGuard
+
+
+class Handler(LocalHTTPGuard,SimpleHTTPRequestHandler):
     def __init__(self, *args, view, **kwargs):
         self.view = view
         super().__init__(*args, directory=str(Path(__file__).resolve().parents[1]/"frontend"), **kwargs)
@@ -55,8 +58,10 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/state":
             try:
                 query = parse_qs(parsed.query)
-                if set(query) != {"time_ms"} or len(query["time_ms"]) != 1:
-                    raise ValueError("Supply exactly one time_ms parameter")
+                if set(query)-{"time_ms","match_id"} or "time_ms" not in query or any(len(v)!=1 for v in query.values()):
+                    raise ValueError("Supply one time_ms and optional match_id")
+                if query.get("match_id",[self.view.metadata['match_id']])[0]!=self.view.metadata['match_id']:
+                    raise ValueError("Unknown match")
                 self.payload(self.view.state(float(query["time_ms"][0])))
             except (ValueError, KeyError) as error:
                 self.payload({"error": str(error)}, 400)

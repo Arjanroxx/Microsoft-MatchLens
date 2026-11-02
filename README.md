@@ -1,6 +1,25 @@
 # Microsoft-MatchLens
 
-Synthetic football match simulation and explainable match intelligence for the Microsoft × Premier League hackathon.
+Synthetic football simulation, replay, and evidence-backed local AI match intelligence. Originally built for the Microsoft × Premier League hackathon; now runnable without Azure.
+
+## Local AI quick start
+
+Use Python **3.12+**, Node **22+** for frontend tests, and [Ollama](https://ollama.com/download). The tested local model is `qwen3:1.7b`.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-ai.txt
+ollama pull qwen3:1.7b
+.\.venv\Scripts\python.exe -m backend.app.server --provider ollama --port 8082
+```
+
+Open **http://127.0.0.1:8082/**. Select a shot or goal and click **Explain this moment**. The Analyst, Story, and Experience roles run through Microsoft Agent Framework and Ollama. Evidence, model status, stage timings, and token counts are visible in the insight panel. English/Hindi, casual/analyst modes, favourite team/player, metric focus, and interval recaps are supported.
+
+The models choose a supported story, reviewed narrative frame, and presentation style. **Python calculates the statistics and renders the final wording from exact source facts.** This is constrained AI storytelling, with explicit demo/fallback labels. It does not connect to Azure Foundry or recognize video.
+
+For a dependency-free functional preview: `python -m backend.app.server --provider demo --port 8082`. This mode performs **no AI inference**. Setup/run helpers are in `scripts/`. No Azure account or paid API key is needed for local inference.
+
+Start with the [completion checklist and runbook](docs/PROJECT-COMPLETION.md), [agent architecture and limitations](docs/LOCAL-AGENTS.md), and [frontend AI integration contract](docs/AI-UI-INTEGRATION.md). Existing detailed simulator/UI documentation remains below.
 
 ## Current implementation
 
@@ -22,13 +41,13 @@ Synthetic football match simulation and explainable match intelligence for the M
 - Frozen offside evidence replay and local API for authoritative live player ratings.
 - Validation, replay to the terminal, and automated tests.
 
-This repository provides the **data-generation layer** and a buildless **Replay Studio frontend**. Run `python -m http.server 8080` from the repository root and open `http://localhost:8080/frontend/`. See [frontend/README.md](frontend/README.md) for controls, import and integration details. AI narratives, cloud backend integration, and video recognition are not implemented.
+This repository includes the **data generator**, buildless **Replay Studio frontend**, and **local agent backend**. A static preview (`python -m http.server 8080`, then `/frontend/`) supports replay only. Use the local AI quick start above for intelligence and authoritative prefix statistics. See [frontend/README.md](frontend/README.md) for replay controls and [docs/AI-UI-INTEGRATION.md](docs/AI-UI-INTEGRATION.md) for agent integration.
 
 For all P1-P3 features and live player ratings, run `python -m simulator.ui_server --input data/examples/movement-match --port 8080` and open `http://127.0.0.1:8080/`. The complete teammate handoff, field mappings and copyable Sol task are in [docs/UI-INTEGRATION.md](docs/UI-INTEGRATION.md).
 
 ## Quick start
 
-Python 3.10+ is required; Python 3.13 is the development baseline. No external Python packages are required.
+The simulator requires Python 3.10+ and no external packages. The local AI backend is tested with Python 3.12.14 and the pinned packages in `requirements-ai.txt`. Replace `py -3.13` below with `.\.venv\Scripts\python.exe` when using the project environment.
 
 From the repository root, on Windows:
 

@@ -1,0 +1,4 @@
+# Tested on Python 3.12.14. The simulator and demo provider need no packages.
+agent-framework-core==1.23.0
+agent-framework-ollama==1.0.0b261022
+ollama==0.5.3

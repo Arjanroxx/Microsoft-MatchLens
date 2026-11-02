@@ -1,5 +1,7 @@
 # MatchLens Replay Studio
 
+The local AI edition is integrated into this frontend. Start `python -m backend.app.server --provider ollama --port 8082` after the [project setup](../docs/PROJECT-COMPLETION.md). See the [AI integration contract](../docs/AI-UI-INTEGRATION.md) for three-agent explanations, personalisation, recaps, source registration, streaming and stale-result checks. `--provider demo` provides an explicit non-AI functional preview.
+
 Current schema **1.8** adds generated support movement, carrying, receiving runs and lane-aware lead passing. Priorities 1-3 remain supported. See [movement details](../docs/REALISM-AND-MOVEMENT.md). See [the complete UI handoff](../docs/UI-INTEGRATION.md) and [offside contract](../docs/OFFSIDE.md). `python -m simulator.ui_server --input data/examples/movement-match --port 8080` serves the selected match plus authoritative prefix ratings/stats at `http://127.0.0.1:8080/`. Existing static mode and legacy fixtures remain supported.
 
 An interactive, buildless HTML/CSS/JavaScript frontend for the MatchLens simulator. No npm install, framework, Azure account, or AI key is needed.

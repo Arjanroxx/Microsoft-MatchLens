@@ -36,5 +36,21 @@ test('app startup draws 22 players; Names, playback, seek and player inspection 
     assert.ok(get('evidence').innerHTML.includes('Distance to goal centre'));
     assert.ok(get('stat-tiles').innerHTML.includes('xG estimate'));
     assert.ok(get('comparison').innerHTML.includes('Goals minus xG'));
+    const hostile=JSON.parse(readFileSync(new URL('../../data/examples/short-match/metadata.json',import.meta.url),'utf8'));
+    hostile.players.find(p=>p.player_id==='home-07').shirt_number='<img src=x onerror=alert(1)>';
+    const poisoned=structuredClone(source);
+    const pass=poisoned.find(e=>e.type==='pass');
+    pass.difficulty_context.defenders_in_lane='<img src=x onerror=alert(2)>';
+    await get('files').onchange({target:{files:[
+      {name:'metadata.json',size:100,text:async()=>JSON.stringify(hostile)},
+      {name:'events.jsonl',size:100,text:async()=>poisoned.map(JSON.stringify).join('\n')}
+    ],value:''}});
+    listeners.click({target:{closest:selector=>selector==='[data-player]'?{dataset:{player:'home-07'}}:null}});
+    assert.ok(get('evidence').innerHTML.includes('&lt;img'));
+    assert.ok(!get('evidence').innerHTML.includes('<img'));
+    get('seek').oninput({target:{value:600000}});
+    listeners.click({target:{closest:selector=>selector==='[data-event]'?{dataset:{event:pass.event_id}}:null}});
+    assert.ok(get('evidence').innerHTML.includes('&lt;img'));
+    assert.ok(!get('evidence').innerHTML.includes('<img'));
   }finally{globalThis.setTimeout=nativeTimeout;}
 });

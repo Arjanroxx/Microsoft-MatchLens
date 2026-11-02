@@ -1,4 +1,10 @@
-# MatchLens AI/explainability prototype
+# MatchLens backend
+
+The current runnable multi-agent application is `python -m backend.app.server --provider ollama`. See [local agent architecture](../docs/LOCAL-AGENTS.md), [setup/checklist](../docs/PROJECT-COMPLETION.md), and [UI contract](../docs/AI-UI-INTEGRATION.md). It uses real Microsoft Agent Framework/Ollama inference with a deterministic evidence renderer.
+
+The remainder of this document describes the **earlier dependency-free explainability prototype**, retained for its separate verification tests. Its demo-provider limitations do not describe the newer Ollama application.
+
+## Earlier prototype
 
 This backend package turns structured MatchLens team statistics into one
 evidence-backed football insight. It is intentionally small and uses only the
